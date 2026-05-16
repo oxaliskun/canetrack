@@ -41,10 +41,11 @@ npm --version
    - **Pricing Plan:** Free
 3. Click **Create new project** (wait 1–2 min)
 4. Go to **Project Settings** → **Database** → scroll to **Connection string**
-5. Copy the URI:
+5. Under **Session pooler**, copy the URI:
    ```
-   postgresql://postgres:YOUR_PASSWORD@db.xxxxx.supabase.co:5432/postgres
+   postgresql://postgres:YOUR_PASSWORD@db.xxxxx.pooler.supabase.com:6543/postgres?pgbouncer=true
    ```
+   ⚠️ Use the **Session pooler** (port **6543**), NOT the direct connection (port 5432). Render's network cannot reach Supabase's direct port.
 
 ---
 
@@ -147,6 +148,7 @@ git push -u origin main
 | CORS error (console) | `FRONTEND_URL` in Render env vars         |
 | API 404              | `VITE_API_URL` in Netlify env vars        |
 | Database error       | `DATABASE_URL` in Render env vars         |
+| `P1001: Can't reach database server` | Use **Session pooler** URI (port 6543) instead of direct (port 5432) |
 | Login fails          | Check Render logs for JWT_SECRET issues   |
 
 - Open **Browser DevTools (F12)** → Console tab for CORS errors
