@@ -63,7 +63,7 @@ export function AdminTickets() {
           <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-3 border ${isDark ? 'bg-blue-900/30 text-blue-400 border-blue-800' : 'bg-blue-100 text-blue-700 border-blue-200'}`}>
              <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" /> Live Monitoring
           </div>
-          <h1 className={`text-4xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Ticket & Dispute Monitor</h1>
+          <h1 className={`text-2xl sm:text-4xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Ticket & Dispute Monitor</h1>
         </div>
       </div>
 

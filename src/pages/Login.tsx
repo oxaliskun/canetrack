@@ -109,35 +109,35 @@ export function Login() {
 
       {/* Right Form Panel */}
       <div className="w-full lg:w-1/2 flex justify-center py-12 px-6 sm:px-12 relative xl:px-24">
-        <div className="absolute top-8 right-6 sm:right-12 flex items-center gap-3">
-          <button onClick={() => navigate('/')} className={`flex items-center gap-2 px-4 py-3 rounded-xl font-bold text-sm transition-all shadow-lg ${isDark ? 'bg-slate-800 border border-slate-700 text-slate-300 hover:bg-slate-700 shadow-black/30' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 shadow-slate-200/50'}`}>
-            <ArrowLeft className="w-4 h-4" /> Back
-          </button>
+        <div className="absolute top-4 right-4 sm:top-8 sm:right-12 flex items-center gap-2 sm:gap-3">
           <button 
             onClick={toggleTheme}
-            className={`p-3 rounded-xl border transition-all shadow-lg flex items-center justify-center ${isDark ? 'bg-slate-800 border-slate-700 text-amber-400 hover:bg-slate-700 shadow-black/30' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 shadow-slate-200/50'}`}
+            className={`p-2.5 sm:p-3 rounded-xl border transition-all shadow-lg flex items-center justify-center ${isDark ? 'bg-slate-800 border-slate-700 text-amber-400 hover:bg-slate-700 shadow-black/30' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 shadow-slate-200/50'}`}
           >
-            {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            {isDark ? <Sun className="w-4 h-4 sm:w-5 sm:h-5" /> : <Moon className="w-4 h-4 sm:w-5 sm:h-5" />}
+          </button>
+          <button onClick={() => navigate('/')} className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-lg ${isDark ? 'bg-slate-800 border border-slate-700 text-slate-300 hover:bg-slate-700 shadow-black/30' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 shadow-slate-200/50'}`}>
+            <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Back
           </button>
         </div>
 
-        <div className="max-w-[420px] w-full flex flex-col justify-center mt-12 lg:mt-0">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="space-y-8">
+        <div className="max-w-[420px] w-full flex flex-col justify-center mt-16 sm:mt-12 lg:mt-0">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="space-y-6 sm:space-y-8">
             <div className="text-center lg:text-left">
               <div className="flex justify-center lg:hidden mb-6">
-                <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-4 rounded-2xl shadow-lg shadow-emerald-500/20">
-                  <Leaf className="w-8 h-8 text-white" />
+                <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-3 sm:p-4 rounded-2xl shadow-lg shadow-emerald-500/20">
+                  <Leaf className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                 </div>
               </div>
-              <h2 className={`text-4xl font-extrabold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+              <h2 className={`text-2xl sm:text-4xl font-extrabold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
                 {isRegistering ? 'Start right now.' : 'Welcome back.'}
               </h2>
-              <p className={`mt-3 font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+              <p className={`mt-2 sm:mt-3 text-sm sm:text-base font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                 {isRegistering ? "Create your client account to track your earnings." : "Sign into your account to view your deliveries."}
               </p>
             </div>
 
-            <form className="space-y-5" onSubmit={handleSubmit}>
+            <form className="space-y-4 sm:space-y-5" onSubmit={handleSubmit}>
               <AnimatePresence mode="wait">
                 {error && <motion.div initial={{opacity:0, height:0}} animate={{opacity:1, height:'auto'}} exit={{opacity:0, height:0}} className="bg-red-950/30 text-red-400 p-4 rounded-2xl text-sm font-bold border border-red-900/50 flex items-start gap-3">
                   <div className="mt-0.5"><div className="w-2 h-2 rounded-full bg-red-500" /></div>
@@ -204,7 +204,7 @@ export function Login() {
                </p>
             </div>
             
-            <div className={`mt-12 rounded-2xl p-5 relative overflow-hidden border ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700' : 'bg-gradient-to-br from-slate-50 to-white border-slate-100'}`}>
+            <div className={`mt-8 sm:mt-12 rounded-2xl p-4 sm:p-5 relative overflow-hidden border ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700' : 'bg-gradient-to-br from-slate-50 to-white border-slate-100'}`}>
                 <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-emerald-400 to-emerald-600" />
                 <h4 className={`text-xs font-bold uppercase tracking-widest mb-2 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Staff & Administration</h4>
                 <p className={`text-sm font-medium leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>

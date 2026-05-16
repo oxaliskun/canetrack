@@ -85,7 +85,7 @@ export function AdminUsers() {
           <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-3 border ${isDark ? 'bg-indigo-900/30 text-indigo-400 border-indigo-800' : 'bg-indigo-100 text-indigo-700 border-indigo-200'}`}>
              <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" /> Identity Management
           </div>
-          <h1 className={`text-4xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>User Management</h1>
+          <h1 className={`text-2xl sm:text-4xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>User Management</h1>
           <p className={`mt-1 font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Provision, manage, and control system access.</p>
         </div>
         <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setShowAddUser(!showAddUser)} className="flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white px-5 py-3 rounded-2xl font-bold shadow-lg shadow-indigo-600/25 transition-all">

@@ -61,7 +61,7 @@ export function LandingPage() {
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               Trusted by 500+ Farmers Nationwide
             </div>
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight mb-6 leading-[1.1] text-slate-900">
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight mb-4 sm:mb-6 leading-[1.1] text-slate-900">
               Fair, transparent <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-emerald-400">harvest payouts</span> for everyone.
             </h1>
             <p className="text-lg md:text-xl text-slate-600 mb-8 leading-relaxed max-w-xl">
@@ -82,15 +82,15 @@ export function LandingPage() {
               </button>
             </div>
             
-            <div className="mt-12 flex items-center gap-8 text-sm text-slate-500 font-medium">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-emerald-500" /> Transparent Pricing
+            <div className="mt-6 sm:mt-12 flex flex-wrap items-center gap-3 sm:gap-8 text-xs sm:text-sm text-slate-500 font-medium">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" /> Transparent Pricing
               </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-emerald-500" /> Immutable Audits
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" /> Immutable Audits
               </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-emerald-500" /> 24/7 Support
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" /> 24/7 Support
               </div>
             </div>
           </motion.div>

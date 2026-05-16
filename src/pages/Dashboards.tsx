@@ -102,8 +102,8 @@ export function FarmerDashboard() {
           <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-3 border ${isDark ? 'bg-emerald-900/30 text-emerald-400 border-emerald-800' : 'bg-emerald-100 text-emerald-700 border-emerald-200'}`}>
              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Live Status
           </div>
-          <h1 className={`text-4xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Performance & Payouts</h1>
-          <p className={`mt-1 font-medium ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Track your harvest earnings and delivery history.</p>
+          <h1 className={`text-2xl sm:text-4xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Performance & Payouts</h1>
+          <p className={`mt-1 text-sm sm:text-base font-medium ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Track your harvest earnings and delivery history.</p>
         </div>
       </motion.div>
       
@@ -266,8 +266,8 @@ export function OperatorDashboard() {
           <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-3 border ${isDark ? 'bg-blue-900/30 text-blue-400 border-blue-800' : 'bg-blue-100 text-blue-700 border-blue-200'}`}>
              <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" /> Weighbridge Active
           </div>
-          <h1 className={`text-4xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Operator Terminal</h1>
-          <p className={`mt-1 font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Encode deliveries and manage active tickets.</p>
+          <h1 className={`text-2xl sm:text-4xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Operator Terminal</h1>
+          <p className={`mt-1 text-sm sm:text-base font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Encode deliveries and manage active tickets.</p>
         </div>
         <div className={`flex p-1 rounded-xl ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
            <button onClick={() => setView('ENCODE')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${view==='ENCODE' ? (isDark ? 'bg-slate-700 shadow-sm text-white' : 'bg-white shadow-sm text-slate-900') : (isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700')}`}>Encode & Active</button>
@@ -426,8 +426,8 @@ export function AdminDashboard() {
         <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-3 border w-max ${isDark ? 'bg-purple-900/30 text-purple-400 border-purple-800' : 'bg-purple-100 text-purple-700 border-purple-200'}`}>
            <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" /> Command Center
         </div>
-        <h1 className={`text-4xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Global Overview</h1>
-        <p className={`mt-2 font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Real-time platform analytics and system health metrics.</p>
+        <h1 className={`text-2xl sm:text-4xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Global Overview</h1>
+        <p className={`mt-2 text-sm sm:text-base font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Real-time platform analytics and system health metrics.</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -521,8 +521,8 @@ export function ReceiverDashboard() {
         <div className="flex items-center gap-3">
           <div className={`p-2 rounded-xl border shadow-lg text-white ${isDark ? 'bg-gradient-to-br from-orange-600 to-orange-700 border-orange-800 shadow-orange-900/30' : 'bg-gradient-to-br from-orange-500 to-orange-600 border-orange-200 shadow-orange-500/20'}`}><Clock className="w-6 h-6" /></div>
           <div>
-            <h1 className={`text-4xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Refinery Terminal</h1>
-            <p className={`mt-1 font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Verify deliveries and reconcile weights.</p>
+            <h1 className={`text-2xl sm:text-4xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Refinery Terminal</h1>
+            <p className={`mt-1 text-sm sm:text-base font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Verify deliveries and reconcile weights.</p>
           </div>
         </div>
         <div className={`flex p-1 rounded-xl ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
