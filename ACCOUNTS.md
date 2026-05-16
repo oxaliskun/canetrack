@@ -5,7 +5,7 @@ This document lists the pre-configured accounts for the CaneTrack system. These 
 ## 🔐 Default Credentials
 All accounts use the same password for testing convenience.
 
-- **Password**: `password`
+- **Password**: `canetrack2026`
 
 ### 🛠️ Admin Account
 - **Email**: `admin@canetrack.com`

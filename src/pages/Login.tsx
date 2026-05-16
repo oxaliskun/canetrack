@@ -213,10 +213,10 @@ export function Login() {
                 <div className={`mt-4 pt-4 border-t ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
                    <h4 className={`text-xs font-bold uppercase tracking-widest mb-2 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Demo Credentials</h4>
                    <ul className="text-xs font-mono space-y-1 text-slate-500">
-                     <li>Admin: <span className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>admin@canetrack.com</span> / password</li>
-                     <li>Operator: <span className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>operator@canetrack.com</span> / password</li>
-                     <li>Receiver: <span className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>receiver@canetrack.com</span> / password</li>
-                     <li>Farmer: <span className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>farmer@canetrack.com</span> / password</li>
+<li>Admin: <span className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>admin@canetrack.com</span> / canetrack2026</li>
+                      <li>Operator: <span className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>operator@canetrack.com</span> / canetrack2026</li>
+                      <li>Receiver: <span className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>receiver@canetrack.com</span> / canetrack2026</li>
+                      <li>Farmer: <span className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>farmer@canetrack.com</span> / canetrack2026</li>
                    </ul>
                 </div>
             </div>
