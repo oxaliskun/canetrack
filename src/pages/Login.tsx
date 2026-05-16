@@ -110,14 +110,14 @@ export function Login() {
       {/* Right Form Panel */}
       <div className="w-full lg:w-1/2 flex justify-center py-12 px-6 sm:px-12 relative xl:px-24">
         <div className="absolute top-8 right-6 sm:right-12 flex items-center gap-3">
+          <button onClick={() => navigate('/')} className={`flex items-center gap-2 px-4 py-3 rounded-xl font-bold text-sm transition-all shadow-lg ${isDark ? 'bg-slate-800 border border-slate-700 text-slate-300 hover:bg-slate-700 shadow-black/30' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 shadow-slate-200/50'}`}>
+            <ArrowLeft className="w-4 h-4" /> Back
+          </button>
           <button 
             onClick={toggleTheme}
             className={`p-3 rounded-xl border transition-all shadow-lg flex items-center justify-center ${isDark ? 'bg-slate-800 border-slate-700 text-amber-400 hover:bg-slate-700 shadow-black/30' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 shadow-slate-200/50'}`}
           >
             {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </button>
-          <button onClick={() => navigate('/')} className={`font-bold text-sm flex items-center gap-2 px-4 py-2.5 rounded-xl transition-colors ${isDark ? 'text-slate-400 hover:text-emerald-400 hover:bg-slate-800' : 'text-slate-500 hover:text-emerald-600 hover:bg-emerald-50'}`}>
-            Go Back <ArrowLeft className="w-4 h-4" />
           </button>
         </div>
 
