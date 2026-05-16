@@ -1,0 +1,107 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         String   // FARMER, OPERATOR, RECEIVER, ADMIN
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  farms           Farm[]                 @relation("FarmerFarms")
+  tickets         WeightTicket[]         @relation("OperatorTickets")
+  reconciliations ReconciliationRecord[] @relation("ReceiverReconciliations")
+  auditLogs       AuditLog[]             @relation("UserAudits")
+  notifications   Notification[]
+}
+
+model Farm {
+  id        String   @id @default(cuid())
+  farmName  String
+  location  String
+  barangay  String?
+  hectares  Float?
+  ownerId   String
+  createdAt DateTime @default(now())
+
+  owner   User           @relation("FarmerFarms", fields: [ownerId], references: [id])
+  tickets WeightTicket[]
+}
+
+model WeightTicket {
+  id             String    @id @default(cuid())
+  ticketNo       String    @unique @default(cuid())
+  truckPlate     String
+  farmId         String
+  grossWeight    Float
+  tareWeight     Float
+  millWeight     Float
+  pricePerKg     Float     @default(2.50)
+  totalValue     Float     @default(0)
+  status         String    @default("PENDING") // PENDING, SUBMITTED, RECONCILED, DISPUTED
+  notes          String?
+  operatorId     String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  farm           Farm       @relation(fields: [farmId], references: [id])
+  operator       User       @relation("OperatorTickets", fields: [operatorId], references: [id])
+  reconciliation ReconciliationRecord?
+}
+
+model ReconciliationRecord {
+  id             String   @id @default(cuid())
+  ticketId       String   @unique
+  refineryWeight Float
+  difference     Float
+  percentDiff    Float
+  flagged        Boolean  @default(false)
+  notes          String?
+  receiverId     String
+  createdAt      DateTime @default(now())
+  resolvedAt     DateTime?
+
+  ticket   WeightTicket @relation(fields: [ticketId], references: [id])
+  receiver User         @relation("ReceiverReconciliations", fields: [receiverId], references: [id])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+  action     String
+  targetId   String?
+  targetType String?
+  ipAddress  String?
+  userAgent  String?
+  timestamp  DateTime @default(now())
+
+  user User @relation("UserAudits", fields: [userId], references: [id])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model SystemSettings {
+  id                String   @id @default(cuid())
+  varianceThreshold Float    @default(50)
+  basePricePerKg    Float    @default(2.50)
+  updatedAt         DateTime @updatedAt
+}
