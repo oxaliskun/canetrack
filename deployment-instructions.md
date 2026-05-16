@@ -76,7 +76,7 @@ git push -u origin main
 | Region         | Singapore                                              |
 | Branch         | `main`                                                 |
 | Runtime        | `Node`                                                 |
-| Build Command  | `npm install && npx prisma generate && npx prisma db push` |
+| Build Command  | `npm install && npx prisma generate && npx prisma db push && npx prisma db seed` |
 | Start Command  | `npm start`                                            |
 | Plan           | Free                                                   |
 
