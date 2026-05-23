@@ -43,12 +43,6 @@ export function LandingPage() {
         <div className="absolute top-40 right-[-10%] w-[35%] h-[35%] rounded-full bg-blue-100/40 blur-[100px] pointer-events-none" />
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[60%] h-[30%] rounded-full bg-emerald-50/50 blur-[80px] pointer-events-none" />
         
-        {/* Background image overlay */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="w-full h-full bg-[url('https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&q=80&w=1920')] bg-cover bg-right opacity-[0.07]" />
-          <div className="absolute inset-0 bg-gradient-to-r from-white/40 to-transparent" />
-        </div>
-
         <div className="grid lg:grid-cols-2 gap-16 items-center relative">
           
           {/* Left Hero Text */}
@@ -105,7 +99,7 @@ export function LandingPage() {
           >
             {/* Background decorative image */}
             <div className="absolute inset-0 -z-10 opacity-15">
-              <div className="w-full h-full bg-[url('https://images.unsplash.com/photo-1592982537447-6f29e160a3bb?auto=format&fit=crop&q=80&w=800')] bg-cover bg-right rounded-[3rem] blur-sm" />
+              <div className="w-full h-full bg-[url('https://images.unsplash.com/photo-1592982537447-6f29e160a3bb?auto=format&fit=crop&q=80&w=800')] bg-cover bg-center rounded-[3rem] blur-sm" />
             </div>
             
             {/* Main Mock Card */}
@@ -160,7 +154,7 @@ export function LandingPage() {
             <motion.div
                animate={{ y: [0, 8, 0] }}
                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-               className="absolute -left-4 top-32 z-30 hidden lg:flex items-center gap-3 bg-white/90 backdrop-blur-xl px-5 py-3 rounded-2xl shadow-xl border border-slate-200/50"
+               className="absolute -right-4 -top-4 z-30 hidden lg:flex items-center gap-3 bg-white/90 backdrop-blur-xl px-5 py-3 rounded-2xl shadow-xl border border-slate-200/50"
             >
                <div className="p-2 bg-emerald-100 rounded-lg">
                  <BarChart3 className="w-5 h-5 text-emerald-600" />
