@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Users, UserPlus, Shield, Activity, Power, Lock, Search, UserCheck } from 'lucide-react';
+import { Users, UserPlus, Shield, Activity, Power, Lock, Search, UserCheck, Trash2 } from 'lucide-react';
 import api from '../../api/axiosInstance';
 import { useTheme } from '../../context/ThemeContext';
 import { toast } from 'sonner';
@@ -60,6 +60,17 @@ export function AdminUsers() {
        toast.success("Password reset successfully");
     } catch {
        toast.error("Failed to reset password");
+    }
+  };
+
+  const handleDeleteUser = async (id: string, name: string) => {
+    if (!confirm(`Are you sure you want to permanently delete "${name}"? This action cannot be undone.`)) return;
+    try {
+      await api.delete(`/users/${id}`);
+      toast.success(`User "${name}" deleted successfully`);
+      fetchUsers();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to delete user');
     }
   };
 
@@ -169,9 +180,12 @@ export function AdminUsers() {
                      <Power className="w-4 h-4" />
                    </button>
                    <button onClick={() => handleResetPassword(u.id)} className={`p-2 rounded-xl border border-transparent transition-colors ${isDark ? 'text-slate-500 hover:text-indigo-400 hover:bg-indigo-900/30 hover:border-indigo-800' : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200'}`} title="Reset Password">
-                     <Lock className="w-4 h-4" />
-                   </button>
-                </td>
+                      <Lock className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => handleDeleteUser(u.id, u.name)} className={`p-2 rounded-xl border border-transparent transition-colors ${isDark ? 'text-slate-500 hover:text-red-400 hover:bg-red-900/30 hover:border-red-800' : 'text-slate-400 hover:text-red-600 hover:bg-red-50 hover:border-red-200'}`} title="Delete User">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                 </td>
               </tr>
             ))}
             {filteredUsers.length === 0 && <tr><td colSpan={5} className={`px-6 py-16 text-center text-lg ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>No users found.</td></tr>}

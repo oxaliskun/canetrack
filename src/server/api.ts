@@ -342,6 +342,24 @@ apiRouter.patch('/users/:id/password', authMiddleware, roleGuard(['ADMIN']), asy
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 });
 
+apiRouter.delete('/users/:id', authMiddleware, roleGuard(['ADMIN']), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+     const { id } = req.params;
+     if (id === req.user!.userId) {
+       res.status(400).json({ message: 'Cannot delete your own account' });
+       return;
+     }
+     const user = await prisma.user.findUnique({ where: { id } });
+     if (!user) {
+       res.status(404).json({ message: 'User not found' });
+       return;
+     }
+     await prisma.user.delete({ where: { id } });
+     await writeAuditLog(req.user!.userId, 'DELETE_USER', id, 'User');
+     res.json({ message: 'User deleted successfully' });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+});
+
 // --- SETTINGS ---
 apiRouter.get('/settings', authMiddleware, roleGuard(['ADMIN']), async (req: AuthRequest, res: Response) => {
    try {
