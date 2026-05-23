@@ -125,7 +125,7 @@ export function LandingPage() {
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="grid grid-cols-3 gap-4 mb-6">
                 <div className="bg-gradient-to-br from-slate-50 to-slate-100/50 p-4 rounded-2xl border border-slate-100">
                   <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Mill Weight</span>
                   <span className="text-2xl font-black text-slate-800">15,400 <span className="text-base text-slate-500 font-semibold">kg</span></span>
@@ -133,6 +133,10 @@ export function LandingPage() {
                 <div className="bg-gradient-to-br from-slate-50 to-slate-100/50 p-4 rounded-2xl border border-slate-100">
                   <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Refinery</span>
                   <span className="text-2xl font-black text-slate-800">15,380 <span className="text-base text-slate-500 font-semibold">kg</span></span>
+                </div>
+                <div className="bg-gradient-to-br from-slate-50 to-slate-100/50 p-4 rounded-2xl border border-slate-100">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Monthly Deliveries</span>
+                  <span className="text-2xl font-black text-slate-800">2,847</span>
                 </div>
               </div>
 
@@ -156,20 +160,6 @@ export function LandingPage() {
               <img src="https://images.unsplash.com/photo-1592982537447-6f29e160a3bb?auto=format&fit=crop&q=80&w=300&h=300" alt="Sugarcane field" className="w-48 h-48 object-cover" />
             </motion.div>
 
-            {/* Floating stats badge */}
-            <motion.div
-               animate={{ y: [0, 8, 0] }}
-               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-               className="absolute -left-4 bottom-4 z-30 hidden lg:flex items-center gap-3 bg-white/90 backdrop-blur-xl px-5 py-3 rounded-2xl shadow-xl border border-slate-200/50"
-            >
-               <div className="p-2 bg-emerald-100 rounded-lg">
-                 <BarChart3 className="w-5 h-5 text-emerald-600" />
-               </div>
-               <div>
-                 <p className="text-xs text-slate-500 font-bold uppercase">Monthly Deliveries</p>
-                 <p className="text-lg font-black text-slate-900">2,847</p>
-               </div>
-             </motion.div>
           </motion.div>
         </div>
       </main>
