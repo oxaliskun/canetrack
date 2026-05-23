@@ -354,7 +354,37 @@ apiRouter.delete('/users/:id', authMiddleware, roleGuard(['ADMIN']), async (req:
        res.status(404).json({ message: 'User not found' });
        return;
      }
-     await prisma.user.delete({ where: { id } });
+
+     await prisma.$transaction(async (tx) => {
+       // Delete notifications & audit logs
+       await tx.notification.deleteMany({ where: { userId: id } });
+       await tx.auditLog.deleteMany({ where: { userId: id } });
+
+       // Delete reconciliation records made by this user (receiver)
+       await tx.reconciliationRecord.deleteMany({ where: { receiverId: id } });
+
+       // Delete tickets made by this user (operator) & their reconciliations
+       const operatorTickets = await tx.weightTicket.findMany({ where: { operatorId: id } });
+       for (const ticket of operatorTickets) {
+         await tx.reconciliationRecord.deleteMany({ where: { ticketId: ticket.id } });
+       }
+       await tx.weightTicket.deleteMany({ where: { operatorId: id } });
+
+       // Delete farms owned by this user (farmer) & their tickets & reconciliations
+       const farms = await tx.farm.findMany({ where: { ownerId: id } });
+       for (const farm of farms) {
+         const farmTickets = await tx.weightTicket.findMany({ where: { farmId: farm.id } });
+         for (const ticket of farmTickets) {
+           await tx.reconciliationRecord.deleteMany({ where: { ticketId: ticket.id } });
+         }
+         await tx.weightTicket.deleteMany({ where: { farmId: farm.id } });
+       }
+       await tx.farm.deleteMany({ where: { ownerId: id } });
+
+       // Finally delete the user
+       await tx.user.delete({ where: { id } });
+     });
+
      await writeAuditLog(req.user!.userId, 'DELETE_USER', id, 'User');
      res.json({ message: 'User deleted successfully' });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
