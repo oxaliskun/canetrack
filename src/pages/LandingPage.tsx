@@ -44,8 +44,9 @@ export function LandingPage() {
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[60%] h-[30%] rounded-full bg-emerald-50/50 blur-[80px] pointer-events-none" />
         
         {/* Background image overlay */}
-        <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
-          <div className="w-full h-full bg-[url('https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&q=80&w=1920')] bg-cover bg-center" />
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="w-full h-full bg-[url('https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&q=80&w=1920')] bg-cover bg-right opacity-[0.07]" />
+          <div className="absolute inset-0 bg-gradient-to-r from-white/40 to-transparent" />
         </div>
 
         <div className="grid lg:grid-cols-2 gap-16 items-center relative">
@@ -103,8 +104,8 @@ export function LandingPage() {
             className="relative lg:block"
           >
             {/* Background decorative image */}
-            <div className="absolute inset-0 -z-10 opacity-10">
-              <div className="w-full h-full bg-[url('https://images.unsplash.com/photo-1592982537447-6f29e160a3bb?auto=format&fit=crop&q=80&w=800')] bg-cover bg-center rounded-[3rem] blur-sm" />
+            <div className="absolute inset-0 -z-10 opacity-15">
+              <div className="w-full h-full bg-[url('https://images.unsplash.com/photo-1592982537447-6f29e160a3bb?auto=format&fit=crop&q=80&w=800')] bg-cover bg-right rounded-[3rem] blur-sm" />
             </div>
             
             {/* Main Mock Card */}
@@ -159,23 +160,23 @@ export function LandingPage() {
             <motion.div
                animate={{ y: [0, 8, 0] }}
                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-               className="absolute -left-8 top-12 z-30 hidden lg:flex items-center gap-3 bg-white/90 backdrop-blur-xl px-5 py-3 rounded-2xl shadow-xl border border-slate-200/50"
+               className="absolute -left-4 top-32 z-30 hidden lg:flex items-center gap-3 bg-white/90 backdrop-blur-xl px-5 py-3 rounded-2xl shadow-xl border border-slate-200/50"
             >
-              <div className="p-2 bg-emerald-100 rounded-lg">
-                <BarChart3 className="w-5 h-5 text-emerald-600" />
-              </div>
-              <div>
-                <p className="text-xs text-slate-500 font-bold uppercase">Monthly Deliveries</p>
-                <p className="text-lg font-black text-slate-900">2,847</p>
-              </div>
-            </motion.div>
+               <div className="p-2 bg-emerald-100 rounded-lg">
+                 <BarChart3 className="w-5 h-5 text-emerald-600" />
+               </div>
+               <div>
+                 <p className="text-xs text-slate-500 font-bold uppercase">Monthly Deliveries</p>
+                 <p className="text-lg font-black text-slate-900">2,847</p>
+               </div>
+             </motion.div>
           </motion.div>
         </div>
       </main>
 
       {/* Stats Bar */}
       <section className="relative z-10 py-12 bg-gradient-to-r from-emerald-600 to-emerald-500">
-        <div className="absolute inset-0 opacity-10">
+        <div className="absolute inset-0 opacity-25">
           <div className="w-full h-full bg-[url('https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&q=80&w=1920')] bg-cover bg-center" />
         </div>
         <div className="max-w-7xl mx-auto px-6 relative">
@@ -203,7 +204,7 @@ export function LandingPage() {
       {/* Feature Bento Grid */}
       <section id="features" className="relative z-10 py-24 bg-white">
         {/* Subtle background pattern */}
-        <div className="absolute inset-0 opacity-[0.02] pointer-events-none">
+        <div className="absolute inset-0 opacity-15 pointer-events-none">
           <div className="w-full h-full bg-[url('https://images.unsplash.com/photo-1536306281595-54745b543498?auto=format&fit=crop&q=80&w=1920')] bg-cover bg-center" />
         </div>
         
@@ -261,7 +262,7 @@ export function LandingPage() {
 
       {/* How It Works Section */}
       <section id="roles" className="relative z-10 py-24 bg-slate-50">
-        <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
+        <div className="absolute inset-0 opacity-20 pointer-events-none">
           <div className="w-full h-full bg-[url('https://images.unsplash.com/photo-1560493676-04079c3e121d?auto=format&fit=crop&q=80&w=1920')] bg-cover bg-center" />
         </div>
         
@@ -406,7 +407,7 @@ export function LandingPage() {
 
       {/* Testimonials Section */}
       <section id="testimonials" className="relative z-10 py-24 bg-slate-50">
-        <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
+        <div className="absolute inset-0 opacity-20 pointer-events-none">
           <div className="w-full h-full bg-[url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&q=80&w=1920')] bg-cover bg-center" />
         </div>
         
@@ -488,7 +489,7 @@ export function LandingPage() {
       {/* CTA Section */}
       <section className="relative z-10 py-24 bg-gradient-to-br from-emerald-600 via-emerald-500 to-emerald-400 overflow-hidden">
         {/* Background images with opacity */}
-        <div className="absolute inset-0 opacity-10">
+        <div className="absolute inset-0 opacity-30">
           <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&q=80&w=1920')] bg-cover bg-center" />
         </div>
         <div className="absolute top-0 left-0 w-full h-full">
@@ -524,7 +525,7 @@ export function LandingPage() {
 
       {/* Footer */}
       <footer className="relative z-10 bg-slate-900 text-slate-400 py-16">
-        <div className="absolute inset-0 opacity-5">
+        <div className="absolute inset-0 opacity-20">
           <div className="w-full h-full bg-[url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&q=80&w=1920')] bg-cover bg-center" />
         </div>
         

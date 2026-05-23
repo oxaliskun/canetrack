@@ -51,7 +51,7 @@ export function Login() {
       <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] rounded-full blur-[80px] pointer-events-none ${isDark ? 'bg-emerald-950/20' : 'bg-emerald-50/30'}`} />
       
       {/* Background image overlay */}
-      <div className={`absolute inset-0 pointer-events-none ${isDark ? 'opacity-[0.04]' : 'opacity-[0.02]'}`}>
+      <div className={`absolute inset-0 pointer-events-none ${isDark ? 'opacity-20' : 'opacity-15'}`}>
         <div className="w-full h-full bg-[url('https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&q=80&w=1920')] bg-cover bg-center" />
       </div>
 
