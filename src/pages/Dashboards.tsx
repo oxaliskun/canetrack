@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axiosInstance';
 import { formatWeight, formatDate, formatCurrency } from '../lib/utils';
-import { FileText, CheckCircle, AlertTriangle, Clock, Activity, DollarSign, Database, Plus, Users, UserPlus, TrendingUp, Printer, Bell, Download, Sprout, Shield, BarChart3, Truck, Scale, Leaf } from 'lucide-react';
+import { FileText, CheckCircle, AlertTriangle, Clock, Activity, DollarSign, Database, Plus, Users, UserPlus, TrendingUp, Printer, Bell, Download, Sprout, Shield, BarChart3, Truck, Scale, Leaf, Phone, MapPin } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
@@ -53,6 +53,53 @@ export const TableWrapper = ({ children, delay = 0, title, icon: Icon, action }:
     </motion.div>
   );
 };
+
+function ProfileCard() {
+  const { user } = useAuth();
+  const { isDark } = useTheme();
+  const navigate = useNavigate();
+
+  if (!user) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.4 }}
+      className={`rounded-2xl border p-5 flex flex-col gap-3 relative overflow-hidden group cursor-pointer hover:shadow-lg transition-all ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}
+      onClick={() => navigate('/dashboard/profile')}
+    >
+      <div className={`absolute -right-8 -top-8 w-20 h-20 blur-2xl opacity-20 rounded-full ${isDark ? 'bg-emerald-500' : 'bg-emerald-400'}`} />
+      <div className="flex items-center gap-3">
+        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-base font-black border-2 shrink-0 ${isDark ? 'bg-emerald-900/50 text-emerald-400 border-slate-700' : 'bg-emerald-100 text-emerald-600 border-white'}`}>
+          {user.profilePicture ? (
+            <img src={user.profilePicture} alt="" className="w-full h-full rounded-full object-cover" />
+          ) : (
+            user.name?.charAt(0) || 'U'
+          )}
+        </div>
+        <div className="min-w-0">
+          <p className={`font-extrabold text-sm truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>{user.name}</p>
+          <p className={`text-[10px] font-bold uppercase tracking-widest ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>{user.role.replace('_', ' ')}</p>
+        </div>
+      </div>
+      {(user.contactNumber || user.address) && (
+        <div className={`pt-3 border-t text-[11px] space-y-1.5 ${isDark ? 'border-slate-700 text-slate-400' : 'border-slate-100 text-slate-500'}`}>
+          {user.contactNumber && (
+            <div className="flex items-center gap-2">
+              <Phone className="w-3 h-3 shrink-0" />
+              <span className="truncate">{user.contactNumber}</span>
+            </div>
+          )}
+          {user.address && (
+            <div className="flex items-center gap-2">
+              <MapPin className="w-3 h-3 shrink-0" />
+              <span className="truncate">{user.address}</span>
+            </div>
+          )}
+        </div>
+      )}
+    </motion.div>
+  );
+}
 
 export function FarmerDashboard() {
   const [tickets, setTickets] = useState([]);
@@ -104,6 +151,9 @@ export function FarmerDashboard() {
           </div>
           <h1 className={`text-2xl sm:text-4xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Performance & Payouts</h1>
           <p className={`mt-1 text-sm sm:text-base font-medium ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Track your harvest earnings and delivery history.</p>
+        </div>
+        <div className="hidden sm:block w-64">
+          <ProfileCard />
         </div>
       </motion.div>
       
@@ -261,7 +311,7 @@ export function OperatorDashboard() {
       {/* Decorative background */}
       <div className={`absolute top-0 right-0 w-[25%] h-[25%] rounded-full blur-[80px] pointer-events-none ${isDark ? 'bg-blue-950/30' : 'bg-blue-50/50'}`} />
       
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 relative">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-4 relative">
         <div>
           <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-3 border ${isDark ? 'bg-blue-900/30 text-blue-400 border-blue-800' : 'bg-blue-100 text-blue-700 border-blue-200'}`}>
              <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" /> Weighbridge Active
@@ -269,9 +319,14 @@ export function OperatorDashboard() {
           <h1 className={`text-2xl sm:text-4xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Operator Terminal</h1>
           <p className={`mt-1 text-sm sm:text-base font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Encode deliveries and manage active tickets.</p>
         </div>
-        <div className={`flex p-1 rounded-xl ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
-           <button onClick={() => setView('ENCODE')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${view==='ENCODE' ? (isDark ? 'bg-slate-700 shadow-sm text-white' : 'bg-white shadow-sm text-slate-900') : (isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700')}`}>Encode & Active</button>
-           <button onClick={() => setView('HISTORY')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${view==='HISTORY' ? (isDark ? 'bg-slate-700 shadow-sm text-white' : 'bg-white shadow-sm text-slate-900') : (isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700')}`}>Ticket History</button>
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:block w-56">
+            <ProfileCard />
+          </div>
+          <div className={`flex p-1 rounded-xl ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
+             <button onClick={() => setView('ENCODE')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${view==='ENCODE' ? (isDark ? 'bg-slate-700 shadow-sm text-white' : 'bg-white shadow-sm text-slate-900') : (isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700')}`}>Encode & Active</button>
+             <button onClick={() => setView('HISTORY')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${view==='HISTORY' ? (isDark ? 'bg-slate-700 shadow-sm text-white' : 'bg-white shadow-sm text-slate-900') : (isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700')}`}>Ticket History</button>
+          </div>
         </div>
       </div>
       
@@ -422,12 +477,17 @@ export function AdminDashboard() {
       <div className={`absolute top-0 right-0 w-[30%] h-[30%] rounded-full blur-[80px] pointer-events-none ${isDark ? 'bg-purple-950/30' : 'bg-purple-50/50'}`} />
       <div className={`absolute bottom-0 left-0 w-[20%] h-[20%] rounded-full blur-[60px] pointer-events-none ${isDark ? 'bg-indigo-950/20' : 'bg-indigo-50/30'}`} />
       
-      <div className="flex flex-col mb-8 relative">
-        <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-3 border w-max ${isDark ? 'bg-purple-900/30 text-purple-400 border-purple-800' : 'bg-purple-100 text-purple-700 border-purple-200'}`}>
-           <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" /> Command Center
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 relative">
+        <div>
+          <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-3 border w-max ${isDark ? 'bg-purple-900/30 text-purple-400 border-purple-800' : 'bg-purple-100 text-purple-700 border-purple-200'}`}>
+             <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse" /> Command Center
+          </div>
+          <h1 className={`text-2xl sm:text-4xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Global Overview</h1>
+          <p className={`mt-2 text-sm sm:text-base font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Real-time platform analytics and system health metrics.</p>
         </div>
-        <h1 className={`text-2xl sm:text-4xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Global Overview</h1>
-        <p className={`mt-2 text-sm sm:text-base font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Real-time platform analytics and system health metrics.</p>
+        <div className="hidden sm:block w-64 mt-4 sm:mt-0">
+          <ProfileCard />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -517,7 +577,7 @@ export function ReceiverDashboard() {
       {/* Decorative background */}
       <div className={`absolute top-0 right-0 w-[25%] h-[25%] rounded-full blur-[80px] pointer-events-none ${isDark ? 'bg-orange-950/30' : 'bg-orange-50/50'}`} />
       
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 relative">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6 relative">
         <div className="flex items-center gap-3">
           <div className={`p-2 rounded-xl border shadow-lg text-white ${isDark ? 'bg-gradient-to-br from-orange-600 to-orange-700 border-orange-800 shadow-orange-900/30' : 'bg-gradient-to-br from-orange-500 to-orange-600 border-orange-200 shadow-orange-500/20'}`}><Clock className="w-6 h-6" /></div>
           <div>
@@ -525,9 +585,14 @@ export function ReceiverDashboard() {
             <p className={`mt-1 text-sm sm:text-base font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Verify deliveries and reconcile weights.</p>
           </div>
         </div>
-        <div className={`flex p-1 rounded-xl ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
-           <button onClick={() => setView('QUEUE')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${view==='QUEUE' ? (isDark ? 'bg-slate-700 shadow-sm text-white' : 'bg-white shadow-sm text-slate-900') : (isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700')}`}>Incoming Queue</button>
-           <button onClick={() => setView('HISTORY')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${view==='HISTORY' ? (isDark ? 'bg-slate-700 shadow-sm text-white' : 'bg-white shadow-sm text-slate-900') : (isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700')}`}>Reconciliation History</button>
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:block w-56">
+            <ProfileCard />
+          </div>
+          <div className={`flex p-1 rounded-xl ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
+             <button onClick={() => setView('QUEUE')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${view==='QUEUE' ? (isDark ? 'bg-slate-700 shadow-sm text-white' : 'bg-white shadow-sm text-slate-900') : (isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700')}`}>Incoming Queue</button>
+             <button onClick={() => setView('HISTORY')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${view==='HISTORY' ? (isDark ? 'bg-slate-700 shadow-sm text-white' : 'bg-white shadow-sm text-slate-900') : (isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700')}`}>Reconciliation History</button>
+          </div>
         </div>
       </div>
 

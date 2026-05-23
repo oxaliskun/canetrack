@@ -11,7 +11,7 @@ import { SearchInput } from '../../components/SearchInput';
 export function AdminUsers() {
   const [users, setUsers] = useState([]);
   const [showAddUser, setShowAddUser] = useState(false);
-  const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: 'OPERATOR' });
+  const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: 'OPERATOR', contactNumber: '', address: '' });
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const { isDark } = useTheme();
@@ -32,10 +32,10 @@ export function AdminUsers() {
   const handleCreateUser = async (e: React.FormEvent) => {
      e.preventDefault();
      try {
-       await api.post('/users', newUser);
-       toast.success('User created successfully');
-       setShowAddUser(false);
-       setNewUser({ name: '', email: '', password: '', role: 'OPERATOR' });
+      await api.post('/users', newUser);
+        toast.success('User created successfully');
+        setShowAddUser(false);
+        setNewUser({ name: '', email: '', password: '', role: 'OPERATOR', contactNumber: '', address: '' });
        fetchUsers();
      } catch (error: any) {
        toast.error(error.response?.data?.message || 'Failed to create user.');
@@ -128,6 +128,10 @@ export function AdminUsers() {
                    <option value="OPERATOR">Operator</option><option value="RECEIVER">Receiver</option><option value="ADMIN">Admin</option>
                  </select>
                </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+               <div><label className={`block text-xs font-extrabold uppercase tracking-widest mb-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Contact Number</label><input value={newUser.contactNumber} onChange={e=>setNewUser({...newUser, contactNumber: e.target.value})} className={`w-full px-5 py-3 border rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-semibold ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`} placeholder="+63 912 345 6789" /></div>
+               <div><label className={`block text-xs font-extrabold uppercase tracking-widest mb-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Address</label><input value={newUser.address} onChange={e=>setNewUser({...newUser, address: e.target.value})} className={`w-full px-5 py-3 border rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-semibold ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`} placeholder="Office / station location" /></div>
             </div>
             <div className="flex gap-3">
               <button type="submit" className="bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white px-8 py-3 rounded-xl font-bold transition shadow-lg shadow-indigo-600/30">Provision User</button>

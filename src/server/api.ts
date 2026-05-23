@@ -53,10 +53,16 @@ const writeAuditLog = async (userId: string, action: string, targetId?: string, 
 // --- AUTH ROUTES ---
 apiRouter.post('/auth/register', async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, contactNumber, address, farmName, farmLocation } = req.body;
     // Clients registering publicly are always FARMER
     const role = 'FARMER';
-    
+
+    // Validation
+    if (!name || !email || !password) {
+      res.status(400).json({ message: 'Name, email, and password are required' });
+      return;
+    }
+
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
       res.status(409).json({ message: 'Email already in use' });
@@ -64,14 +70,14 @@ apiRouter.post('/auth/register', async (req: Request, res: Response): Promise<vo
     }
     const passwordHash = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
-      data: { name, email, passwordHash, role },
-      select: { id: true, name: true, email: true, role: true }
+      data: { name, email, passwordHash, role, contactNumber, address },
+      select: { id: true, name: true, email: true, role: true, contactNumber: true, address: true, profilePicture: true }
     });
     // Auto-create their first farm configuration
     await prisma.farm.create({
       data: {
-        farmName: `${name}'s Farm`,
-        location: 'Local Region',
+        farmName: farmName || `${name}'s Farm`,
+        location: farmLocation || 'Local Region',
         barangay: 'Unspecified',
         hectares: 5,
         ownerId: user.id
@@ -97,7 +103,7 @@ apiRouter.post('/auth/login', async (req: Request, res: Response): Promise<void>
        return;
     }
     const token = jwt.sign({ userId: user.id, role: user.role, name: user.name, email: user.email }, JWT_SECRET, { expiresIn: '8h' });
-    res.json({ token, user: { id: user.id, userId: user.id, name: user.name, email: user.email, role: user.role } });
+    res.json({ token, user: { id: user.id, userId: user.id, name: user.name, email: user.email, role: user.role, contactNumber: user.contactNumber, address: user.address, profilePicture: user.profilePicture } });
   } catch (e: any) {
     res.status(500).json({ message: e.message });
   }
@@ -105,16 +111,75 @@ apiRouter.post('/auth/login', async (req: Request, res: Response): Promise<void>
 
 apiRouter.get('/auth/me', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-     const user = await prisma.user.findUnique({ where: { id: req.user!.userId } });
+     const user = await prisma.user.findUnique({
+       where: { id: req.user!.userId },
+       include: { farms: { select: { id: true, farmName: true, location: true, barangay: true, hectares: true } } }
+     });
      if (!user) return res.status(404).json({ message: 'User not found' });
-     res.json({ user: { id: user.id, userId: user.id, name: user.name, email: user.email, role: user.role } });
+     res.json({ user: { id: user.id, userId: user.id, name: user.name, email: user.email, role: user.role, contactNumber: user.contactNumber, address: user.address, profilePicture: user.profilePicture, farms: user.farms } });
   } catch(e: any) { res.status(500).json({ message: e.message }); }
+});
+
+// --- PROFILE ROUTES (self-service) ---
+apiRouter.get('/users/profile', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user!.userId },
+      include: { farms: { select: { id: true, farmName: true, location: true, barangay: true, hectares: true } } }
+    });
+    if (!user) { res.status(404).json({ message: 'User not found' }); return; }
+    res.json({ user: { id: user.id, userId: user.id, name: user.name, email: user.email, role: user.role, contactNumber: user.contactNumber, address: user.address, profilePicture: user.profilePicture, farms: user.farms } });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+});
+
+apiRouter.patch('/users/profile', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { name, contactNumber, address, profilePicture, farmName, farmLocation } = req.body;
+
+    if (name !== undefined && !name.trim()) {
+      res.status(400).json({ message: 'Name cannot be empty' });
+      return;
+    }
+
+    const updateData: any = {};
+    if (name !== undefined) updateData.name = name;
+    if (contactNumber !== undefined) updateData.contactNumber = contactNumber;
+    if (address !== undefined) updateData.address = address;
+    if (profilePicture !== undefined) updateData.profilePicture = profilePicture;
+
+    const user = await prisma.user.update({
+      where: { id: req.user!.userId },
+      data: updateData,
+      select: { id: true, name: true, email: true, role: true, contactNumber: true, address: true, profilePicture: true }
+    });
+
+    // If user is a FARMER, allow updating farm info
+    if (req.user!.role === 'FARMER') {
+      const farmUpdate: any = {};
+      if (farmName !== undefined) farmUpdate.farmName = farmName;
+      if (farmLocation !== undefined) farmUpdate.location = farmLocation;
+      if (Object.keys(farmUpdate).length > 0) {
+        await prisma.farm.updateMany({
+          where: { ownerId: req.user!.userId },
+          data: farmUpdate
+        });
+      }
+    }
+
+    // Fetch farm data for farmer
+    let farms: any[] = [];
+    if (req.user!.role === 'FARMER') {
+      farms = await prisma.farm.findMany({ where: { ownerId: req.user!.userId } });
+    }
+
+    res.json({ message: 'Profile updated successfully', user: { ...user, farms } });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
 });
 
 // Admin creates staff users
 apiRouter.post('/users', authMiddleware, roleGuard(['ADMIN']), async (req: AuthRequest, res: Response): Promise<void> => {
    try {
-     const { name, email, password, role } = req.body;
+     const { name, email, password, role, contactNumber, address } = req.body;
      const existing = await prisma.user.findUnique({ where: { email } });
      if (existing) {
        res.status(409).json({ message: 'Email already in use' });
@@ -122,8 +187,8 @@ apiRouter.post('/users', authMiddleware, roleGuard(['ADMIN']), async (req: AuthR
      }
      const passwordHash = await bcrypt.hash(password, 10);
      const user = await prisma.user.create({
-       data: { name, email, passwordHash, role },
-       select: { id: true, name: true, email: true, role: true }
+       data: { name, email, passwordHash, role, contactNumber, address },
+       select: { id: true, name: true, email: true, role: true, contactNumber: true, address: true }
      });
      res.status(201).json({ message: 'Staff user created successfully', user });
    } catch (e: any) { res.status(500).json({ message: e.message }); }
@@ -316,7 +381,7 @@ apiRouter.get('/farms', authMiddleware, async (req: AuthRequest, res: Response) 
 apiRouter.get('/users', authMiddleware, roleGuard(['ADMIN']), async (req: AuthRequest, res: Response) => {
    try {
      const users = await prisma.user.findMany({
-       select: { id: true, name: true, email: true, role: true, isActive: true, createdAt: true },
+       select: { id: true, name: true, email: true, role: true, isActive: true, contactNumber: true, address: true, createdAt: true },
        orderBy: { createdAt: 'desc' }
      });
      res.json({ users });
@@ -332,13 +397,18 @@ apiRouter.patch('/users/:id/status', authMiddleware, roleGuard(['ADMIN']), async
    } catch (e: any) { res.status(500).json({ message: e.message }); }
 });
 
-apiRouter.patch('/users/:id/password', authMiddleware, roleGuard(['ADMIN']), async (req: AuthRequest, res: Response) => {
+apiRouter.patch('/users/:id/password', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
      const { id } = req.params;
+     // Allow only if user is updating their own password OR is admin
+     if (id !== req.user!.userId && req.user!.role !== 'ADMIN') {
+       res.status(403).json({ message: 'Access denied' });
+       return;
+     }
      const { password } = req.body;
      const passwordHash = await bcrypt.hash(password, 10);
      await prisma.user.update({ where: { id }, data: { passwordHash } });
-     res.json({ message: 'Password reset' });
+     res.json({ message: 'Password updated successfully' });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 });
 

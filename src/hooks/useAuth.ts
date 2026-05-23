@@ -6,6 +6,10 @@ interface User {
   name: string;
   email: string;
   role: string;
+  contactNumber?: string;
+  address?: string;
+  profilePicture?: string;
+  farms?: { id: string; farmName: string; location: string; barangay?: string; hectares?: number }[];
 }
 
 export function useAuth() {

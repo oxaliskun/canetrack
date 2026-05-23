@@ -13,24 +13,32 @@ async function main() {
       email: 'admin@canetrack.com',
       passwordHash: hashedPassword,
       role: 'ADMIN',
+      contactNumber: '+63 912 345 6789',
+      address: 'Admin Office, Main Building, Central Compound',
     },
     {
       name: 'Mill Operator',
       email: 'operator@canetrack.com',
       passwordHash: hashedPassword,
       role: 'OPERATOR',
+      contactNumber: '+63 923 456 7890',
+      address: 'Mill Plant, Industrial Zone',
     },
     {
       name: 'Refinery Receiver',
       email: 'receiver@canetrack.com',
       passwordHash: hashedPassword,
       role: 'RECEIVER',
+      contactNumber: '+63 934 567 8901',
+      address: 'Refinery Complex, Port Area',
     },
     {
       name: 'Sample Farmer',
       email: 'farmer@canetrack.com',
       passwordHash: hashedPassword,
       role: 'FARMER',
+      contactNumber: '+63 945 678 9012',
+      address: '123 Barangay San Juan, Sugarcane Province',
     },
   ];
 

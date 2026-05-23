@@ -4,13 +4,17 @@ import { motion, AnimatePresence } from 'motion/react';
 import api from '../api/axiosInstance';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
-import { ArrowLeft, Leaf, Loader2, Mail, Lock, User, CheckCircle2, Shield, Sprout, Truck, BarChart3, Moon, Sun } from 'lucide-react';
+import { ArrowLeft, Leaf, Loader2, Mail, Lock, User, CheckCircle2, Shield, Sprout, Truck, BarChart3, Moon, Sun, Phone, MapPin } from 'lucide-react';
 
 export function Login() {
   const [isRegistering, setIsRegistering] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [contactNumber, setContactNumber] = useState('');
+  const [address, setAddress] = useState('');
+  const [farmName, setFarmName] = useState('');
+  const [farmLocation, setFarmLocation] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -24,9 +28,9 @@ export function Login() {
     setLoading(true); setError(''); setSuccess('');
     try {
       if (isRegistering) {
-        await api.post('/auth/register', { name, email, password });
+        await api.post('/auth/register', { name, email, password, contactNumber, address, farmName, farmLocation });
         setSuccess('Account created! Sign in to view your earnings.');
-        setIsRegistering(false); setPassword('');
+        setIsRegistering(false); setPassword(''); setContactNumber(''); setAddress(''); setFarmName(''); setFarmLocation('');
       } else {
         const { data } = await api.post('/auth/login', { email, password });
         login(data.token, data.user);
@@ -158,6 +162,62 @@ export function Login() {
                         <div className="relative">
                           <input type="text" required={isRegistering} className={`w-full pl-12 pr-4 py-3.5 border rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={name} onChange={e => setName(e.target.value)} placeholder="Juan Dela Cruz" />
                           <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <AnimatePresence>
+                  {isRegistering && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                      <div className="pb-4">
+                        <label className={`block text-xs font-bold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Contact Number</label>
+                        <div className="relative">
+                          <input type="tel" className={`w-full pl-12 pr-4 py-3.5 border rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={contactNumber} onChange={e => setContactNumber(e.target.value)} placeholder="+63 912 345 6789" />
+                          <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <AnimatePresence>
+                  {isRegistering && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                      <div className="pb-4">
+                        <label className={`block text-xs font-bold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Complete Address</label>
+                        <div className="relative">
+                          <input type="text" className={`w-full pl-12 pr-4 py-3.5 border rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={address} onChange={e => setAddress(e.target.value)} placeholder="123 Barangay San Juan, Province" />
+                          <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <AnimatePresence>
+                  {isRegistering && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                      <div className="pb-4">
+                        <label className={`block text-xs font-bold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Farm Name</label>
+                        <div className="relative">
+                          <input type="text" className={`w-full pl-12 pr-4 py-3.5 border rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={farmName} onChange={e => setFarmName(e.target.value)} placeholder="My Sugarcane Farm" />
+                          <Sprout className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <AnimatePresence>
+                  {isRegistering && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                      <div className="pb-4">
+                        <label className={`block text-xs font-bold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Farm Location</label>
+                        <div className="relative">
+                          <input type="text" className={`w-full pl-12 pr-4 py-3.5 border rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={farmLocation} onChange={e => setFarmLocation(e.target.value)} placeholder="Barangay, Municipality, Province" />
+                          <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                         </div>
                       </div>
                     </motion.div>
