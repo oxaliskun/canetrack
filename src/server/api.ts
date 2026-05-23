@@ -2,6 +2,28 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import multer from 'multer';
+import path from 'path';
+import { randomUUID } from 'crypto';
+
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, path.join(__dirname, '..', '..', 'uploads'));
+  },
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname) || '.jpg';
+    cb(null, `${randomUUID()}${ext}`);
+  }
+});
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, allowed.includes(ext));
+  }
+});
 
 const prisma = new PrismaClient();
 export const apiRouter = Router();
@@ -12,6 +34,7 @@ const THRESHOLD = Number(process.env.DISCREPANCY_THRESHOLD) || 50;
 // --- TYPES ---
 export interface AuthRequest extends Request {
   user?: { userId: string; role: string; name: string };
+  file?: Express.Multer.File;
 }
 
 // --- MIDDLEWARE ---
@@ -192,6 +215,26 @@ apiRouter.post('/users', authMiddleware, roleGuard(['ADMIN']), async (req: AuthR
      });
      res.status(201).json({ message: 'Staff user created successfully', user });
    } catch (e: any) { res.status(500).json({ message: e.message }); }
+});
+
+// --- FILE UPLOAD ---
+apiRouter.post('/upload', authMiddleware, (req: AuthRequest, res: Response): void => {
+  upload.single('file')(req, res, (err) => {
+    if (err instanceof multer.MulterError) {
+      res.status(400).json({ message: 'File too large. Max 5MB.' });
+      return;
+    }
+    if (err) {
+      res.status(400).json({ message: 'Upload failed. Only images allowed.' });
+      return;
+    }
+    if (!req.file) {
+      res.status(400).json({ message: 'No file provided' });
+      return;
+    }
+    const url = `/uploads/${req.file.filename}`;
+    res.json({ url });
+  });
 });
 
 // --- TICKETS ROUTES ---

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
-import { User, Lock, Save, ShieldCheck, Phone, MapPin, Image, Sprout, Loader2, Camera } from 'lucide-react';
+import { User, Lock, Save, ShieldCheck, Phone, MapPin, Sprout, Loader2, Camera, Trash2 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../context/ThemeContext';
 import api from '../../api/axiosInstance';
@@ -55,13 +55,22 @@ export function Profile() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Since we don't have a file upload endpoint, convert to base64 data URL
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
-      setProfilePicture(dataUrl);
-    };
-    reader.readAsDataURL(file);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await api.post('/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setProfilePicture(res.data.url);
+      toast.success('Photo uploaded');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to upload photo');
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    setProfilePicture('');
   };
 
   const handleSaveProfile = async (e: React.FormEvent) => {
@@ -143,18 +152,30 @@ export function Profile() {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className={`rounded-[2rem] border shadow-xl overflow-hidden ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
             <div className={`p-8 border-b ${isDark ? 'border-slate-700 bg-slate-800/50' : 'border-slate-100 bg-slate-50/50'}`}>
               <div className="flex items-center gap-6">
-                <div className="relative group">
-                  <div onClick={handleProfilePictureClick} className={`w-20 h-20 rounded-full flex items-center justify-center text-3xl font-black border-4 shadow-sm cursor-pointer overflow-hidden ${isDark ? 'bg-emerald-900/50 text-emerald-400 border-slate-700' : 'bg-emerald-100 text-emerald-600 border-white'}`}>
-                    {profilePicture ? (
-                      <img src={profilePicture} alt="Profile" className="w-full h-full object-cover" />
-                    ) : (
-                      authUser?.name?.charAt(0) || 'U'
+                <div>
+                  <div className="relative group">
+                    <div onClick={handleProfilePictureClick} className={`w-20 h-20 rounded-full flex items-center justify-center text-3xl font-black border-4 shadow-sm cursor-pointer overflow-hidden ${isDark ? 'bg-emerald-900/50 text-emerald-400 border-slate-700' : 'bg-emerald-100 text-emerald-600 border-white'}`}>
+                      {profilePicture ? (
+                        <img src={profilePicture} alt="Profile" className="w-full h-full object-cover" />
+                      ) : (
+                        authUser?.name?.charAt(0) || 'U'
+                      )}
+                    </div>
+                    <div onClick={handleProfilePictureClick} className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                      <Camera className="w-6 h-6 text-white" />
+                    </div>
+                    <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
+                  </div>
+                  <div className="flex items-center gap-2 mt-2">
+                    <button type="button" onClick={handleProfilePictureClick} className={`text-[11px] font-bold flex items-center gap-1 px-3 py-1.5 rounded-xl transition-all ${isDark ? 'bg-emerald-900/30 text-emerald-400 hover:bg-emerald-900/50' : 'bg-emerald-100 text-emerald-600 hover:bg-emerald-200'}`}>
+                      <Camera className="w-3.5 h-3.5" /> Change Photo
+                    </button>
+                    {profilePicture && (
+                      <button type="button" onClick={handleRemovePhoto} className={`text-[11px] font-bold flex items-center gap-1 px-3 py-1.5 rounded-xl transition-all ${isDark ? 'bg-red-900/30 text-red-400 hover:bg-red-900/50' : 'bg-red-100 text-red-600 hover:bg-red-200'}`}>
+                        <Trash2 className="w-3.5 h-3.5" /> Remove
+                      </button>
                     )}
                   </div>
-                  <div onClick={handleProfilePictureClick} className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                    <Camera className="w-6 h-6 text-white" />
-                  </div>
-                  <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
                 </div>
                 <div>
                   <h2 className={`text-2xl font-extrabold ${isDark ? 'text-white' : 'text-slate-900'}`}>{authUser?.name}</h2>
@@ -184,13 +205,6 @@ export function Profile() {
                     <div className="relative">
                       <input type="tel" value={contactNumber} onChange={e => setContactNumber(e.target.value)} className={`${inputClass} pl-10`} placeholder="+63 912 345 6789" />
                       <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    </div>
-                  </div>
-                  <div>
-                    <label className={labelClass}>Profile Picture URL</label>
-                    <div className="relative">
-                      <input type="url" value={profilePicture} onChange={e => setProfilePicture(e.target.value)} className={`${inputClass} pl-10`} placeholder="https://example.com/photo.jpg" />
-                      <Image className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     </div>
                   </div>
                 </div>
