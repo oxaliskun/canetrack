@@ -9,28 +9,28 @@ export function LandingPage() {
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-emerald-100 overflow-x-hidden">
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-white/70 border-b border-slate-200/50 shadow-sm">
-        <div className="flex items-center justify-between px-6 py-4 max-w-7xl mx-auto">
-          <div className="flex items-center gap-2">
-            <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-2 rounded-xl shadow-lg shadow-emerald-500/20">
-              <Leaf className="w-6 h-6 text-white" />
+        <div className="flex items-center justify-between gap-2 px-4 sm:px-6 py-3 sm:py-4 max-w-7xl mx-auto">
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-1.5 sm:p-2 rounded-xl shadow-lg shadow-emerald-500/20">
+              <Leaf className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-            <span className="text-xl font-bold tracking-tight text-slate-900">CaneTrack</span>
+            <span className="text-lg sm:text-xl font-bold tracking-tight text-slate-900">CaneTrack</span>
           </div>
-          <div className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-600">
-            <a href="#features" className="hover:text-emerald-600 transition-colors">Features</a>
-            <a href="#financials" className="hover:text-emerald-600 transition-colors">Financials</a>
-            <a href="#roles" className="hover:text-emerald-600 transition-colors">Roles</a>
-            <a href="#testimonials" className="hover:text-emerald-600 transition-colors">Testimonials</a>
+          <div className="hidden md:flex items-center gap-6 lg:gap-8 text-sm font-semibold text-slate-600">
+            <a href="#features" className="hover:text-emerald-600 transition-colors whitespace-nowrap">Features</a>
+            <a href="#financials" className="hover:text-emerald-600 transition-colors whitespace-nowrap">Financials</a>
+            <a href="#roles" className="hover:text-emerald-600 transition-colors whitespace-nowrap">Roles</a>
+            <a href="#testimonials" className="hover:text-emerald-600 transition-colors whitespace-nowrap">Testimonials</a>
           </div>
-          <div className="flex items-center gap-4">
-            <Link to="/login" className="hidden md:flex items-center gap-2 text-sm font-bold text-slate-600 hover:text-emerald-600 transition-colors">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <Link to="/login" className="hidden md:flex items-center gap-2 text-sm font-bold text-slate-600 hover:text-emerald-600 transition-colors whitespace-nowrap">
               Sign In
             </Link>
-            <button 
+            <button
               onClick={() => navigate('/login')}
-              className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-lg shadow-emerald-500/25 active:scale-95">
+              className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all shadow-lg shadow-emerald-500/25 active:scale-95 min-h-[36px] sm:min-h-[40px]">
               Get Started
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
           </div>
         </div>

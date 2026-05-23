@@ -109,33 +109,33 @@ export function AdminUsers() {
         {showAddUser && (
           <motion.form 
             initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-            className={`p-8 rounded-[2rem] border shadow-xl overflow-hidden relative group ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700' : 'bg-white border-slate-200'}`} 
+            className={`p-4 sm:p-6 lg:p-8 rounded-xl sm:rounded-[2rem] border shadow-xl overflow-hidden relative group ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700' : 'bg-white border-slate-200'}`} 
             onSubmit={handleCreateUser}
           >
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500" />
             <div className={`absolute -bottom-10 -right-10 w-32 h-32 rounded-full blur-2xl opacity-50 pointer-events-none ${isDark ? 'bg-indigo-950/50' : 'bg-indigo-50'}`} />
-            <div className="flex items-center gap-3 mb-6">
+            <div className="flex items-center gap-3 mb-4 sm:mb-6">
               <div className={`p-2 rounded-xl ${isDark ? 'bg-indigo-900/50' : 'bg-indigo-100'}`}><UserCheck className={`w-5 h-5 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`} /></div>
-              <h3 className={`font-extrabold text-2xl ${isDark ? 'text-white' : 'text-slate-900'}`}>Create System Access Profile</h3>
+              <h3 className={`font-extrabold text-lg sm:text-xl lg:text-2xl ${isDark ? 'text-white' : 'text-slate-900'}`}>Create System Access Profile</h3>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-               <div><label className={`block text-xs font-extrabold uppercase tracking-widest mb-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Name</label><input required value={newUser.name} onChange={e=>setNewUser({...newUser, name: e.target.value})} className={`w-full px-5 py-3 border rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-semibold ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`} /></div>
-               <div><label className={`block text-xs font-extrabold uppercase tracking-widest mb-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Email</label><input required type="email" value={newUser.email} onChange={e=>setNewUser({...newUser, email: e.target.value})} className={`w-full px-5 py-3 border rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-semibold ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`} /></div>
-               <div><label className={`block text-xs font-extrabold uppercase tracking-widest mb-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Password</label><input required type="password" value={newUser.password} onChange={e=>setNewUser({...newUser, password: e.target.value})} className={`w-full px-5 py-3 border rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-semibold ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`} /></div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-4 sm:mb-8">
+               <div><label className={`block text-xs font-extrabold uppercase tracking-widest mb-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Name</label><input required value={newUser.name} onChange={e=>setNewUser({...newUser, name: e.target.value})} className={`w-full px-4 sm:px-5 py-3 border rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-semibold min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`} /></div>
+               <div><label className={`block text-xs font-extrabold uppercase tracking-widest mb-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Email</label><input required type="email" value={newUser.email} onChange={e=>setNewUser({...newUser, email: e.target.value})} className={`w-full px-4 sm:px-5 py-3 border rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-semibold min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`} /></div>
+               <div><label className={`block text-xs font-extrabold uppercase tracking-widest mb-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Password</label><input required type="password" value={newUser.password} onChange={e=>setNewUser({...newUser, password: e.target.value})} className={`w-full px-4 sm:px-5 py-3 border rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-semibold min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`} /></div>
                <div>
                  <label className={`block text-xs font-extrabold uppercase tracking-widest mb-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Role Permissions</label>
-                 <select value={newUser.role} onChange={e=>setNewUser({...newUser, role: e.target.value})} className={`w-full px-5 py-3 border rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold cursor-pointer ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-700'}`}>
+                 <select value={newUser.role} onChange={e=>setNewUser({...newUser, role: e.target.value})} className={`w-full px-4 sm:px-5 py-3 border rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold cursor-pointer min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-700'}`}>
                    <option value="OPERATOR">Operator</option><option value="RECEIVER">Receiver</option><option value="ADMIN">Admin</option>
                  </select>
                </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-               <div><label className={`block text-xs font-extrabold uppercase tracking-widest mb-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Contact Number</label><input value={newUser.contactNumber} onChange={e=>setNewUser({...newUser, contactNumber: e.target.value})} className={`w-full px-5 py-3 border rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-semibold ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`} placeholder="+63 912 345 6789" /></div>
-               <div><label className={`block text-xs font-extrabold uppercase tracking-widest mb-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Address</label><input value={newUser.address} onChange={e=>setNewUser({...newUser, address: e.target.value})} className={`w-full px-5 py-3 border rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-semibold ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`} placeholder="Office / station location" /></div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-8">
+               <div><label className={`block text-xs font-extrabold uppercase tracking-widest mb-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Contact Number</label><input value={newUser.contactNumber} onChange={e=>setNewUser({...newUser, contactNumber: e.target.value})} className={`w-full px-4 sm:px-5 py-3 border rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-semibold min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`} placeholder="+63 912 345 6789" /></div>
+               <div><label className={`block text-xs font-extrabold uppercase tracking-widest mb-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Address</label><input value={newUser.address} onChange={e=>setNewUser({...newUser, address: e.target.value})} className={`w-full px-4 sm:px-5 py-3 border rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-semibold min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200'}`} placeholder="Office / station location" /></div>
             </div>
-            <div className="flex gap-3">
-              <button type="submit" className="bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white px-8 py-3 rounded-xl font-bold transition shadow-lg shadow-indigo-600/30">Provision User</button>
-              <button type="button" onClick={() => setShowAddUser(false)} className={`px-8 py-3 rounded-xl font-bold transition ${isDark ? 'bg-slate-800 text-white hover:bg-slate-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}>Cancel</button>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button type="submit" className="w-full sm:w-auto bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white px-6 sm:px-8 py-3 rounded-xl font-bold transition shadow-lg shadow-indigo-600/30 min-h-[44px]">Provision User</button>
+              <button type="button" onClick={() => setShowAddUser(false)} className={`w-full sm:w-auto px-6 sm:px-8 py-3 rounded-xl font-bold transition min-h-[44px] ${isDark ? 'bg-slate-800 text-white hover:bg-slate-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}>Cancel</button>
             </div>
           </motion.form>
         )}
@@ -150,52 +150,58 @@ export function AdminUsers() {
                value={searchTerm} 
                onChange={setSearchTerm} 
                placeholder="Search users..." 
-               className="w-64"
+               className="w-full sm:w-64"
             />
          }
       >
-        <table className="w-full text-left text-sm whitespace-nowrap">
-          <thead className={`border-b uppercase text-[10px] font-extrabold tracking-widest ${isDark ? 'bg-slate-800/80 border-slate-700 text-slate-400' : 'bg-slate-50/80 border-slate-100 text-slate-500'}`}>
-            <tr>
-              <th className="px-6 py-5">Name / Email</th>
-              <th className="px-6 py-5">Role</th>
-              <th className="px-6 py-5">Status</th>
-              <th className="px-6 py-5">Joined</th>
-              <th className="px-6 py-5 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className={`divide-y font-medium ${isDark ? 'divide-slate-700 text-slate-300' : 'divide-slate-100 text-slate-700'}`}>
-            {filteredUsers.map((u: any) => (
-              <tr key={u.id} className={`transition-colors ${isDark ? 'hover:bg-slate-800/50' : 'hover:bg-slate-50'}`}>
-                <td className="px-6 py-5">
-                   <p className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{u.name}</p>
-                   <p className={`text-xs font-mono mt-0.5 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>{u.email}</p>
-                </td>
-                <td className="px-6 py-5">
-                   <div className="flex items-center gap-1.5"><Shield className={`w-3.5 h-3.5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} /> {u.role}</div>
-                </td>
-                <td className="px-6 py-5">
-                   <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${u.isActive ? (isDark ? 'bg-emerald-900/30 text-emerald-400 border border-emerald-800' : 'bg-emerald-100 text-emerald-700 border border-emerald-200') : (isDark ? 'bg-rose-900/30 text-rose-400 border border-rose-800' : 'bg-rose-100 text-rose-700 border border-rose-200')}`}>
-                      {u.isActive ? 'Active' : 'Inactive'}
-                   </span>
-                </td>
-                <td className={`px-6 py-5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{formatDate(u.createdAt)}</td>
-                <td className="px-6 py-5 flex items-center justify-end gap-2">
-                   <button onClick={() => handleToggleStatus(u.id, u.isActive)} className={`p-2 rounded-xl border flex items-center justify-center transition-colors ${u.isActive ? (isDark ? 'hover:bg-rose-900/30 hover:text-rose-400 border-transparent hover:border-rose-800 text-slate-500' : 'hover:bg-rose-50 hover:text-rose-600 border-transparent hover:border-rose-200 text-slate-400') : (isDark ? 'hover:bg-emerald-900/30 hover:text-emerald-400 border-transparent hover:border-emerald-800 text-slate-500' : 'hover:bg-emerald-50 hover:text-emerald-600 border-transparent hover:border-emerald-200 text-slate-400')}`} title={u.isActive ? 'Deactivate' : 'Activate'}>
-                     <Power className="w-4 h-4" />
-                   </button>
-                   <button onClick={() => handleResetPassword(u.id)} className={`p-2 rounded-xl border border-transparent transition-colors ${isDark ? 'text-slate-500 hover:text-indigo-400 hover:bg-indigo-900/30 hover:border-indigo-800' : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200'}`} title="Reset Password">
-                      <Lock className="w-4 h-4" />
-                    </button>
-                    <button onClick={() => handleDeleteUser(u.id, u.name)} className={`p-2 rounded-xl border border-transparent transition-colors ${isDark ? 'text-slate-500 hover:text-red-400 hover:bg-red-900/30 hover:border-red-800' : 'text-slate-400 hover:text-red-600 hover:bg-red-50 hover:border-red-200'}`} title="Delete User">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                 </td>
+        <div className="overflow-x-auto scrollbar-hide">
+          <table className="w-full text-left text-sm whitespace-nowrap table-card-view">
+            <thead className={`border-b uppercase text-[10px] font-extrabold tracking-widest ${isDark ? 'bg-slate-800/80 border-slate-700 text-slate-400' : 'bg-slate-50/80 border-slate-100 text-slate-500'}`}>
+              <tr>
+                <th className="px-4 sm:px-6 py-4 sm:py-5">Name / Email</th>
+                <th className="px-4 sm:px-6 py-4 sm:py-5">Role</th>
+                <th className="px-4 sm:px-6 py-4 sm:py-5">Status</th>
+                <th className="px-4 sm:px-6 py-4 sm:py-5">Created</th>
+                <th className="px-4 sm:px-6 py-4 sm:py-5">Updated</th>
+                <th className="px-4 sm:px-6 py-4 sm:py-5 text-right">Actions</th>
               </tr>
-            ))}
-            {filteredUsers.length === 0 && <tr><td colSpan={5} className={`px-6 py-16 text-center text-lg ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>No users found.</td></tr>}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className={`divide-y font-medium ${isDark ? 'divide-slate-700 text-slate-300' : 'divide-slate-100 text-slate-700'}`}>
+              {filteredUsers.map((u: any) => (
+                <tr key={u.id} className={`transition-colors ${isDark ? 'hover:bg-slate-800/50' : 'hover:bg-slate-50'}`}>
+                  <td data-label="Name / Email" className="px-4 sm:px-6 py-4 sm:py-5">
+                     <p className={`font-bold text-sm sm:text-base truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>{u.name}</p>
+                     <p className={`text-xs font-mono mt-0.5 truncate ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>{u.email}</p>
+                  </td>
+                  <td data-label="Role" className="px-4 sm:px-6 py-4 sm:py-5">
+                     <div className="flex items-center gap-1.5"><Shield className={`w-3.5 h-3.5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} /> {u.role}</div>
+                  </td>
+                  <td data-label="Status" className="px-4 sm:px-6 py-4 sm:py-5">
+                     <span className={`px-2.5 sm:px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${u.isActive ? (isDark ? 'bg-emerald-900/30 text-emerald-400 border border-emerald-800' : 'bg-emerald-100 text-emerald-700 border border-emerald-200') : (isDark ? 'bg-rose-900/30 text-rose-400 border border-rose-800' : 'bg-rose-100 text-rose-700 border border-rose-200')}`}>
+                        {u.isActive ? 'Active' : 'Inactive'}
+                     </span>
+                  </td>
+                  <td data-label="Created" className={`px-4 sm:px-6 py-4 sm:py-5 text-xs sm:text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{formatDate(u.createdAt)}</td>
+                  <td data-label="Updated" className={`px-4 sm:px-6 py-4 sm:py-5 text-xs sm:text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{formatDate(u.updatedAt)}</td>
+                  <td data-label="Actions" className="px-4 sm:px-6 py-4 sm:py-5">
+                     <div className="flex items-center justify-end gap-1 sm:gap-2">
+                       <button onClick={() => handleToggleStatus(u.id, u.isActive)} className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl border flex items-center justify-center transition-colors min-h-[36px] min-w-[36px] ${u.isActive ? (isDark ? 'hover:bg-rose-900/30 hover:text-rose-400 border-transparent hover:border-rose-800 text-slate-500' : 'hover:bg-rose-50 hover:text-rose-600 border-transparent hover:border-rose-200 text-slate-400') : (isDark ? 'hover:bg-emerald-900/30 hover:text-emerald-400 border-transparent hover:border-emerald-800 text-slate-500' : 'hover:bg-emerald-50 hover:text-emerald-600 border-transparent hover:border-emerald-200 text-slate-400')}`} title={u.isActive ? 'Deactivate' : 'Activate'}>
+                         <Power className="w-4 h-4" />
+                       </button>
+                       <button onClick={() => handleResetPassword(u.id)} className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl border border-transparent flex items-center justify-center transition-colors min-h-[36px] min-w-[36px] ${isDark ? 'text-slate-500 hover:text-indigo-400 hover:bg-indigo-900/30 hover:border-indigo-800' : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200'}`} title="Reset Password">
+                          <Lock className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => handleDeleteUser(u.id, u.name)} className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl border border-transparent flex items-center justify-center transition-colors min-h-[36px] min-w-[36px] ${isDark ? 'text-slate-500 hover:text-red-400 hover:bg-red-900/30 hover:border-red-800' : 'text-slate-400 hover:text-red-600 hover:bg-red-50 hover:border-red-200'}`} title="Delete User">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                     </div>
+                   </td>
+                </tr>
+              ))}
+              {filteredUsers.length === 0 && <tr><td colSpan={6} className={`px-4 sm:px-6 py-12 sm:py-16 text-center text-base sm:text-lg ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>No users found.</td></tr>}
+            </tbody>
+          </table>
+        </div>
       </TableWrapper>
     </div>
   );

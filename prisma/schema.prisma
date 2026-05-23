@@ -20,6 +20,7 @@ model User {
   address        String?
   profilePicture String?
   createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   farms           Farm[]                 @relation("FarmerFarms")
   tickets         WeightTicket[]         @relation("OperatorTickets")
@@ -29,13 +30,17 @@ model User {
 }
 
 model Farm {
-  id        String   @id @default(cuid())
-  farmName  String
-  location  String
-  barangay  String?
-  hectares  Float?
-  ownerId   String
-  createdAt DateTime @default(now())
+  id          String   @id @default(cuid())
+  farmName    String
+  location    String
+  barangay    String?
+  hectares    Float?
+  cropType    String?
+  description String?
+  isArchived  Boolean  @default(false)
+  ownerId     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   owner   User           @relation("FarmerFarms", fields: [ownerId], references: [id])
   tickets WeightTicket[]
@@ -56,6 +61,7 @@ model WeightTicket {
   operatorId     String
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+  verifiedAt     DateTime?
 
   farm           Farm       @relation(fields: [farmId], references: [id])
   operator       User       @relation("OperatorTickets", fields: [operatorId], references: [id])
@@ -72,6 +78,8 @@ model ReconciliationRecord {
   notes          String?
   receiverId     String
   createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  reconciledAt   DateTime @default(now())
   resolvedAt     DateTime?
 
   ticket   WeightTicket @relation(fields: [ticketId], references: [id])
@@ -87,6 +95,7 @@ model AuditLog {
   ipAddress  String?
   userAgent  String?
   timestamp  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   user User @relation("UserAudits", fields: [userId], references: [id])
 }
@@ -98,6 +107,7 @@ model Notification {
   message   String
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id])
 }

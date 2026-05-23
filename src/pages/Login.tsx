@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import api from '../api/axiosInstance';
@@ -18,13 +18,31 @@ export function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [attempts, setAttempts] = useState(0);
+  const [lockoutUntil, setLockoutUntil] = useState<number | null>(null);
+  const [countdown, setCountdown] = useState(0);
   const { isDark, toggleTheme } = useTheme();
   
   const navigate = useNavigate();
   const { login } = useAuth();
 
+  useEffect(() => {
+    if (!lockoutUntil) return;
+    const tick = () => {
+      const remaining = Math.max(0, Math.ceil((lockoutUntil - Date.now()) / 1000));
+      setCountdown(remaining);
+      if (remaining <= 0) { setLockoutUntil(null); setAttempts(0); }
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [lockoutUntil]);
+
+  const isLocked = lockoutUntil !== null && Date.now() < lockoutUntil;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLocked) return;
     setLoading(true); setError(''); setSuccess('');
     try {
       if (isRegistering) {
@@ -33,6 +51,7 @@ export function Login() {
         setIsRegistering(false); setPassword(''); setContactNumber(''); setAddress(''); setFarmName(''); setFarmLocation('');
       } else {
         const { data } = await api.post('/auth/login', { email, password });
+        setAttempts(0);
         login(data.token, data.user);
         const roleMap: Record<string, string> = {
           FARMER: '/dashboard/farmer', OPERATOR: '/dashboard/operator',
@@ -41,7 +60,14 @@ export function Login() {
         navigate(roleMap[data.user.role]);
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Authentication failed. Please try again.');
+      const newAttempts = attempts + 1;
+      setAttempts(newAttempts);
+      if (newAttempts >= 3) {
+        setLockoutUntil(Date.now() + 180000);
+        setError('Too many failed attempts. Locked out for 3 minutes.');
+      } else {
+        setError(err.response?.data?.message || 'Authentication failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -112,56 +138,56 @@ export function Login() {
       </div>
 
       {/* Right Form Panel */}
-      <div className="w-full lg:w-1/2 flex justify-center py-12 px-6 sm:px-12 relative xl:px-24">
-        <div className="absolute top-4 right-4 sm:top-8 sm:right-12 flex items-center gap-2 sm:gap-3">
-          <button 
+      <div className="w-full lg:w-1/2 flex justify-center py-8 sm:py-12 px-4 sm:px-8 lg:px-12 relative xl:px-24">
+        <div className="absolute top-3 right-3 sm:top-8 sm:right-12 flex items-center gap-2 sm:gap-3">
+          <button
             onClick={toggleTheme}
-            className={`p-2.5 sm:p-3 rounded-xl border transition-all shadow-lg flex items-center justify-center ${isDark ? 'bg-slate-800 border-slate-700 text-amber-400 hover:bg-slate-700 shadow-black/30' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 shadow-slate-200/50'}`}
+            className={`flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl border transition-all shadow-lg ${isDark ? 'bg-slate-800 border-slate-700 text-amber-400 hover:bg-slate-700 shadow-black/30' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 shadow-slate-200/50'}`}
           >
-            {isDark ? <Sun className="w-4 h-4 sm:w-5 sm:h-5" /> : <Moon className="w-4 h-4 sm:w-5 sm:h-5" />}
+            {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
-          <button onClick={() => navigate('/')} className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-lg ${isDark ? 'bg-slate-800 border border-slate-700 text-slate-300 hover:bg-slate-700 shadow-black/30' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 shadow-slate-200/50'}`}>
-            <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Back
+          <button onClick={() => navigate('/')} className={`flex items-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-lg min-h-[36px] ${isDark ? 'bg-slate-800 border border-slate-700 text-slate-300 hover:bg-slate-700 shadow-black/30' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 shadow-slate-200/50'}`}>
+            <ArrowLeft className="w-3.5 h-3.5" /> Back
           </button>
         </div>
 
-        <div className="max-w-[420px] w-full flex flex-col justify-center mt-16 sm:mt-12 lg:mt-0">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="space-y-6 sm:space-y-8">
+        <div className="max-w-[420px] w-full flex flex-col justify-center mt-12 sm:mt-12 lg:mt-0">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="space-y-5 sm:space-y-6 lg:space-y-8">
             <div className="text-center lg:text-left">
-              <div className="flex justify-center lg:hidden mb-6">
-                <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-3 sm:p-4 rounded-2xl shadow-lg shadow-emerald-500/20">
-                  <Leaf className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+              <div className="flex justify-center lg:hidden mb-4 sm:mb-6">
+                <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-3 rounded-2xl shadow-lg shadow-emerald-500/20">
+                  <Leaf className="w-6 h-6 text-white" />
                 </div>
               </div>
-              <h2 className={`text-2xl sm:text-4xl font-extrabold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+              <h2 className={`text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
                 {isRegistering ? 'Start right now.' : 'Welcome back.'}
               </h2>
-              <p className={`mt-2 sm:mt-3 text-sm sm:text-base font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+              <p className={`mt-1 sm:mt-2 lg:mt-3 text-sm sm:text-base font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                 {isRegistering ? "Create your client account to track your earnings." : "Sign into your account to view your deliveries."}
               </p>
             </div>
 
             <form className="space-y-4 sm:space-y-5" onSubmit={handleSubmit}>
               <AnimatePresence mode="wait">
-                {error && <motion.div initial={{opacity:0, height:0}} animate={{opacity:1, height:'auto'}} exit={{opacity:0, height:0}} className="bg-red-950/30 text-red-400 p-4 rounded-2xl text-sm font-bold border border-red-900/50 flex items-start gap-3">
+                {error && <motion.div initial={{opacity:0, height:0}} animate={{opacity:1, height:'auto'}} exit={{opacity:0, height:0}} className="bg-red-950/30 text-red-400 p-4 rounded-xl sm:rounded-2xl text-sm font-bold border border-red-900/50 flex items-start gap-3">
                   <div className="mt-0.5"><div className="w-2 h-2 rounded-full bg-red-500" /></div>
                   {error}
                 </motion.div>}
-                {success && <motion.div initial={{opacity:0, height:0}} animate={{opacity:1, height:'auto'}} exit={{opacity:0, height:0}} className="bg-emerald-950/30 text-emerald-400 p-4 rounded-2xl text-sm font-bold border border-emerald-800/50 flex items-start gap-3">
+                {success && <motion.div initial={{opacity:0, height:0}} animate={{opacity:1, height:'auto'}} exit={{opacity:0, height:0}} className="bg-emerald-950/30 text-emerald-400 p-4 rounded-xl sm:rounded-2xl text-sm font-bold border border-emerald-800/50 flex items-start gap-3">
                   <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
                   {success}
                 </motion.div>}
               </AnimatePresence>
 
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 <AnimatePresence>
                   {isRegistering && (
                     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-                      <div className="pb-4">
-                        <label className={`block text-xs font-bold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Full Name</label>
+                      <div className="pb-3 sm:pb-4">
+                        <label className={`block text-[11px] sm:text-xs font-bold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Full Name</label>
                         <div className="relative">
-                          <input type="text" required={isRegistering} className={`w-full pl-12 pr-4 py-3.5 border rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={name} onChange={e => setName(e.target.value)} placeholder="Juan Dela Cruz" />
-                          <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                          <input type="text" required={isRegistering} className={`w-full pl-11 sm:pl-12 pr-4 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium min-h-[44px] ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={name} onChange={e => setName(e.target.value)} placeholder="Juan Dela Cruz" />
+                          <User className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-500" />
                         </div>
                       </div>
                     </motion.div>
@@ -171,11 +197,11 @@ export function Login() {
                 <AnimatePresence>
                   {isRegistering && (
                     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-                      <div className="pb-4">
-                        <label className={`block text-xs font-bold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Contact Number</label>
+                      <div className="pb-3 sm:pb-4">
+                        <label className={`block text-[11px] sm:text-xs font-bold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Contact Number</label>
                         <div className="relative">
-                          <input type="tel" className={`w-full pl-12 pr-4 py-3.5 border rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={contactNumber} onChange={e => setContactNumber(e.target.value)} placeholder="+63 912 345 6789" />
-                          <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                          <input type="tel" className={`w-full pl-11 sm:pl-12 pr-4 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium min-h-[44px] ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={contactNumber} onChange={e => setContactNumber(e.target.value)} placeholder="+63 912 345 6789" />
+                          <Phone className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-500" />
                         </div>
                       </div>
                     </motion.div>
@@ -185,11 +211,11 @@ export function Login() {
                 <AnimatePresence>
                   {isRegistering && (
                     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-                      <div className="pb-4">
-                        <label className={`block text-xs font-bold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Complete Address</label>
+                      <div className="pb-3 sm:pb-4">
+                        <label className={`block text-[11px] sm:text-xs font-bold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Complete Address</label>
                         <div className="relative">
-                          <input type="text" className={`w-full pl-12 pr-4 py-3.5 border rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={address} onChange={e => setAddress(e.target.value)} placeholder="123 Barangay San Juan, Province" />
-                          <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                          <input type="text" className={`w-full pl-11 sm:pl-12 pr-4 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium min-h-[44px] ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={address} onChange={e => setAddress(e.target.value)} placeholder="123 Barangay San Juan, Province" />
+                          <MapPin className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-500" />
                         </div>
                       </div>
                     </motion.div>
@@ -199,11 +225,11 @@ export function Login() {
                 <AnimatePresence>
                   {isRegistering && (
                     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-                      <div className="pb-4">
-                        <label className={`block text-xs font-bold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Farm Name</label>
+                      <div className="pb-3 sm:pb-4">
+                        <label className={`block text-[11px] sm:text-xs font-bold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Farm Name</label>
                         <div className="relative">
-                          <input type="text" className={`w-full pl-12 pr-4 py-3.5 border rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={farmName} onChange={e => setFarmName(e.target.value)} placeholder="My Sugarcane Farm" />
-                          <Sprout className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                          <input type="text" className={`w-full pl-11 sm:pl-12 pr-4 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium min-h-[44px] ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={farmName} onChange={e => setFarmName(e.target.value)} placeholder="My Sugarcane Farm" />
+                          <Sprout className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-500" />
                         </div>
                       </div>
                     </motion.div>
@@ -213,11 +239,11 @@ export function Login() {
                 <AnimatePresence>
                   {isRegistering && (
                     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-                      <div className="pb-4">
-                        <label className={`block text-xs font-bold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Farm Location</label>
+                      <div className="pb-3 sm:pb-4">
+                        <label className={`block text-[11px] sm:text-xs font-bold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Farm Location</label>
                         <div className="relative">
-                          <input type="text" className={`w-full pl-12 pr-4 py-3.5 border rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={farmLocation} onChange={e => setFarmLocation(e.target.value)} placeholder="Barangay, Municipality, Province" />
-                          <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                          <input type="text" className={`w-full pl-11 sm:pl-12 pr-4 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium min-h-[44px] ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={farmLocation} onChange={e => setFarmLocation(e.target.value)} placeholder="Barangay, Municipality, Province" />
+                          <MapPin className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-500" />
                         </div>
                       </div>
                     </motion.div>
@@ -225,60 +251,59 @@ export function Login() {
                 </AnimatePresence>
 
                 <div>
-                  <label className={`block text-xs font-bold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Email address</label>
+                  <label className={`block text-[11px] sm:text-xs font-bold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Email address</label>
                   <div className="relative">
-                    <input type="email" required className={`w-full pl-12 pr-4 py-3.5 border rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" />
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                    <input type="email" required className={`w-full pl-11 sm:pl-12 pr-4 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium min-h-[44px] ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" />
+                    <Mail className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-500" />
                   </div>
                 </div>
 
                 <div>
                   <div className="flex justify-between items-center mb-2 ml-1 pr-1">
-                     <label className={`block text-xs font-bold uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Password</label>
+                     <label className={`block text-[11px] sm:text-xs font-bold uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Password</label>
                      {!isRegistering && <a href="#" className="text-xs font-bold text-emerald-500 hover:text-emerald-400">Forgot?</a>}
                   </div>
                   <div className="relative">
-                    <input type="password" required className={`w-full pl-12 pr-4 py-3.5 border rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium tracking-widest ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900 text-lg'}`} value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" />
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                    <input type="password" required className={`w-full pl-11 sm:pl-12 pr-4 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium tracking-widest min-h-[44px] ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" />
+                    <Lock className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-500" />
                   </div>
                 </div>
               </div>
 
-              <motion.button 
-                whileHover={{ scale: 1.01 }} 
-                whileTap={{ scale: 0.98 }} 
-                type="submit" 
-                disabled={loading} 
-                className="w-full flex justify-center items-center py-4 px-4 rounded-2xl font-bold text-white bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 transition-all shadow-lg shadow-emerald-600/30 mt-6"
+              {attempts >= 2 && !isLocked && (
+                <div className={`text-xs font-bold text-center ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
+                  {3 - attempts} attempt{3 - attempts > 1 ? 's' : ''} remaining before 3-minute lockout
+                </div>
+              )}
+              <motion.button
+                whileHover={isLocked ? {} : { scale: 1.01 }}
+                whileTap={isLocked ? {} : { scale: 0.98 }}
+                type="submit"
+                disabled={loading || isLocked}
+                className={`w-full flex justify-center items-center py-3.5 sm:py-4 px-4 rounded-xl sm:rounded-2xl font-bold transition-all shadow-lg mt-4 sm:mt-6 min-h-[48px] ${isLocked
+                  ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
+                  : 'text-white bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 shadow-emerald-600/30'}`}
               >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (isRegistering ? 'Create Client Account' : 'Sign In securely')}
+                {isLocked ? `Locked ${countdown}s` : loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (isRegistering ? 'Create Client Account' : 'Sign In securely')}
               </motion.button>
             </form>
 
-            <div className="text-center mt-8">
+            <div className="text-center mt-6 sm:mt-8">
                <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                  {isRegistering ? "Already a client?" : "Are you a new farmer/client?"}{' '}
-                 <button onClick={() => { setIsRegistering(!isRegistering); setError(''); setSuccess(''); }} className="text-emerald-500 hover:text-emerald-400 font-bold ml-1 transition-colors underline decoration-2 underline-offset-4 decoration-emerald-800">
+                  <button onClick={() => { setIsRegistering(!isRegistering); setError(''); setSuccess(''); setAttempts(0); setLockoutUntil(null); }} className="text-emerald-500 hover:text-emerald-400 font-bold ml-1 transition-colors underline decoration-2 underline-offset-4 decoration-emerald-800">
                    {isRegistering ? "Sign in instead" : "Create Account"}
                  </button>
                </p>
             </div>
-            
-            <div className={`mt-8 sm:mt-12 rounded-2xl p-4 sm:p-5 relative overflow-hidden border ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700' : 'bg-gradient-to-br from-slate-50 to-white border-slate-100'}`}>
+
+            <div className={`mt-6 sm:mt-8 lg:mt-12 rounded-xl sm:rounded-2xl p-4 sm:p-5 relative overflow-hidden border ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700' : 'bg-gradient-to-br from-slate-50 to-white border-slate-100'}`}>
                 <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-emerald-400 to-emerald-600" />
-                <h4 className={`text-xs font-bold uppercase tracking-widest mb-2 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Staff & Administration</h4>
-                <p className={`text-sm font-medium leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                <h4 className={`text-[11px] sm:text-xs font-bold uppercase tracking-widest mb-2 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Staff & Administration</h4>
+                <p className={`text-xs sm:text-sm font-medium leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                   <span className={`font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>Operator</span> and <span className={`font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>Receiver</span> accounts cannot be created here. They must be provisioned internally by an Administrator.
                 </p>
-                <div className={`mt-4 pt-4 border-t ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
-                   <h4 className={`text-xs font-bold uppercase tracking-widest mb-2 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Demo Credentials</h4>
-                   <ul className="text-xs font-mono space-y-1 text-slate-500">
-<li>Admin: <span className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>admin@canetrack.com</span> / canetrack2026</li>
-                      <li>Operator: <span className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>operator@canetrack.com</span> / canetrack2026</li>
-                      <li>Receiver: <span className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>receiver@canetrack.com</span> / canetrack2026</li>
-                      <li>Farmer: <span className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>farmer@canetrack.com</span> / canetrack2026</li>
-                   </ul>
-                </div>
+
             </div>
           </motion.div>
         </div>

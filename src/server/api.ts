@@ -130,7 +130,17 @@ apiRouter.post('/auth/login', async (req: Request, res: Response): Promise<void>
        return;
     }
     const token = jwt.sign({ userId: user.id, role: user.role, name: user.name, email: user.email }, JWT_SECRET, { expiresIn: '8h' });
+    await writeAuditLog(user.id, 'LOGIN', user.id, 'User');
     res.json({ token, user: { id: user.id, userId: user.id, name: user.name, email: user.email, role: user.role, contactNumber: user.contactNumber, address: user.address, profilePicture: user.profilePicture } });
+  } catch (e: any) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
+apiRouter.post('/auth/logout', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    await writeAuditLog(req.user!.userId, 'LOGOUT', req.user!.userId, 'User');
+    res.json({ message: 'Logged out successfully' });
   } catch (e: any) {
     res.status(500).json({ message: e.message });
   }
@@ -138,12 +148,12 @@ apiRouter.post('/auth/login', async (req: Request, res: Response): Promise<void>
 
 apiRouter.get('/auth/me', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-     const user = await prisma.user.findUnique({
-       where: { id: req.user!.userId },
-       include: { farms: { select: { id: true, farmName: true, location: true, barangay: true, hectares: true } } }
-     });
-     if (!user) return res.status(404).json({ message: 'User not found' });
-     res.json({ user: { id: user.id, userId: user.id, name: user.name, email: user.email, role: user.role, contactNumber: user.contactNumber, address: user.address, profilePicture: user.profilePicture, farms: user.farms } });
+      const user = await prisma.user.findUnique({
+        where: { id: req.user!.userId },
+        include: { farms: { select: { id: true, farmName: true, location: true, barangay: true, hectares: true, cropType: true, description: true, isArchived: true } } }
+      });
+      if (!user) return res.status(404).json({ message: 'User not found' });
+      res.json({ user: { id: user.id, userId: user.id, name: user.name, email: user.email, role: user.role, contactNumber: user.contactNumber, address: user.address, profilePicture: user.profilePicture, farms: user.farms } });
   } catch(e: any) { res.status(500).json({ message: e.message }); }
 });
 
@@ -152,7 +162,7 @@ apiRouter.get('/users/profile', authMiddleware, async (req: AuthRequest, res: Re
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user!.userId },
-      include: { farms: { select: { id: true, farmName: true, location: true, barangay: true, hectares: true } } }
+      include: { farms: { select: { id: true, farmName: true, location: true, barangay: true, hectares: true, cropType: true, description: true, isArchived: true } } }
     });
     if (!user) { res.status(404).json({ message: 'User not found' }); return; }
     res.json({ user: { id: user.id, userId: user.id, name: user.name, email: user.email, role: user.role, contactNumber: user.contactNumber, address: user.address, profilePicture: user.profilePicture, farms: user.farms } });
@@ -199,6 +209,7 @@ apiRouter.patch('/users/profile', authMiddleware, async (req: AuthRequest, res: 
       farms = await prisma.farm.findMany({ where: { ownerId: req.user!.userId } });
     }
 
+    await writeAuditLog(req.user!.userId, 'UPDATE_PROFILE', req.user!.userId, 'User');
     res.json({ message: 'Profile updated successfully', user: { ...user, farms } });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 });
@@ -217,8 +228,9 @@ apiRouter.post('/users', authMiddleware, roleGuard(['ADMIN']), async (req: AuthR
        data: { name, email, passwordHash, role, contactNumber, address },
        select: { id: true, name: true, email: true, role: true, contactNumber: true, address: true }
      });
-     res.status(201).json({ message: 'Staff user created successfully', user });
-   } catch (e: any) { res.status(500).json({ message: e.message }); }
+      await writeAuditLog(req.user!.userId, 'CREATE_USER', user.id, 'User');
+      res.status(201).json({ message: 'Staff user created successfully', user });
+    } catch (e: any) { res.status(500).json({ message: e.message }); }
 });
 
 // --- FILE UPLOAD ---
@@ -277,12 +289,12 @@ apiRouter.post('/tickets', authMiddleware, roleGuard(['OPERATOR']), async (req: 
      });
 
      await prisma.notification.create({
-       data: {
-         userId: ticket.farm.ownerId,
-         type: 'TICKET_CREATED',
-         message: `New ticket ${ticket.ticketNo} recorded for truck ${truckPlate} (${millWeight}kg).`
-       }
-     });
+        data: {
+          userId: ticket.farm.ownerId,
+          type: 'SUCCESS',
+          message: `New ticket ${ticket.ticketNo} recorded for truck ${truckPlate} (${millWeight}kg).`
+        }
+      });
 
      await writeAuditLog(req.user!.userId, 'CREATE_TICKET', ticket.id, 'WeightTicket');
      res.status(201).json(ticket);
@@ -315,6 +327,76 @@ apiRouter.get('/tickets', authMiddleware, async (req: AuthRequest, res: Response
     
     res.json({ tickets });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
+});
+
+// Single ticket details with timeline
+apiRouter.get('/tickets/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const ticket = await prisma.weightTicket.findUnique({
+      where: { id },
+      include: {
+        farm: { include: { owner: { select: { name: true, email: true, contactNumber: true, address: true } } } },
+        operator: { select: { name: true, email: true, contactNumber: true } },
+        reconciliation: { include: { receiver: { select: { name: true, email: true, contactNumber: true } } } }
+      }
+    });
+    if (!ticket) {
+      res.status(404).json({ message: 'Ticket not found' });
+      return;
+    }
+
+    // Farmers can only view their own tickets
+    if (req.user!.role === 'FARMER') {
+      const farms = await prisma.farm.findMany({ where: { ownerId: req.user!.userId }, select: { id: true } });
+      const farmIds = farms.map(f => f.id);
+      if (!farmIds.includes(ticket.farmId)) {
+        res.status(403).json({ message: 'Access denied' });
+        return;
+      }
+    }
+
+    const timeline = [];
+    timeline.push({
+      type: 'CREATED',
+      date: ticket.createdAt,
+      label: 'Ticket Created',
+      description: `Ticket ${ticket.ticketNo} was encoded by ${ticket.operator?.name || 'Operator'}`
+    });
+
+    if (ticket.reconciliation) {
+      timeline.push({
+        type: ticket.status === 'DISPUTED' ? 'FLAGGED' : 'RECONCILED',
+        date: ticket.reconciliation.reconciledAt,
+        label: ticket.status === 'DISPUTED' ? 'Variance Flagged' : 'Weight Reconciled',
+        description: ticket.status === 'DISPUTED'
+          ? `Variance of ${Math.abs(ticket.reconciliation.difference)}kg (${ticket.reconciliation.percentDiff.toFixed(2)}%) flagged for review`
+          : `Refinery weight: ${ticket.reconciliation.refineryWeight}kg (${ticket.reconciliation.difference > 0 ? '+' : ''}${ticket.reconciliation.difference}kg variance)`
+      });
+
+      if (ticket.reconciliation.resolvedAt) {
+        timeline.push({
+          type: 'RESOLVED',
+          date: ticket.reconciliation.resolvedAt,
+          label: 'Dispute Resolved',
+          description: ticket.reconciliation.notes || 'Dispute was resolved by administrator'
+        });
+      }
+    }
+
+    if (ticket.updatedAt) {
+      timeline.push({
+        type: 'UPDATED',
+        date: ticket.updatedAt,
+        label: 'Last Updated',
+        description: `Ticket was last modified`
+      });
+    }
+
+    res.json({ ticket, timeline });
+  } catch (e: any) {
+    res.status(500).json({ message: e.message });
+  }
 });
 
 // --- RECONCILIATION ROUTES ---
@@ -358,7 +440,7 @@ apiRouter.post('/reconciliation/:ticketId', authMiddleware, roleGuard(['RECEIVER
       where: { id: ticketId },
       data: { 
          status: newStatus,
-         // We might optionally adjust totalValue here based on refinery weight
+         verifiedAt: new Date(),
       },
       include: { farm: true }
     });
@@ -366,12 +448,26 @@ apiRouter.post('/reconciliation/:ticketId', authMiddleware, roleGuard(['RECEIVER
     await prisma.notification.create({
       data: {
         userId: updatedTicket.farm.ownerId,
-        type: flagged ? 'TICKET_DISPUTED' : 'TICKET_RECONCILED',
+        type: flagged ? 'DISPUTE' : 'SUCCESS',
         message: flagged 
-           ? `Variance flagged on ticket ${updatedTicket.ticketNo}. Awaiting resolution.`
+           ? `Ticket ${updatedTicket.ticketNo}: variance of ${Math.abs(difference).toFixed(1)}kg flagged. Awaiting admin resolution.`
            : `Ticket ${updatedTicket.ticketNo} reconciled successfully.`
       }
     });
+
+    // Notify admins about the dispute
+    if (flagged) {
+      const admins = await prisma.user.findMany({ where: { role: 'ADMIN' }, select: { id: true } });
+      for (const admin of admins) {
+        await prisma.notification.create({
+          data: {
+            userId: admin.id,
+            type: 'WARNING',
+            message: `Dispute detected on ticket ${updatedTicket.ticketNo} (${Math.abs(difference).toFixed(1)}kg variance).`
+          }
+        });
+      }
+    }
 
     await writeAuditLog(req.user!.userId, flagged ? 'RECONCILE_DISPUTED' : 'RECONCILE_OK', record.id, 'ReconciliationRecord');
     
@@ -408,30 +504,122 @@ apiRouter.patch('/reconciliation/:id/resolve', authMiddleware, roleGuard(['ADMIN
        }
     });
     
-    await prisma.weightTicket.update({
+    const ticket = await prisma.weightTicket.update({
       where: { id: record.ticketId },
-      data: { status: 'RECONCILED' } // Set back to reconciled once verified
+      data: { status: 'RECONCILED' },
+      include: { farm: true }
     });
-    
+
+    await prisma.notification.create({
+      data: {
+        userId: ticket.farm.ownerId,
+        type: 'RESOLVED',
+        message: `Admin resolved dispute on ticket ${ticket.ticketNo}.${resolutionNotes ? ` Note: ${resolutionNotes}` : ''}`
+      }
+    });
+
     await writeAuditLog(req.user!.userId, 'RESOLVE_DISPUTE', record.id, 'ReconciliationRecord');
     res.json({ message: 'Dispute resolved', record });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 });
 
 // --- FARMS & USERS ---
+// All active farms (for operator dropdown)
 apiRouter.get('/farms', authMiddleware, async (req: AuthRequest, res: Response) => {
    try {
-     const farms = await prisma.farm.findMany({ include: { owner: { select: { name: true } } } });
+     const farms = await prisma.farm.findMany({
+       where: { isArchived: false },
+       include: { owner: { select: { name: true } } }
+     });
      res.json({ farms });
    } catch(e: any) { res.status(500).json({ message: e.message }); }
 });
 
+// Farmer's own farms
+apiRouter.get('/farms/mine', authMiddleware, roleGuard(['FARMER']), async (req: AuthRequest, res: Response) => {
+  try {
+    const farms = await prisma.farm.findMany({
+      where: { ownerId: req.user!.userId },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json({ farms });
+  } catch(e: any) { res.status(500).json({ message: e.message }); }
+});
+
+// Create a farm (FARMER only)
+apiRouter.post('/farms', authMiddleware, roleGuard(['FARMER']), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { farmName, location, barangay, hectares, cropType, description } = req.body;
+    if (!farmName || !location) {
+      res.status(400).json({ message: 'Farm name and location are required' });
+      return;
+    }
+    const farm = await prisma.farm.create({
+      data: {
+        farmName,
+        location,
+        barangay: barangay || null,
+        hectares: hectares ? Number(hectares) : null,
+        cropType: cropType || null,
+        description: description || null,
+        ownerId: req.user!.userId
+      }
+    });
+    await writeAuditLog(req.user!.userId, 'CREATE_FARM', farm.id, 'Farm');
+    res.status(201).json(farm);
+  } catch(e: any) { res.status(500).json({ message: e.message }); }
+});
+
+// Update a farm (owner only)
+apiRouter.patch('/farms/:id', authMiddleware, roleGuard(['FARMER']), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const farm = await prisma.farm.findUnique({ where: { id } });
+    if (!farm || farm.ownerId !== req.user!.userId) {
+      res.status(404).json({ message: 'Farm not found' });
+      return;
+    }
+    const { farmName, location, barangay, hectares, cropType, description } = req.body;
+    const updated = await prisma.farm.update({
+      where: { id },
+      data: {
+        ...(farmName !== undefined && { farmName }),
+        ...(location !== undefined && { location }),
+        ...(barangay !== undefined && { barangay }),
+        ...(hectares !== undefined && { hectares: Number(hectares) }),
+        ...(cropType !== undefined && { cropType }),
+        ...(description !== undefined && { description }),
+      }
+    });
+    await writeAuditLog(req.user!.userId, 'UPDATE_FARM', id, 'Farm');
+    res.json(updated);
+  } catch(e: any) { res.status(500).json({ message: e.message }); }
+});
+
+// Archive/Unarchive a farm (owner only)
+apiRouter.patch('/farms/:id/archive', authMiddleware, roleGuard(['FARMER']), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const farm = await prisma.farm.findUnique({ where: { id } });
+    if (!farm || farm.ownerId !== req.user!.userId) {
+      res.status(404).json({ message: 'Farm not found' });
+      return;
+    }
+    const updated = await prisma.farm.update({
+      where: { id },
+      data: { isArchived: !farm.isArchived }
+    });
+    await writeAuditLog(req.user!.userId, updated.isArchived ? 'ARCHIVE_FARM' : 'UNARCHIVE_FARM', id, 'Farm');
+    res.json(updated);
+  } catch(e: any) { res.status(500).json({ message: e.message }); }
+});
+
 apiRouter.get('/users', authMiddleware, roleGuard(['ADMIN']), async (req: AuthRequest, res: Response) => {
    try {
-     const users = await prisma.user.findMany({
-       select: { id: true, name: true, email: true, role: true, isActive: true, contactNumber: true, address: true, createdAt: true },
-       orderBy: { createdAt: 'desc' }
-     });
+      const users = await prisma.user.findMany({
+        select: { id: true, name: true, email: true, role: true, isActive: true, contactNumber: true, address: true, createdAt: true, updatedAt: true },
+        orderBy: { createdAt: 'desc' }
+      });
      res.json({ users });
    } catch(e: any) { res.status(500).json({ message: e.message }); }
 });
@@ -440,9 +628,10 @@ apiRouter.patch('/users/:id/status', authMiddleware, roleGuard(['ADMIN']), async
    try {
      const { id } = req.params;
      const { isActive } = req.body;
-     await prisma.user.update({ where: { id }, data: { isActive } });
-     res.json({ message: 'User status updated' });
-   } catch (e: any) { res.status(500).json({ message: e.message }); }
+      await prisma.user.update({ where: { id }, data: { isActive } });
+      await writeAuditLog(req.user!.userId, isActive ? 'ACTIVATE_USER' : 'DEACTIVATE_USER', id, 'User');
+      res.json({ message: 'User status updated' });
+    } catch (e: any) { res.status(500).json({ message: e.message }); }
 });
 
 apiRouter.patch('/users/:id/password', authMiddleware, async (req: AuthRequest, res: Response) => {
@@ -455,9 +644,10 @@ apiRouter.patch('/users/:id/password', authMiddleware, async (req: AuthRequest, 
      }
      const { password } = req.body;
      const passwordHash = await bcrypt.hash(password, 10);
-     await prisma.user.update({ where: { id }, data: { passwordHash } });
-     res.json({ message: 'Password updated successfully' });
-  } catch (e: any) { res.status(500).json({ message: e.message }); }
+      await prisma.user.update({ where: { id }, data: { passwordHash } });
+      await writeAuditLog(req.user!.userId, 'PASSWORD_CHANGE', id, 'User');
+      res.json({ message: 'Password updated successfully' });
+   } catch (e: any) { res.status(500).json({ message: e.message }); }
 });
 
 apiRouter.delete('/users/:id', authMiddleware, roleGuard(['ADMIN']), async (req: AuthRequest, res: Response): Promise<void> => {
@@ -533,14 +723,154 @@ apiRouter.post('/settings', authMiddleware, roleGuard(['ADMIN']), async (req: Au
    } catch(e: any) { res.status(500).json({ message: e.message }); }
 });
 
+// --- AUDIT LOGS ---
+apiRouter.get('/audit-logs', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { userId, action, dateFrom, dateTo, search, page = '1', limit = '50' } = req.query;
+    const pageNum = Math.max(1, parseInt(page as string, 10) || 1);
+    const pageSize = Math.min(100, Math.max(1, parseInt(limit as string, 10) || 50));
+    const skip = (pageNum - 1) * pageSize;
+
+    let where: any = {};
+
+    // Non-admin users can only see their own logs
+    if (req.user!.role !== 'ADMIN') {
+      where.userId = req.user!.userId;
+    } else if (userId) {
+      where.userId = userId as string;
+    }
+
+    if (action) {
+      where.action = action as string;
+    }
+
+    if (dateFrom || dateTo) {
+      where.timestamp = {};
+      if (dateFrom) where.timestamp.gte = new Date(dateFrom as string);
+      if (dateTo) where.timestamp.lte = new Date(dateTo as string);
+    }
+
+    if (search) {
+      where.OR = [
+        { action: { contains: search as string } },
+        { targetType: { contains: search as string } },
+        { targetId: { contains: search as string } },
+        { user: { name: { contains: search as string } } }
+      ];
+    }
+
+    const [logs, total] = await Promise.all([
+      prisma.auditLog.findMany({
+        where,
+        include: {
+          user: { select: { name: true, email: true, role: true } }
+        },
+        orderBy: { timestamp: 'desc' },
+        skip,
+        take: pageSize
+      }),
+      prisma.auditLog.count({ where })
+    ]);
+
+    res.json({
+      logs,
+      pagination: {
+        page: pageNum,
+        limit: pageSize,
+        total,
+        totalPages: Math.ceil(total / pageSize)
+      }
+    });
+  } catch (e: any) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
+// Get distinct action types (for filter dropdown)
+apiRouter.get('/audit-logs/actions', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const logs = await prisma.auditLog.findMany({
+      select: { action: true },
+      distinct: ['action'],
+      orderBy: { action: 'asc' }
+    });
+    res.json({ actions: logs.map(l => l.action) });
+  } catch (e: any) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
 apiRouter.get('/notifications', authMiddleware, async (req: AuthRequest, res: Response) => {
    try {
-     const notifications = await prisma.notification.findMany({
-       where: { userId: req.user!.userId },
-       orderBy: { createdAt: 'desc' },
-       take: 10
+     const { page = '1', limit = '20' } = req.query;
+     const pageNum = Math.max(1, parseInt(page as string, 10) || 1);
+     const pageSize = Math.min(50, Math.max(1, parseInt(limit as string, 10) || 20));
+     const skip = (pageNum - 1) * pageSize;
+
+     const [notifications, total] = await Promise.all([
+       prisma.notification.findMany({
+         where: { userId: req.user!.userId },
+         orderBy: { createdAt: 'desc' },
+         skip,
+         take: pageSize
+       }),
+       prisma.notification.count({ where: { userId: req.user!.userId } })
+     ]);
+
+     res.json({
+       notifications,
+       pagination: {
+         page: pageNum,
+         limit: pageSize,
+         total,
+         totalPages: Math.ceil(total / pageSize)
+       }
      });
-     res.json({ notifications });
+   } catch(e: any) { res.status(500).json({ message: e.message }); }
+});
+
+apiRouter.get('/notifications/unread-count', authMiddleware, async (req: AuthRequest, res: Response) => {
+   try {
+     const count = await prisma.notification.count({
+       where: { userId: req.user!.userId, read: false }
+     });
+     res.json({ count });
+   } catch(e: any) { res.status(500).json({ message: e.message }); }
+});
+
+apiRouter.patch('/notifications/:id/read', authMiddleware, async (req: AuthRequest, res: Response) => {
+   try {
+     const { id } = req.params;
+     const notification = await prisma.notification.findUnique({ where: { id } });
+     if (!notification || notification.userId !== req.user!.userId) {
+       res.status(404).json({ message: 'Notification not found' });
+       return;
+     }
+     await prisma.notification.update({ where: { id }, data: { read: true } });
+     res.json({ message: 'Marked as read' });
+   } catch(e: any) { res.status(500).json({ message: e.message }); }
+});
+
+apiRouter.patch('/notifications/:id/unread', authMiddleware, async (req: AuthRequest, res: Response) => {
+   try {
+     const { id } = req.params;
+     const notification = await prisma.notification.findUnique({ where: { id } });
+     if (!notification || notification.userId !== req.user!.userId) {
+       res.status(404).json({ message: 'Notification not found' });
+       return;
+     }
+     await prisma.notification.update({ where: { id }, data: { read: false } });
+     res.json({ message: 'Marked as unread' });
+   } catch(e: any) { res.status(500).json({ message: e.message }); }
+});
+
+apiRouter.patch('/notifications/read-all', authMiddleware, async (req: AuthRequest, res: Response) => {
+   try {
+     await prisma.notification.updateMany({
+       where: { userId: req.user!.userId, read: false },
+       data: { read: true }
+     });
+     res.json({ message: 'All notifications marked as read' });
    } catch(e: any) { res.status(500).json({ message: e.message }); }
 });
 
