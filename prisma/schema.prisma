@@ -20,7 +20,7 @@ model User {
   address        String?
   profilePicture String?
   createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  updatedAt      DateTime @updatedAt @default(now())
 
   farms           Farm[]                 @relation("FarmerFarms")
   tickets         WeightTicket[]         @relation("OperatorTickets")
@@ -40,7 +40,7 @@ model Farm {
   isArchived  Boolean  @default(false)
   ownerId     String
   createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  updatedAt   DateTime @updatedAt @default(now())
 
   owner   User           @relation("FarmerFarms", fields: [ownerId], references: [id])
   tickets WeightTicket[]
@@ -60,7 +60,7 @@ model WeightTicket {
   notes          String?
   operatorId     String
   createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  updatedAt      DateTime  @updatedAt @default(now())
   verifiedAt     DateTime?
 
   farm           Farm       @relation(fields: [farmId], references: [id])
@@ -78,7 +78,7 @@ model ReconciliationRecord {
   notes          String?
   receiverId     String
   createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  updatedAt      DateTime @updatedAt @default(now())
   reconciledAt   DateTime @default(now())
   resolvedAt     DateTime?
 
@@ -95,7 +95,7 @@ model AuditLog {
   ipAddress  String?
   userAgent  String?
   timestamp  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  updatedAt  DateTime @updatedAt @default(now())
 
   user User @relation("UserAudits", fields: [userId], references: [id])
 }
@@ -107,7 +107,7 @@ model Notification {
   message   String
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @updatedAt @default(now())
 
   user User @relation(fields: [userId], references: [id])
 }
@@ -116,5 +116,5 @@ model SystemSettings {
   id                String   @id @default(cuid())
   varianceThreshold Float    @default(50)
   basePricePerKg    Float    @default(2.50)
-  updatedAt         DateTime @updatedAt
+  updatedAt         DateTime @updatedAt @default(now())
 }
