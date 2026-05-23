@@ -70,7 +70,8 @@ export function AdminUsers() {
       toast.success(`User "${name}" deleted successfully`);
       fetchUsers();
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to delete user');
+      console.error('Delete user error:', error.response?.data || error.message);
+      toast.error(error.response?.data?.message || error.message || 'Failed to delete user');
     }
   };
 
