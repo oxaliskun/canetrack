@@ -236,7 +236,8 @@ apiRouter.post('/upload', authMiddleware, (req: AuthRequest, res: Response): voi
       res.status(400).json({ message: 'No file provided' });
       return;
     }
-    const url = `/uploads/${req.file.filename}`;
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const url = `${baseUrl}/uploads/${req.file.filename}`;
     res.json({ url });
   });
 });

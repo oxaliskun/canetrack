@@ -4,6 +4,7 @@ import { User, Lock, Save, ShieldCheck, Phone, MapPin, Sprout, Loader2, Camera, 
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../context/ThemeContext';
 import api from '../../api/axiosInstance';
+import { resolveProfilePic } from '../../lib/utils';
 import { toast } from 'sonner';
 
 export function Profile() {
@@ -156,7 +157,7 @@ export function Profile() {
                   <div className="relative group">
                     <div onClick={handleProfilePictureClick} className={`w-20 h-20 rounded-full flex items-center justify-center text-3xl font-black border-4 shadow-sm cursor-pointer overflow-hidden ${isDark ? 'bg-emerald-900/50 text-emerald-400 border-slate-700' : 'bg-emerald-100 text-emerald-600 border-white'}`}>
                       {profilePicture ? (
-                        <img src={profilePicture} alt="Profile" className="w-full h-full object-cover" />
+                        <img src={resolveProfilePic(profilePicture)} alt="Profile" className="w-full h-full object-cover" />
                       ) : (
                         authUser?.name?.charAt(0) || 'U'
                       )}

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axiosInstance';
-import { formatWeight, formatDate, formatCurrency } from '../lib/utils';
+import { formatWeight, formatDate, formatCurrency, resolveProfilePic } from '../lib/utils';
 import { FileText, CheckCircle, AlertTriangle, Clock, Activity, DollarSign, Database, Plus, Users, UserPlus, TrendingUp, Printer, Bell, Download, Sprout, Shield, BarChart3, Truck, Scale, Leaf, Phone, MapPin } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { useAuth } from '../hooks/useAuth';
@@ -71,7 +71,7 @@ function ProfileCard() {
       <div className="flex items-center gap-3">
         <div className={`w-10 h-10 rounded-full flex items-center justify-center text-base font-black border-2 shrink-0 ${isDark ? 'bg-emerald-900/50 text-emerald-400 border-slate-700' : 'bg-emerald-100 text-emerald-600 border-white'}`}>
           {user.profilePicture ? (
-            <img src={user.profilePicture} alt="" className="w-full h-full rounded-full object-cover" />
+            <img src={resolveProfilePic(user.profilePicture)} alt="" className="w-full h-full rounded-full object-cover" />
           ) : (
             user.name?.charAt(0) || 'U'
           )}
