@@ -106,7 +106,7 @@ export function Login() {
         setLockoutUntil(Date.now() + 180000); localStorage.setItem('lockout_until', String(Date.now() + 180000));
         setError('Too many failed attempts. Locked out for 3 minutes.');
       } else {
-        setError(err.response?.data?.message || 'Authentication failed. Please try again.');
+        setError(err.response?.data?.message || (err.code === 'ERR_NETWORK' ? 'Network error — check if the server is running' : 'Authentication failed. Please try again.'));
       }
     } finally {
       setLoading(false);
