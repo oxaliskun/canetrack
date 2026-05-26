@@ -18,7 +18,7 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (res) => res,
   (err) => {
-    if (err.response?.status === 401 && window.location.pathname !== '/login') {
+    if (err.response?.status === 401 && !['/login', '/'].includes(window.location.pathname)) {
       localStorage.removeItem('canetrack_token');
       localStorage.removeItem('canetrack_user');
       window.location.href = '/login';
