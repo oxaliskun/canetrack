@@ -11,6 +11,7 @@ export function Login() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [contactNumber, setContactNumber] = useState('');
   const [address, setAddress] = useState('');
   const [farmName, setFarmName] = useState('');
@@ -18,8 +19,17 @@ export function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [attempts, setAttempts] = useState(0);
-  const [lockoutUntil, setLockoutUntil] = useState<number | null>(null);
+  const [attempts, setAttempts] = useState(Number(localStorage.getItem('login_attempts') || 0));
+  const [verificationEmail, setVerificationEmail] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
+  const [verifying, setVerifying] = useState(false);
+  const [lockoutUntil, setLockoutUntil] = useState<number | null>(() => {
+    const saved = localStorage.getItem('lockout_until');
+    if (saved && Number(saved) > Date.now()) return Number(saved);
+    localStorage.removeItem('lockout_until');
+    localStorage.removeItem('login_attempts');
+    return null;
+  });
   const [countdown, setCountdown] = useState(0);
   const { isDark, toggleTheme } = useTheme();
   
@@ -27,11 +37,25 @@ export function Login() {
   const { login } = useAuth();
 
   useEffect(() => {
+    const saved = localStorage.getItem('lockout_until');
+    const attempts = localStorage.getItem('login_attempts');
+    if (saved && Number(saved) > Date.now()) {
+      setLockoutUntil(Number(saved));
+      if (attempts) setAttempts(Number(attempts));
+    }
+  }, []);
+
+  useEffect(() => {
     if (!lockoutUntil) return;
     const tick = () => {
       const remaining = Math.max(0, Math.ceil((lockoutUntil - Date.now()) / 1000));
       setCountdown(remaining);
-      if (remaining <= 0) { setLockoutUntil(null); setAttempts(0); }
+      if (remaining <= 0) {
+        setLockoutUntil(null);
+        setAttempts(0);
+        localStorage.removeItem('lockout_until');
+        localStorage.removeItem('login_attempts');
+      }
     };
     tick();
     const id = setInterval(tick, 1000);
@@ -46,12 +70,28 @@ export function Login() {
     setLoading(true); setError(''); setSuccess('');
     try {
       if (isRegistering) {
-        await api.post('/auth/register', { name, email, password, contactNumber, address, farmName, farmLocation });
-        setSuccess('Account created! Sign in to view your earnings.');
-        setIsRegistering(false); setPassword(''); setContactNumber(''); setAddress(''); setFarmName(''); setFarmLocation('');
+        if (password !== confirmPassword) {
+          setError('Passwords do not match');
+          setLoading(false);
+          return;
+        }
+        if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
+          setError('Password must contain both letters and numbers');
+          setLoading(false);
+          return;
+        }
+        if (!/^09\d{9}$/.test(contactNumber)) {
+          setError('Contact number must be 11 digits starting with 09');
+          setLoading(false);
+          return;
+        }
+        const { data } = await api.post('/auth/register', { name, email, password, contactNumber, address, farmName, farmLocation });
+        setVerificationEmail(data.email);
+        setSuccess('Verification code sent to your email!');
+        setPassword(''); setConfirmPassword(''); setContactNumber(''); setAddress(''); setFarmName(''); setFarmLocation('');
       } else {
         const { data } = await api.post('/auth/login', { email, password });
-        setAttempts(0);
+        setAttempts(0); localStorage.setItem('login_attempts', '0');
         login(data.token, data.user);
         const roleMap: Record<string, string> = {
           FARMER: '/dashboard/farmer', OPERATOR: '/dashboard/operator',
@@ -61,13 +101,47 @@ export function Login() {
       }
     } catch (err: any) {
       const newAttempts = attempts + 1;
-      setAttempts(newAttempts);
+      setAttempts(newAttempts); localStorage.setItem('login_attempts', String(newAttempts));
       if (newAttempts >= 3) {
-        setLockoutUntil(Date.now() + 180000);
+        setLockoutUntil(Date.now() + 180000); localStorage.setItem('lockout_until', String(Date.now() + 180000));
         setError('Too many failed attempts. Locked out for 3 minutes.');
       } else {
         setError(err.response?.data?.message || 'Authentication failed. Please try again.');
       }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setVerifying(true); setError('');
+    try {
+      await api.post('/auth/verify-email', { email: verificationEmail, code: verificationCode });
+      const verifiedEmail = verificationEmail;
+      setVerificationEmail('');
+      setVerificationCode('');
+      setEmail(verifiedEmail);
+      setSuccess('Email verified! Enter your password to sign in.');
+      setIsRegistering(false);
+      setPassword('');
+      setConfirmPassword('');
+      setAttempts(0); localStorage.setItem('login_attempts', '0');
+      setLockoutUntil(null); localStorage.removeItem('lockout_until');
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Verification failed');
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    setLoading(true); setError(''); setSuccess('');
+    try {
+      await api.post('/auth/resend-code', { email: verificationEmail });
+      setSuccess('New verification code sent!');
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to resend code');
     } finally {
       setLoading(false);
     }
@@ -167,18 +241,65 @@ export function Login() {
               </p>
             </div>
 
-            <form className="space-y-4 sm:space-y-5" onSubmit={handleSubmit}>
-              <AnimatePresence mode="wait">
-                {error && <motion.div initial={{opacity:0, height:0}} animate={{opacity:1, height:'auto'}} exit={{opacity:0, height:0}} className="bg-red-950/30 text-red-400 p-4 rounded-xl sm:rounded-2xl text-sm font-bold border border-red-900/50 flex items-start gap-3">
-                  <div className="mt-0.5"><div className="w-2 h-2 rounded-full bg-red-500" /></div>
-                  {error}
-                </motion.div>}
-                {success && <motion.div initial={{opacity:0, height:0}} animate={{opacity:1, height:'auto'}} exit={{opacity:0, height:0}} className="bg-emerald-950/30 text-emerald-400 p-4 rounded-xl sm:rounded-2xl text-sm font-bold border border-emerald-800/50 flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
-                  {success}
-                </motion.div>}
-              </AnimatePresence>
+            {verificationEmail ? (
+              <form className="space-y-4 sm:space-y-5" onSubmit={handleVerifyCode}>
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/50 mb-4">
+                    <Mail className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <h3 className={`text-lg font-extrabold ${isDark ? 'text-white' : 'text-slate-900'}`}>Check your email</h3>
+                  <p className={`text-sm mt-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                    We sent a 6-digit code to <strong className={isDark ? 'text-white' : 'text-slate-800'}>{verificationEmail}</strong>
+                  </p>
+                </motion.div>
 
+                <div className="max-w-[240px] mx-auto">
+                  <label className={`block text-[11px] sm:text-xs font-bold uppercase tracking-widest mb-2 ml-1 text-center ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Verification Code</label>
+                  <input
+                    type="text"
+                    required
+                    maxLength={6}
+                    className={`w-full text-center text-2xl font-bold tracking-[8px] py-4 border rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none min-h-[52px] ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`}
+                    value={verificationCode}
+                    onChange={e => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder="000000"
+                  />
+                </div>
+
+                <AnimatePresence mode="wait">
+                  {error && <motion.div initial={{opacity:0, height:0}} animate={{opacity:1, height:'auto'}} exit={{opacity:0, height:0}} className="bg-red-950/30 text-red-400 p-4 rounded-xl sm:rounded-2xl text-sm font-bold border border-red-900/50 flex items-start gap-3">
+                    <div className="mt-0.5"><div className="w-2 h-2 rounded-full bg-red-500" /></div>
+                    {error}
+                  </motion.div>}
+                  {success && <motion.div initial={{opacity:0, height:0}} animate={{opacity:1, height:'auto'}} exit={{opacity:0, height:0}} className="bg-emerald-950/30 text-emerald-400 p-4 rounded-xl sm:rounded-2xl text-sm font-bold border border-emerald-800/50 flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+                    {success}
+                  </motion.div>}
+                </AnimatePresence>
+
+                <motion.button
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="submit"
+                  disabled={verifying || verificationCode.length !== 6}
+                  className={`w-full flex justify-center items-center py-3.5 sm:py-4 px-4 rounded-xl sm:rounded-2xl font-bold transition-all shadow-lg min-h-[48px] ${verifying || verificationCode.length !== 6 ? 'bg-slate-600 text-slate-400 cursor-not-allowed' : 'text-white bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 shadow-emerald-600/30'}`}
+                >
+                  {verifying ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Verify Email'}
+                </motion.button>
+
+                <p className="text-center">
+                  <button type="button" onClick={handleResendCode} disabled={loading} className={`text-sm font-medium hover:underline ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-700'}`}>
+                    {loading ? 'Sending...' : 'Resend code'}
+                  </button>
+                </p>
+                <p className="text-center">
+                  <button type="button" onClick={() => { setVerificationEmail(''); setVerificationCode(''); setError(''); setSuccess(''); }} className={`text-sm font-medium hover:underline ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                    Back to sign in
+                  </button>
+                </p>
+              </form>
+            ) : (
+            <><form className="space-y-4 sm:space-y-5" onSubmit={handleSubmit}>
               <div className="space-y-3 sm:space-y-4">
                 <AnimatePresence>
                   {isRegistering && (
@@ -200,7 +321,7 @@ export function Login() {
                       <div className="pb-3 sm:pb-4">
                         <label className={`block text-[11px] sm:text-xs font-bold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Contact Number</label>
                         <div className="relative">
-                          <input type="tel" className={`w-full pl-11 sm:pl-12 pr-4 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium min-h-[44px] ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={contactNumber} onChange={e => setContactNumber(e.target.value)} placeholder="+63 912 345 6789" />
+                          <input type="tel" required={isRegistering} className={`w-full pl-11 sm:pl-12 pr-4 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium min-h-[44px] ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={contactNumber} onChange={e => setContactNumber(e.target.value)} placeholder="09123456789" />
                           <Phone className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-500" />
                         </div>
                       </div>
@@ -268,6 +389,31 @@ export function Login() {
                     <Lock className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-500" />
                   </div>
                 </div>
+
+                <AnimatePresence>
+                  {isRegistering && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                      <div>
+                        <label className={`block text-[11px] sm:text-xs font-bold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Confirm Password</label>
+                        <div className="relative">
+                          <input type="password" required={isRegistering} className={`w-full pl-11 sm:pl-12 pr-4 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium tracking-widest min-h-[44px] ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="••••••••" />
+                          <Lock className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-500" />
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <AnimatePresence mode="wait">
+                  {error && <motion.div initial={{opacity:0, height:0}} animate={{opacity:1, height:'auto'}} exit={{opacity:0, height:0}} className="bg-red-950/30 text-red-400 p-4 rounded-xl sm:rounded-2xl text-sm font-bold border border-red-900/50 flex items-start gap-3">
+                    <div className="mt-0.5"><div className="w-2 h-2 rounded-full bg-red-500" /></div>
+                    {error}
+                  </motion.div>}
+                  {success && <motion.div initial={{opacity:0, height:0}} animate={{opacity:1, height:'auto'}} exit={{opacity:0, height:0}} className="bg-emerald-950/30 text-emerald-400 p-4 rounded-xl sm:rounded-2xl text-sm font-bold border border-emerald-800/50 flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+                    {success}
+                  </motion.div>}
+                </AnimatePresence>
               </div>
 
               {attempts >= 2 && !isLocked && (
@@ -291,7 +437,7 @@ export function Login() {
             <div className="text-center mt-6 sm:mt-8">
                <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                  {isRegistering ? "Already a client?" : "Are you a new farmer/client?"}{' '}
-                  <button onClick={() => { setIsRegistering(!isRegistering); setError(''); setSuccess(''); setAttempts(0); setLockoutUntil(null); }} className="text-emerald-500 hover:text-emerald-400 font-bold ml-1 transition-colors underline decoration-2 underline-offset-4 decoration-emerald-800">
+                   <button onClick={() => { setIsRegistering(!isRegistering); setError(''); setSuccess(''); setPassword(''); setConfirmPassword(''); setAttempts(0); localStorage.setItem('login_attempts', '0'); setLockoutUntil(null); localStorage.removeItem('lockout_until'); }} className="text-emerald-500 hover:text-emerald-400 font-bold ml-1 transition-colors underline decoration-2 underline-offset-4 decoration-emerald-800">
                    {isRegistering ? "Sign in instead" : "Create Account"}
                  </button>
                </p>
@@ -305,6 +451,8 @@ export function Login() {
                 </p>
 
             </div>
+          </>
+          )}
           </motion.div>
         </div>
       </div>

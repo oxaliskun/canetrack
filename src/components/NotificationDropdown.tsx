@@ -103,12 +103,12 @@ export function NotificationDropdown() {
   const { notifications, unreadCount, markAsRead, markAsUnread, markAllAsRead } = useNotifications();
   const [open, setOpen] = useState(false);
   const btnRef = useRef<HTMLButtonElement>(null);
-  const [pos, setPos] = useState({ top: 0, right: 0 });
+  const [pos, setPos] = useState({ top: 0, left: 0 });
 
   const toggle = () => {
     if (!open && btnRef.current) {
       const rect = btnRef.current.getBoundingClientRect();
-      setPos({ top: rect.top, right: window.innerWidth - rect.right });
+      setPos({ top: rect.top, left: rect.right + 8 });
     }
     setOpen(!open);
   };
@@ -141,7 +141,7 @@ export function NotificationDropdown() {
         <>
           <div className="fixed inset-0 z-[100]" onClick={() => setOpen(false)} />
           <div
-            style={{ top: pos.top, right: pos.right }}
+            style={{ top: pos.top, left: pos.left }}
             className={cn(
               'fixed w-[calc(100vw-32px)] max-w-sm sm:w-80 rounded-2xl border shadow-2xl overflow-hidden z-[101]',
               isDark

@@ -5,7 +5,25 @@ import jwt from 'jsonwebtoken';
 import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { randomUUID } from 'crypto';
+import { randomUUID, randomInt } from 'crypto';
+import nodemailer from 'nodemailer';
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+const pendingRegistrations = new Map<string, { name: string; email: string; passwordHash: string; contactNumber: string | null; address: string | null; farmName: string | null; farmLocation: string | null; code: string; expiresAt: number }>();
+
+const cleanupPending = setInterval(() => {
+  const now = Date.now();
+  for (const [email, reg] of pendingRegistrations) {
+    if (reg.expiresAt < now) pendingRegistrations.delete(email);
+  }
+}, 60000);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -81,12 +99,14 @@ const writeAuditLog = async (userId: string, action: string, targetId?: string, 
 apiRouter.post('/auth/register', async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, email, password, contactNumber, address, farmName, farmLocation } = req.body;
-    // Clients registering publicly are always FARMER
-    const role = 'FARMER';
 
-    // Validation
-    if (!name || !email || !password) {
-      res.status(400).json({ message: 'Name, email, and password are required' });
+    if (!name || !email || !password || !contactNumber) {
+      res.status(400).json({ message: 'Name, email, contact number, and password are required' });
+      return;
+    }
+
+    if (!/^09\d{9}$/.test(contactNumber)) {
+      res.status(400).json({ message: 'Contact number must be 11 digits starting with 09' });
       return;
     }
 
@@ -95,23 +115,126 @@ apiRouter.post('/auth/register', async (req: Request, res: Response): Promise<vo
       res.status(409).json({ message: 'Email already in use' });
       return;
     }
+
+    if (pendingRegistrations.has(email)) {
+      pendingRegistrations.delete(email);
+    }
+
     const passwordHash = await bcrypt.hash(password, 10);
+    const code = String(randomInt(100000, 999999));
+    pendingRegistrations.set(email, {
+      name, email, passwordHash, contactNumber: contactNumber || null, address: address || null,
+      farmName: farmName || null, farmLocation: farmLocation || null, code,
+      expiresAt: Date.now() + 600000
+    });
+
+    try {
+      await transporter.sendMail({
+        from: `"CaneTrack" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: 'Verify your CaneTrack account',
+        html: `
+          <div style="font-family:sans-serif;max-width:480px;margin:0 auto;">
+            <h1 style="color:#059669;">CaneTrack</h1>
+            <p>Hi <strong>${name}</strong>,</p>
+            <p>Your verification code is:</p>
+            <div style="font-size:32px;font-weight:900;letter-spacing:8px;text-align:center;padding:24px;background:#f0fdf4;border-radius:12px;color:#059669;margin:24px 0;">${code}</div>
+            <p>Enter this code to verify your email and start tracking your harvest.</p>
+            <p style="color:#94a3b8;font-size:12px;">If you didn't create this account, ignore this email.</p>
+          </div>
+        `
+      });
+    } catch (emailErr) {
+      pendingRegistrations.delete(email);
+      console.error('Failed to send verification email:', emailErr);
+      res.status(500).json({ message: 'Failed to send verification email. Check your email credentials.' });
+      return;
+    }
+
+    res.status(201).json({ message: 'Verification code sent to your email', needsVerification: true, email });
+  } catch (e: any) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
+apiRouter.post('/auth/verify-email', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email, code } = req.body;
+    if (!email || !code) {
+      res.status(400).json({ message: 'Email and verification code are required' });
+      return;
+    }
+    const pending = pendingRegistrations.get(email);
+    if (!pending) {
+      res.status(400).json({ message: 'No pending registration found. Please register again.' });
+      return;
+    }
+    if (pending.expiresAt < Date.now()) {
+      pendingRegistrations.delete(email);
+      res.status(400).json({ message: 'Verification code expired. Please register again.' });
+      return;
+    }
+    if (pending.code !== code) {
+      res.status(400).json({ message: 'Invalid verification code' });
+      return;
+    }
+
     const user = await prisma.user.create({
-      data: { name, email, passwordHash, role, contactNumber, address },
+      data: {
+        name: pending.name, email: pending.email, passwordHash: pending.passwordHash,
+        role: 'FARMER', contactNumber: pending.contactNumber, address: pending.address,
+        emailVerified: true, verificationCode: null
+      },
       select: { id: true, name: true, email: true, role: true, contactNumber: true, address: true, profilePicture: true }
     });
-    // Auto-create their first farm configuration
     await prisma.farm.create({
       data: {
-        farmName: farmName || `${name}'s Farm`,
-        location: farmLocation || 'Local Region',
+        farmName: pending.farmName || `${pending.name}'s Farm`,
+        location: pending.farmLocation || 'Local Region',
         barangay: 'Unspecified',
         hectares: 5,
         ownerId: user.id
       }
     });
 
-    res.status(201).json({ message: 'Account created successfully. Please sign in.', user });
+    pendingRegistrations.delete(email);
+    res.json({ message: 'Email verified successfully! You can now sign in.' });
+  } catch (e: any) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
+apiRouter.post('/auth/resend-code', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      res.status(400).json({ message: 'Email is required' });
+      return;
+    }
+    const pending = pendingRegistrations.get(email);
+    if (!pending) {
+      res.status(400).json({ message: 'No pending registration. Please register again.' });
+      return;
+    }
+    const newCode = String(randomInt(100000, 999999));
+    pending.code = newCode;
+    pending.expiresAt = Date.now() + 600000;
+    await transporter.sendMail({
+      from: `"CaneTrack" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: 'Your new CaneTrack verification code',
+      html: `
+        <div style="font-family:sans-serif;max-width:480px;margin:0 auto;">
+          <h1 style="color:#059669;">CaneTrack</h1>
+          <p>Hi <strong>${pending.name}</strong>,</p>
+          <p>Your new verification code is:</p>
+          <div style="font-size:32px;font-weight:900;letter-spacing:8px;text-align:center;padding:24px;background:#f0fdf4;border-radius:12px;color:#059669;margin:24px 0;">${newCode}</div>
+          <p>Enter this code to verify your email and start tracking your harvest.</p>
+          <p style="color:#94a3b8;font-size:12px;">If you didn't request this, ignore this email.</p>
+        </div>
+      `
+    });
+    res.json({ message: 'New verification code sent' });
   } catch (e: any) {
     res.status(500).json({ message: e.message });
   }

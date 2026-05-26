@@ -88,17 +88,25 @@ function PrivateRoute({ allowedRoles, children }: { allowedRoles: string[], chil
 }
 
 export default function App() {
-  const [showSplash, setShowSplash] = useState(true);
+  const isLanding = globalThis.location?.pathname === '/';
+  const alreadyShown = sessionStorage.getItem('splash_shown');
+  const [showSplash, setShowSplash] = useState(isLanding && !alreadyShown);
+
+  if (isLanding && !alreadyShown) {
+    sessionStorage.setItem('splash_shown', '1');
+  }
 
   return (
     <ThemeProvider>
       <Toaster position="top-right" richColors />
       <NotificationProvider>
+      {isLanding && (
       <AnimatePresence>
         {showSplash && <SplashScreen key="splash" onComplete={() => setShowSplash(false)} />}
       </AnimatePresence>
+      )}
       
-      {!showSplash && (
+      {(!isLanding || !showSplash) && (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<LandingPage />} />
