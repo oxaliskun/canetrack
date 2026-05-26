@@ -18,7 +18,7 @@ export function LandingPage() {
           </div>
           <div className="hidden md:flex items-center gap-6 lg:gap-8 text-sm font-semibold text-slate-600">
             <a href="#features" className="hover:text-emerald-600 transition-colors whitespace-nowrap">Features</a>
-            <a href="#financials" className="hover:text-emerald-600 transition-colors whitespace-nowrap">Financials</a>
+            <a href="#how-it-works" className="hover:text-emerald-600 transition-colors whitespace-nowrap">How It Works</a>
             <a href="#roles" className="hover:text-emerald-600 transition-colors whitespace-nowrap">Roles</a>
             <a href="#testimonials" className="hover:text-emerald-600 transition-colors whitespace-nowrap">Testimonials</a>
           </div>
@@ -251,7 +251,7 @@ export function LandingPage() {
       </section>
 
       {/* How It Works Section */}
-      <section id="roles" className="relative z-10 py-24 bg-slate-50">
+      <section id="how-it-works" className="relative z-10 py-24 bg-slate-50">
         <div className="absolute inset-0 opacity-20 pointer-events-none">
           <div className="w-full h-full bg-[url('https://images.unsplash.com/photo-1560493676-04079c3e121d?auto=format&fit=crop&q=80&w=1920')] bg-cover bg-center" />
         </div>
@@ -333,7 +333,7 @@ export function LandingPage() {
       </section>
 
       {/* Roles Section */}
-      <section id="financials" className="relative z-10 py-24 bg-white">
+      <section id="roles" className="relative z-10 py-24 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold uppercase tracking-wider mb-4 border border-emerald-100">
@@ -546,8 +546,8 @@ export function LandingPage() {
               <h4 className="text-white font-bold mb-4">Platform</h4>
               <ul className="space-y-3 text-sm">
                 <li><a href="#features" className="hover:text-emerald-400 transition-colors">Features</a></li>
-                <li><a href="#roles" className="hover:text-emerald-400 transition-colors">How It Works</a></li>
-                <li><a href="#financials" className="hover:text-emerald-400 transition-colors">Pricing</a></li>
+                <li><a href="#how-it-works" className="hover:text-emerald-400 transition-colors">How It Works</a></li>
+                <li><a href="#roles" className="hover:text-emerald-400 transition-colors">Roles</a></li>
                 <li><a href="#testimonials" className="hover:text-emerald-400 transition-colors">Testimonials</a></li>
               </ul>
             </div>
