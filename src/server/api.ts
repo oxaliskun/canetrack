@@ -132,7 +132,7 @@ apiRouter.post('/auth/register', async (req: Request, res: Response): Promise<vo
     });
 
     try {
-      await transporter.sendMail({
+      transporter.sendMail({
         from: `"CaneTrack" <${process.env.EMAIL_USER}>`,
         to: email,
         subject: 'Verify your CaneTrack account',
@@ -146,12 +146,9 @@ apiRouter.post('/auth/register', async (req: Request, res: Response): Promise<vo
             <p style="color:#94a3b8;font-size:12px;">If you didn't create this account, ignore this email.</p>
           </div>
         `
-      });
+      }).catch(e => console.error('Email send failed:', e));
     } catch (emailErr) {
-      pendingRegistrations.delete(email);
       console.error('Failed to send verification email:', emailErr);
-      res.status(500).json({ message: 'Failed to send verification email. Check your email credentials.' });
-      return;
     }
 
     res.status(201).json({ message: 'Verification code sent to your email', needsVerification: true, email });
@@ -222,7 +219,7 @@ apiRouter.post('/auth/resend-code', async (req: Request, res: Response): Promise
     const newCode = String(randomInt(100000, 999999));
     pending.code = newCode;
     pending.expiresAt = Date.now() + 600000;
-    await transporter.sendMail({
+    transporter.sendMail({
       from: `"CaneTrack" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: 'Your new CaneTrack verification code',
@@ -236,7 +233,7 @@ apiRouter.post('/auth/resend-code', async (req: Request, res: Response): Promise
           <p style="color:#94a3b8;font-size:12px;">If you didn't request this, ignore this email.</p>
         </div>
       `
-    });
+    }).catch(e => console.error('Resend email failed:', e));
     res.json({ message: 'New verification code sent' });
   } catch (e: any) {
     res.status(500).json({ message: e.message });
