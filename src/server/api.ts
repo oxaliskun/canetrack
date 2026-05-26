@@ -149,6 +149,7 @@ apiRouter.post('/auth/register', async (req: Request, res: Response): Promise<vo
           </div>
         `
       }).catch(e => console.error('Email send failed:', e));
+      console.log(`[DEV] Verification code for ${email}: ${code}`);
     } catch (emailErr) {
       console.error('Failed to send verification email:', emailErr);
     }
@@ -236,6 +237,7 @@ apiRouter.post('/auth/resend-code', async (req: Request, res: Response): Promise
         </div>
       `
     }).catch(e => console.error('Resend email failed:', e));
+    console.log(`[DEV] New verification code for ${email}: ${newCode}`);
     res.json({ message: 'New verification code sent' });
   } catch (e: any) {
     res.status(500).json({ message: e.message });
