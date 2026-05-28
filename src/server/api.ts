@@ -13,11 +13,15 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY || '');
 const EMAIL_FROM = process.env.EMAIL_USER || 'noreply@canetrack.app';
 
 const pendingRegistrations = new Map<string, { name: string; email: string; passwordHash: string; contactNumber: string | null; address: string | null; farmName: string | null; farmLocation: string | null; code: string; expiresAt: number }>();
+const pendingResets = new Map<string, { email: string; code: string; expiresAt: number }>();
 
 const cleanupPending = setInterval(() => {
   const now = Date.now();
   for (const [email, reg] of pendingRegistrations) {
     if (reg.expiresAt < now) pendingRegistrations.delete(email);
+  }
+  for (const [email, reset] of pendingResets) {
+    if (reset.expiresAt < now) pendingResets.delete(email);
   }
 }, 60000);
 
@@ -230,6 +234,71 @@ apiRouter.post('/auth/resend-code', async (req: Request, res: Response): Promise
       `
     }).catch(e => console.error('Resend email failed:', e.response?.body || e.message));
     res.json({ message: 'New verification code sent' });
+  } catch (e: any) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
+apiRouter.post('/auth/forgot-password', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      res.status(400).json({ message: 'Email is required' });
+      return;
+    }
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      res.status(404).json({ message: 'No account found with this email' });
+      return;
+    }
+    const code = String(randomInt(100000, 999999));
+    pendingResets.set(email, { email, code, expiresAt: Date.now() + 600000 });
+    sgMail.send({
+      from: EMAIL_FROM,
+      to: email,
+      subject: 'Reset your CaneTrack password',
+      html: `
+        <div style="font-family:sans-serif;max-width:480px;margin:0 auto;">
+          <h1 style="color:#059669;">CaneTrack</h1>
+          <p>Hi <strong>${user.name}</strong>,</p>
+          <p>Your password reset code is:</p>
+          <div style="font-size:32px;font-weight:900;letter-spacing:8px;text-align:center;padding:24px;background:#f0fdf4;border-radius:12px;color:#059669;margin:24px 0;">${code}</div>
+          <p>Enter this code to reset your password. It expires in 10 minutes.</p>
+          <p style="color:#94a3b8;font-size:12px;">If you didn't request this, ignore this email.</p>
+        </div>
+      `
+    }).catch(e => console.error('Forgot password email failed:', e.response?.body || e.message));
+    res.json({ message: 'Reset code sent to your email', email });
+  } catch (e: any) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
+apiRouter.post('/auth/reset-password', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email, code, newPassword } = req.body;
+    if (!email || !code || !newPassword) {
+      res.status(400).json({ message: 'Email, code, and new password are required' });
+      return;
+    }
+    const reset = pendingResets.get(email);
+    if (!reset) {
+      res.status(400).json({ message: 'No reset request found. Please request a code again.' });
+      return;
+    }
+    if (reset.expiresAt < Date.now()) {
+      pendingResets.delete(email);
+      res.status(400).json({ message: 'Reset code expired. Please request a new one.' });
+      return;
+    }
+    if (reset.code !== code) {
+      res.status(400).json({ message: 'Invalid reset code' });
+      return;
+    }
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({ where: { email }, data: { passwordHash } });
+    pendingResets.delete(email);
+    res.json({ message: 'Password reset successfully! You can now sign in.' });
   } catch (e: any) {
     res.status(500).json({ message: e.message });
   }

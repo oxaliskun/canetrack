@@ -34,6 +34,12 @@ export function Login() {
   });
   const [countdown, setCountdown] = useState(0);
   const { isDark, toggleTheme } = useTheme();
+  const [forgotMode, setForgotMode] = useState(false);
+  const [resetStep, setResetStep] = useState<'email' | 'code' | 'password'>('email');
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetCode, setResetCode] = useState('');
+  const [resetPassword, setResetPassword] = useState('');
+  const [resetConfirmPassword, setResetConfirmPassword] = useState('');
   
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -144,6 +150,44 @@ export function Login() {
       setSuccess('New verification code sent!');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to resend code');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true); setError(''); setSuccess('');
+    try {
+      if (resetStep === 'email') {
+        await api.post('/auth/forgot-password', { email: resetEmail });
+        setSuccess('Reset code sent to your email!');
+        setResetStep('code');
+      } else if (resetStep === 'code') {
+        setResetStep('password');
+        setSuccess('Code verified. Set your new password.');
+      } else if (resetStep === 'password') {
+        if (resetPassword !== resetConfirmPassword) {
+          setError('Passwords do not match');
+          setLoading(false);
+          return;
+        }
+        if (!/[a-zA-Z]/.test(resetPassword) || !/[0-9]/.test(resetPassword)) {
+          setError('Password must contain both letters and numbers');
+          setLoading(false);
+          return;
+        }
+        await api.post('/auth/reset-password', { email: resetEmail, code: resetCode, newPassword: resetPassword });
+        setSuccess('Password reset successfully! Sign in with your new password.');
+        setTimeout(() => {
+          setForgotMode(false);
+          setResetStep('email');
+          setResetEmail(''); setResetCode(''); setResetPassword(''); setResetConfirmPassword('');
+          setEmail(resetEmail);
+        }, 2000);
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Something went wrong');
     } finally {
       setLoading(false);
     }
@@ -300,6 +344,83 @@ export function Login() {
                   </button>
                 </p>
               </form>
+            ) : forgotMode ? (
+              <form className="space-y-4 sm:space-y-5" onSubmit={handleForgotSubmit}>
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/50 mb-4">
+                    <Lock className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <h3 className={`text-lg font-extrabold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                    {resetStep === 'email' ? 'Reset Password' : resetStep === 'code' ? 'Check your email' : 'Set new password'}
+                  </h3>
+                  <p className={`text-sm mt-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                    {resetStep === 'email' ? 'Enter your email and we\'ll send a reset code.' : resetStep === 'code' ? `We sent a code to ${resetEmail}` : 'Enter your new password.'}
+                  </p>
+                </motion.div>
+
+                {resetStep === 'email' && (
+                  <div>
+                    <label className={`block text-[11px] sm:text-xs font-bold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Email address</label>
+                    <div className="relative">
+                      <input type="email" required className={`w-full pl-11 sm:pl-12 pr-4 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium min-h-[44px] ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={resetEmail} onChange={e => setResetEmail(e.target.value)} placeholder="you@example.com" />
+                      <Mail className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-500" />
+                    </div>
+                  </div>
+                )}
+
+                {resetStep === 'code' && (
+                  <div className="max-w-[240px] mx-auto">
+                    <label className={`block text-[11px] sm:text-xs font-bold uppercase tracking-widest mb-2 ml-1 text-center ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Reset Code</label>
+                    <input type="text" required maxLength={6} className={`w-full text-center text-2xl font-bold tracking-[8px] py-4 border rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none min-h-[52px] ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={resetCode} onChange={e => setResetCode(e.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="000000" />
+                  </div>
+                )}
+
+                {resetStep === 'password' && (
+                  <>
+                    <div>
+                      <label className={`block text-[11px] sm:text-xs font-bold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>New Password</label>
+                      <div className="relative">
+                        <input type="password" required className={`w-full pl-11 sm:pl-12 pr-4 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium tracking-widest min-h-[44px] ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={resetPassword} onChange={e => setResetPassword(e.target.value)} placeholder="••••••••" />
+                        <Lock className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-500" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className={`block text-[11px] sm:text-xs font-bold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Confirm New Password</label>
+                      <div className="relative">
+                        <input type="password" required className={`w-full pl-11 sm:pl-12 pr-4 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium tracking-widest min-h-[44px] ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={resetConfirmPassword} onChange={e => setResetConfirmPassword(e.target.value)} placeholder="••••••••" />
+                        <Lock className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-500" />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                <AnimatePresence mode="wait">
+                  {error && <motion.div initial={{opacity:0, height:0}} animate={{opacity:1, height:'auto'}} exit={{opacity:0, height:0}} className="bg-red-950/30 text-red-400 p-4 rounded-xl sm:rounded-2xl text-sm font-bold border border-red-900/50 flex items-start gap-3">
+                    <div className="mt-0.5"><div className="w-2 h-2 rounded-full bg-red-500" /></div>
+                    {error}
+                  </motion.div>}
+                  {success && <motion.div initial={{opacity:0, height:0}} animate={{opacity:1, height:'auto'}} exit={{opacity:0, height:0}} className="bg-emerald-950/30 text-emerald-400 p-4 rounded-xl sm:rounded-2xl text-sm font-bold border border-emerald-800/50 flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+                    {success}
+                  </motion.div>}
+                </AnimatePresence>
+
+                <motion.button
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="submit"
+                  disabled={loading || (resetStep === 'code' && resetCode.length !== 6)}
+                  className={`w-full flex justify-center items-center py-3.5 sm:py-4 px-4 rounded-xl sm:rounded-2xl font-bold transition-all shadow-lg min-h-[48px] ${loading || (resetStep === 'code' && resetCode.length !== 6) ? 'bg-slate-600 text-slate-400 cursor-not-allowed' : 'text-white bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 shadow-emerald-600/30'}`}
+                >
+                  {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : resetStep === 'email' ? 'Send Reset Code' : resetStep === 'code' ? 'Continue' : 'Reset Password'}
+                </motion.button>
+
+                <p className="text-center">
+                  <button type="button" onClick={() => { setForgotMode(false); setError(''); setSuccess(''); setResetStep('email'); setResetEmail(''); setResetCode(''); setResetPassword(''); setResetConfirmPassword(''); }} className={`text-sm font-medium hover:underline ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                    Back to sign in
+                  </button>
+                </p>
+              </form>
             ) : (
             <><form className="space-y-4 sm:space-y-5" onSubmit={handleSubmit}>
               <div className="space-y-3 sm:space-y-4">
@@ -384,7 +505,7 @@ export function Login() {
                 <div>
                   <div className="flex justify-between items-center mb-2 ml-1 pr-1">
                      <label className={`block text-[11px] sm:text-xs font-bold uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Password</label>
-                     {!isRegistering && <a href="#" className="text-xs font-bold text-emerald-500 hover:text-emerald-400">Forgot?</a>}
+                     {!isRegistering && <button type="button" onClick={() => { setForgotMode(true); setResetStep('email'); setResetEmail(email); setError(''); setSuccess(''); }} className="text-xs font-bold text-emerald-500 hover:text-emerald-400">Forgot?</button>}
                   </div>
                   <div className="relative">
                     <input type={showPassword ? 'text' : 'password'} required className={`w-full pl-11 sm:pl-12 pr-12 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium tracking-widest min-h-[44px] ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" />
