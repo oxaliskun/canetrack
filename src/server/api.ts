@@ -6,20 +6,11 @@ import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { randomUUID, randomInt } from 'crypto';
-import nodemailer from 'nodemailer';
+import sgMail from '@sendgrid/mail';
 
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  connectionTimeout: 15000,
-  greetingTimeout: 15000,
-  socketTimeout: 20000,
-});
+sgMail.setApiKey(process.env.SENDGRID_API_KEY || '');
+
+const EMAIL_FROM = process.env.EMAIL_USER || 'noreply@canetrack.app';
 
 const pendingRegistrations = new Map<string, { name: string; email: string; passwordHash: string; contactNumber: string | null; address: string | null; farmName: string | null; farmLocation: string | null; code: string; expiresAt: number }>();
 
@@ -134,8 +125,8 @@ apiRouter.post('/auth/register', async (req: Request, res: Response): Promise<vo
     });
 
     try {
-      transporter.sendMail({
-        from: `"CaneTrack" <${process.env.EMAIL_USER}>`,
+      sgMail.send({
+        from: EMAIL_FROM,
         to: email,
         subject: 'Verify your CaneTrack account',
         html: `
@@ -149,7 +140,6 @@ apiRouter.post('/auth/register', async (req: Request, res: Response): Promise<vo
           </div>
         `
       }).catch(e => console.error('Email send failed:', e));
-      console.log(`[DEV] Verification code for ${email}: ${code}`);
     } catch (emailErr) {
       console.error('Failed to send verification email:', emailErr);
     }
@@ -222,8 +212,8 @@ apiRouter.post('/auth/resend-code', async (req: Request, res: Response): Promise
     const newCode = String(randomInt(100000, 999999));
     pending.code = newCode;
     pending.expiresAt = Date.now() + 600000;
-    transporter.sendMail({
-      from: `"CaneTrack" <${process.env.EMAIL_USER}>`,
+    sgMail.send({
+      from: EMAIL_FROM,
       to: email,
       subject: 'Your new CaneTrack verification code',
       html: `
@@ -237,7 +227,6 @@ apiRouter.post('/auth/resend-code', async (req: Request, res: Response): Promise
         </div>
       `
     }).catch(e => console.error('Resend email failed:', e));
-    console.log(`[DEV] New verification code for ${email}: ${newCode}`);
     res.json({ message: 'New verification code sent' });
   } catch (e: any) {
     res.status(500).json({ message: e.message });
