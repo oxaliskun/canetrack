@@ -39,7 +39,9 @@ export function Login() {
   const [resetEmail, setResetEmail] = useState('');
   const [resetCode, setResetCode] = useState('');
   const [resetPassword, setResetPassword] = useState('');
+  const [showResetPassword, setShowResetPassword] = useState(false);
   const [resetConfirmPassword, setResetConfirmPassword] = useState('');
+  const [showResetConfirmPassword, setShowResetConfirmPassword] = useState(false);
   
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -380,15 +382,21 @@ export function Login() {
                     <div>
                       <label className={`block text-[11px] sm:text-xs font-bold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>New Password</label>
                       <div className="relative">
-                        <input type="password" required className={`w-full pl-11 sm:pl-12 pr-4 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium tracking-widest min-h-[44px] ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={resetPassword} onChange={e => setResetPassword(e.target.value)} placeholder="••••••••" />
+                        <input type={showResetPassword ? 'text' : 'password'} required className={`w-full pl-11 sm:pl-12 pr-12 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium tracking-widest min-h-[44px] ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={resetPassword} onChange={e => setResetPassword(e.target.value)} placeholder="••••••••" />
                         <Lock className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-500" />
+                        <button type="button" onClick={() => setShowResetPassword(!showResetPassword)} className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors">
+                          {showResetPassword ? <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" /> : <Eye className="w-4 h-4 sm:w-5 sm:h-5" />}
+                        </button>
                       </div>
                     </div>
                     <div>
                       <label className={`block text-[11px] sm:text-xs font-bold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Confirm New Password</label>
                       <div className="relative">
-                        <input type="password" required className={`w-full pl-11 sm:pl-12 pr-4 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium tracking-widest min-h-[44px] ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={resetConfirmPassword} onChange={e => setResetConfirmPassword(e.target.value)} placeholder="••••••••" />
+                        <input type={showResetConfirmPassword ? 'text' : 'password'} required className={`w-full pl-11 sm:pl-12 pr-12 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium tracking-widest min-h-[44px] ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={resetConfirmPassword} onChange={e => setResetConfirmPassword(e.target.value)} placeholder="••••••••" />
                         <Lock className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-500" />
+                        <button type="button" onClick={() => setShowResetConfirmPassword(!showResetConfirmPassword)} className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors">
+                          {showResetConfirmPassword ? <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" /> : <Eye className="w-4 h-4 sm:w-5 sm:h-5" />}
+                        </button>
                       </div>
                     </div>
                   </>
