@@ -139,7 +139,9 @@ apiRouter.post('/auth/register', async (req: Request, res: Response): Promise<vo
             <p style="color:#94a3b8;font-size:12px;">If you didn't create this account, ignore this email.</p>
           </div>
         `
-      }).catch(e => console.error('Email send failed:', e));
+      }).catch(e => {
+        console.error('Email send failed:', e.response?.body || e.message);
+      });
     } catch (emailErr) {
       console.error('Failed to send verification email:', emailErr);
     }
@@ -226,7 +228,7 @@ apiRouter.post('/auth/resend-code', async (req: Request, res: Response): Promise
           <p style="color:#94a3b8;font-size:12px;">If you didn't request this, ignore this email.</p>
         </div>
       `
-    }).catch(e => console.error('Resend email failed:', e));
+    }).catch(e => console.error('Resend email failed:', e.response?.body || e.message));
     res.json({ message: 'New verification code sent' });
   } catch (e: any) {
     res.status(500).json({ message: e.message });
