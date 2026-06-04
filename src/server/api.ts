@@ -1434,11 +1434,12 @@ apiRouter.get('/farms', authMiddleware, async (req: AuthRequest, res: Response) 
    } catch(e: any) { res.status(500).json({ message: e.message }); }
 });
 
-// Farmer's own farms
-apiRouter.get('/farms/mine', authMiddleware, roleGuard(['FARMER']), async (req: AuthRequest, res: Response) => {
+// Farmer's own farms (admin gets all)
+apiRouter.get('/farms/mine', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
+    const where = req.user!.role === 'FARMER' ? { ownerId: req.user!.userId } : {};
     const farms = await prisma.farm.findMany({
-      where: { ownerId: req.user!.userId },
+      where,
       orderBy: { createdAt: 'desc' }
     });
     res.json({ farms });
