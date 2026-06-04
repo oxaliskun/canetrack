@@ -121,7 +121,7 @@
   - Truck dropdown (farmer's active trucks only, required)
   - Shows: "ABC-1234 - Isuzu Elf (5 tons)"
 
-- [ ] 4.5 Auto-computed net weight
+- [x] 4.5 Auto-computed net weight
   - Gross - Tare = Net (read-only, updates in real-time)
 
 - [ ] 4.6 Delivery receipt photo upload
