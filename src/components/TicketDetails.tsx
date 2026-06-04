@@ -64,7 +64,9 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
   const [categories, setCategories] = useState<any[]>([]);
   const [expForm, setExpForm] = useState({ categoryId: '', amount: '', notes: '' });
   const [expPhoto, setExpPhoto] = useState<File | null>(null);
+  const [expPhotoPreview, setExpPhotoPreview] = useState<string | null>(null);
   const [showExpForm, setShowExpForm] = useState(false);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const { isDark } = useTheme();
 
@@ -75,6 +77,15 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
       api.get('/expense-categories').then(res => setCategories(res.data.categories.filter((c: any) => c.type === 'DELIVERY' && c.isActive)))
     ]).then(() => setLoading(false)).catch(() => setLoading(false));
   }, [ticketId]);
+
+  const handleExpPhotoSelect = (file: File | null) => {
+    if (file) {
+      if (!file.type.startsWith('image/')) { toast.error('Only image files are allowed'); return; }
+      if (file.size > 5 * 1024 * 1024) { toast.error('File must be under 5MB'); return; }
+    }
+    setExpPhoto(file);
+    setExpPhotoPreview(file ? URL.createObjectURL(file) : null);
+  };
 
   const handleAddExpense = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,6 +103,7 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
       setExpenses(res.data.expenses);
       setExpForm({ categoryId: '', amount: '', notes: '' });
       setExpPhoto(null);
+      setExpPhotoPreview(null);
       setShowExpForm(false);
       toast.success('Expense added');
     } catch (e: any) { toast.error(e.response?.data?.message || 'Failed to add expense'); }
@@ -274,6 +286,7 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
   };
 
   return (
+    <>
     <AnimatePresence>
       {ticketId && (
         <motion.div
@@ -511,7 +524,7 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
                                 <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider shrink-0 ${isDark ? 'bg-slate-700 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>{exp.category?.name}</span>
                                 <span className={`font-mono font-bold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>₱{Number(exp.amount).toFixed(2)}</span>
                                 {exp.notes && <span className={`text-xs truncate hidden sm:inline ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{exp.notes}</span>}
-                                {exp.receiptUrl && <a href={exp.receiptUrl} target="_blank" rel="noreferrer" className="text-blue-500 hover:text-blue-400 shrink-0"><Camera className="w-3.5 h-3.5" /></a>}
+                                {exp.receiptUrl && <button type="button" onClick={() => setLightboxUrl(exp.receiptUrl)} className="shrink-0"><img src={exp.receiptUrl} alt="Receipt" className="w-7 h-7 rounded-lg object-cover border border-blue-500/30 hover:border-blue-500 transition-colors" /></button>}
                               </div>
                               <button onClick={() => handleDeleteExpense(exp.id)} className={`p-1.5 rounded-lg shrink-0 ${isDark ? 'text-slate-500 hover:text-red-400 hover:bg-red-900/30' : 'text-slate-400 hover:text-red-600 hover:bg-red-50'}`} title="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
                             </div>
@@ -531,12 +544,13 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
                         </select>
                         <div className="grid grid-cols-2 gap-3">
                           <input required type="number" step="0.01" min="0" value={expForm.amount} onChange={e => setExpForm({...expForm, amount: e.target.value})} placeholder="Amount" className={`w-full px-4 py-2.5 border rounded-xl outline-none text-sm font-mono font-bold min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-400'}`} />
-                          <input type="file" accept="image/*" onChange={e => setExpPhoto(e.target.files?.[0] || null)} className={`w-full text-sm file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:cursor-pointer min-h-[44px] ${isDark ? 'text-slate-300 file:bg-emerald-600 file:text-white' : 'text-slate-600 file:bg-emerald-500 file:text-white'}`} />
+                          <input type="file" accept="image/*" onChange={e => handleExpPhotoSelect(e.target.files?.[0] || null)} className={`w-full text-sm file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:cursor-pointer min-h-[44px] ${isDark ? 'text-slate-300 file:bg-emerald-600 file:text-white' : 'text-slate-600 file:bg-emerald-500 file:text-white'}`} />
                         </div>
+                        {expPhotoPreview && <img src={expPhotoPreview} alt="Receipt preview" className="h-20 rounded-xl object-cover border border-emerald-500/30" />}
                         <input value={expForm.notes} onChange={e => setExpForm({...expForm, notes: e.target.value})} placeholder="Notes (optional)" className={`w-full px-4 py-2.5 border rounded-xl outline-none text-sm font-medium min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-400'}`} />
                         <div className="flex gap-2">
                           <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit" className="flex-1 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold py-2.5 rounded-xl text-sm shadow-lg shadow-emerald-600/25 min-h-[44px]"><Plus className="w-4 h-4 inline mr-1" /> Add Expense</motion.button>
-                          <button type="button" onClick={() => { setShowExpForm(false); setExpForm({ categoryId: '', amount: '', notes: '' }); setExpPhoto(null); }} className={`px-5 py-2.5 rounded-xl font-bold text-sm min-h-[44px] ${isDark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}`}>Cancel</button>
+                          <button type="button" onClick={() => { setShowExpForm(false); setExpForm({ categoryId: '', amount: '', notes: '' }); setExpPhoto(null); setExpPhotoPreview(null); }} className={`px-5 py-2.5 rounded-xl font-bold text-sm min-h-[44px] ${isDark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}`}>Cancel</button>
                         </div>
                       </form>
                     ) : (
@@ -588,5 +602,30 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
         </motion.div>
       )}
     </AnimatePresence>
+      {/* Receipt lightbox */}
+      <AnimatePresence>
+        {lightboxUrl && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+            onClick={() => setLightboxUrl(null)}
+          >
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="relative max-w-3xl max-h-[90vh]"
+              onClick={e => e.stopPropagation()}
+            >
+              <button onClick={() => setLightboxUrl(null)} className="absolute -top-3 -right-3 z-10 w-8 h-8 rounded-full bg-white shadow-lg flex items-center justify-center text-slate-700 hover:text-slate-900 font-bold"><X className="w-4 h-4" /></button>
+              <img src={lightboxUrl} alt="Receipt" className="max-w-full max-h-[90vh] rounded-2xl shadow-2xl" />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

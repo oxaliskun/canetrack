@@ -44,6 +44,7 @@ export function FarmerFarms() {
   const [expCategories, setExpCategories] = useState<any[]>([]);
   const [expForm, setExpForm] = useState({ farmId: '', categoryId: '', amount: '', notes: '', date: new Date().toISOString().split('T')[0] });
   const [expPhoto, setExpPhoto] = useState<File | null>(null);
+  const [expPhotoPreview, setExpPhotoPreview] = useState<string | null>(null);
   const [expandingFarm, setExpandingFarm] = useState<string | null>(null);
   const { isDark } = useTheme();
 
@@ -128,6 +129,15 @@ export function FarmerFarms() {
     }
   };
 
+  const handleExpPhotoSelect = (file: File | null) => {
+    if (file) {
+      if (!file.type.startsWith('image/')) { toast.error('Only image files are allowed'); return; }
+      if (file.size > 5 * 1024 * 1024) { toast.error('File must be under 5MB'); return; }
+    }
+    setExpPhoto(file);
+    setExpPhotoPreview(file ? URL.createObjectURL(file) : null);
+  };
+
   const handleAddFarmExpense = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!expForm.categoryId || !expForm.amount) return;
@@ -144,6 +154,7 @@ export function FarmerFarms() {
       setExpandingFarm(null);
       setExpForm({ farmId: '', categoryId: '', amount: '', notes: '', date: new Date().toISOString().split('T')[0] });
       setExpPhoto(null);
+      setExpPhotoPreview(null);
     } catch (e: any) { toast.error(e.response?.data?.message || 'Failed to add expense'); }
   };
 
@@ -324,10 +335,11 @@ export function FarmerFarms() {
                           <input type="date" value={expForm.farmId === farm.id ? expForm.date : new Date().toISOString().split('T')[0]} onChange={e => setExpForm({...expForm, farmId: farm.id, date: e.target.value})} className={`w-full px-3 py-2 border rounded-xl outline-none text-sm font-medium min-h-[40px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'}`} />
                         </div>
                         <input value={expForm.farmId === farm.id ? expForm.notes : ''} onChange={e => setExpForm({...expForm, farmId: farm.id, notes: e.target.value})} placeholder="Notes (optional)" className={`w-full px-3 py-2 border rounded-xl outline-none text-sm font-medium min-h-[40px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-400'}`} />
-                        <input type="file" accept="image/*" onChange={e => { setExpPhoto(e.target.files?.[0] || null); setExpForm(prev => ({...prev, farmId: farm.id})); }} className={`w-full text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:cursor-pointer min-h-[40px] ${isDark ? 'text-slate-300 file:bg-emerald-600 file:text-white' : 'text-slate-600 file:bg-emerald-500 file:text-white'}`} />
+                        <input type="file" accept="image/*" onChange={e => { handleExpPhotoSelect(e.target.files?.[0] || null); setExpForm(prev => ({...prev, farmId: farm.id})); }} className={`w-full text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:cursor-pointer min-h-[40px] ${isDark ? 'text-slate-300 file:bg-emerald-600 file:text-white' : 'text-slate-600 file:bg-emerald-500 file:text-white'}`} />
+                        {expPhotoPreview && <img src={expPhotoPreview} alt="Receipt preview" className="h-16 rounded-xl object-cover border border-emerald-500/30" />}
                         <div className="flex gap-2">
                           <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit" className="flex-1 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold py-2 rounded-xl text-xs shadow-lg shadow-emerald-600/25 min-h-[40px]"><Plus className="w-3.5 h-3.5 inline mr-1" /> Add Expense</motion.button>
-                          <button type="button" onClick={() => { setExpandingFarm(null); setExpPhoto(null); }} className={`px-4 py-2 rounded-xl font-bold text-xs min-h-[40px] ${isDark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}`}>Cancel</button>
+                          <button type="button" onClick={() => { setExpandingFarm(null); setExpPhoto(null); setExpPhotoPreview(null); }} className={`px-4 py-2 rounded-xl font-bold text-xs min-h-[40px] ${isDark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}`}>Cancel</button>
                         </div>
                       </form>
                     )}

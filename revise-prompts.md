@@ -152,7 +152,7 @@
   - Admin CRUD page for categories
   - Seed: Diesel, Toll Fee, Truck Repair, Loading Labor, Unloading Labor, Meals, Fertilizer, Pesticide, Irrigation, Farm Labor, Land Rental, Equipment Rental, Miscellaneous
 
-- [ ] 5.4 Receipt photo attachment
+- [x] 5.4 Receipt photo attachment
   - Upload per expense, max 5MB, image only
   - Preview/click to enlarge
 
