@@ -248,8 +248,8 @@
 
 ## Phase 10: Cleanup
 
-- [ ] 10.1 Delete old operator/receiver pages
-- [ ] 10.2 Update navbar/farmer nav: Dashboard, Farms, Trucks, Create Quedan, Deliveries, Expenses, Payments, Reports
-- [ ] 10.3 Update admin nav: Dashboard, Verifications, Farmers, Farms, Trucks, Quedans, Disputes, Payments, Variants, Types, Pricing, Categories, Reports
-- [ ] 10.4 Update landing page text to farmer-focused
-- [ ] 10.5 Test full flow: register → verify → farm → verify → truck → quedan → expense → reconcile → payment
+- [x] 10.1 Delete old operator/receiver pages
+- [x] 10.2 Update farmer nav
+- [x] 10.3 Update admin nav
+- [x] 10.4 Update landing page text to farmer-focused
+- [x] 10.5 Test full flow

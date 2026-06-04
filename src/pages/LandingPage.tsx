@@ -66,7 +66,7 @@ export function LandingPage() {
               Fair, transparent <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-emerald-400">harvest payouts</span> for everyone.
             </h1>
             <p className="text-lg md:text-xl text-slate-600 mb-8 leading-relaxed max-w-xl">
-              From the sugarcane field to the refinery. Digitize your weight-bridge workflow, automate discrepancy flagging, and establish absolute trust with instant financial reconciliation.
+              From the sugarcane field to the refinery. Track your deliveries, verify your earnings, and get paid fairly — all in one place.
             </p>
             <div className="flex flex-col sm:flex-row items-center gap-4">
               <button 
@@ -204,7 +204,7 @@ export function LandingPage() {
               <Shield className="w-4 h-4" /> Enterprise-Grade Platform
             </div>
             <h2 className="text-3xl md:text-5xl font-extrabold mb-4 text-slate-900 tracking-tight">Everything you need to manage your harvest</h2>
-            <p className="text-slate-600 max-w-2xl mx-auto text-lg leading-relaxed">Built to handle thousands of daily transactions ensuring zero weight loss, perfect auditing, and transparent farmer compensation.</p>
+            <p className="text-slate-600 max-w-2xl mx-auto text-lg leading-relaxed">Track your deliveries, monitor earnings, manage expenses, and get paid — all from one dashboard.</p>
           </div>
           
           <div className="grid md:grid-cols-3 gap-6">
@@ -217,7 +217,7 @@ export function LandingPage() {
               </div>
               <h3 className="text-xl font-extrabold mb-3 text-slate-900">Automated Reconciliation</h3>
               <p className="text-slate-600 text-sm flex-1 leading-relaxed font-medium">
-                Our engine automatically compares mill outbound weights against refinery inbound logs. Discrepancies above the threshold are instantly flagged for admin review.
+                Mill outbound weights are automatically compared against records. Discrepancies are flagged instantly so you always get paid for exactly what you delivered.
               </p>
             </motion.div>
             
@@ -241,9 +241,9 @@ export function LandingPage() {
               <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/20 mb-6 group-hover:scale-110 transition-transform">
                 <Scale className="w-7 h-7 text-white" />
               </div>
-              <h3 className="text-xl font-extrabold mb-3 text-slate-900">Role-Based Integrity</h3>
+              <h3 className="text-xl font-extrabold mb-3 text-slate-900">Role-Based Access</h3>
               <p className="text-slate-600 text-sm flex-1 leading-relaxed font-medium">
-                Farmers see their own data. Operators encode. Receivers double-check. Admins oversee. Zero cross-contamination of permissions or data leaks.
+                Farmers see their own data and earnings. Admins oversee the platform. Everyone stays in their lane with clear permissions.
               </p>
             </motion.div>
           </div>
@@ -294,8 +294,8 @@ export function LandingPage() {
                 <span className="text-2xl font-black text-white">2</span>
               </div>
               <Scale className="w-8 h-8 text-emerald-600 mx-auto mb-3" />
-              <h3 className="text-lg font-extrabold text-slate-900 mb-2">Weighing</h3>
-              <p className="text-sm text-slate-600 font-medium">Operator records gross and net weight on the digital ticket.</p>
+              <h3 className="text-lg font-extrabold text-slate-900 mb-2">Weighing & Quality</h3>
+              <p className="text-sm text-slate-600 font-medium">Digital ticket records gross weight, tare weight, and quality samples.</p>
             </motion.div>
             
             <motion.div 
@@ -311,7 +311,7 @@ export function LandingPage() {
               </div>
               <FileText className="w-8 h-8 text-emerald-600 mx-auto mb-3" />
               <h3 className="text-lg font-extrabold text-slate-900 mb-2">Reconciliation</h3>
-              <p className="text-sm text-slate-600 font-medium">Receiver verifies weight at refinery and confirms match.</p>
+              <p className="text-sm text-slate-600 font-medium">Admin verifies mill weight and price, then reconciles your quedan.</p>
             </motion.div>
             
             <motion.div 
@@ -343,7 +343,7 @@ export function LandingPage() {
             <p className="text-slate-600 max-w-2xl mx-auto text-lg leading-relaxed">Each user gets a personalized dashboard designed for their specific workflow.</p>
           </div>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-2 gap-6">
             <motion.div 
               whileHover={{ y: -4 }}
               className="bg-gradient-to-br from-emerald-50 to-white border border-emerald-100 hover:border-emerald-300 hover:shadow-xl hover:shadow-emerald-100/50 transition-all rounded-3xl p-6 text-center group overflow-hidden relative"
@@ -353,31 +353,7 @@ export function LandingPage() {
                 <Sprout className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-lg font-extrabold text-slate-900 mb-2">Farmer</h3>
-              <p className="text-sm text-slate-600 font-medium">Track deliveries, view earnings, and monitor payout history in real-time.</p>
-            </motion.div>
-            
-            <motion.div 
-              whileHover={{ y: -4 }}
-              className="bg-gradient-to-br from-blue-50 to-white border border-blue-100 hover:border-blue-300 hover:shadow-xl hover:shadow-blue-100/50 transition-all rounded-3xl p-6 text-center group overflow-hidden relative"
-            >
-              <div className="absolute top-0 right-0 w-24 h-24 bg-blue-100/50 rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="w-16 h-16 mx-auto bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20 mb-4">
-                <Truck className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-lg font-extrabold text-slate-900 mb-2">Operator</h3>
-              <p className="text-sm text-slate-600 font-medium">Encode deliveries, manage tickets, and track active shipments efficiently.</p>
-            </motion.div>
-            
-            <motion.div 
-              whileHover={{ y: -4 }}
-              className="bg-gradient-to-br from-orange-50 to-white border border-orange-100 hover:border-orange-300 hover:shadow-xl hover:shadow-orange-100/50 transition-all rounded-3xl p-6 text-center group overflow-hidden relative"
-            >
-              <div className="absolute top-0 right-0 w-24 h-24 bg-orange-100/50 rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="w-16 h-16 mx-auto bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/20 mb-4">
-                <CheckCircle className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-lg font-extrabold text-slate-900 mb-2">Receiver</h3>
-              <p className="text-sm text-slate-600 font-medium">Verify incoming deliveries, reconcile weights, and flag discrepancies.</p>
+              <p className="text-sm text-slate-600 font-medium">Track deliveries, view earnings, manage expenses, and monitor payout history in real-time.</p>
             </motion.div>
             
             <motion.div 
@@ -389,7 +365,7 @@ export function LandingPage() {
                 <Shield className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-lg font-extrabold text-slate-900 mb-2">Admin</h3>
-              <p className="text-sm text-slate-600 font-medium">Full platform oversight, user management, reports, and dispute resolution.</p>
+              <p className="text-sm text-slate-600 font-medium">Full platform oversight, user management, reports, pricing, and dispute resolution.</p>
             </motion.div>
           </div>
         </div>
@@ -444,10 +420,10 @@ export function LandingPage() {
               </div>
               <p className="text-slate-600 font-medium mb-6 leading-relaxed">"The automated reconciliation saves us hours every day. Discrepancies are caught instantly and resolved quickly."</p>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white font-bold">JC</div>
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white font-bold">PC</div>
                 <div>
-                  <p className="font-bold text-slate-900 text-sm">Juan Cruz</p>
-                  <p className="text-xs text-slate-500">Operator, Central Mill</p>
+                  <p className="font-bold text-slate-900 text-sm">Pedro Cruz</p>
+                  <p className="text-xs text-slate-500">Farmer, San Miguel</p>
                 </div>
               </div>
             </motion.div>

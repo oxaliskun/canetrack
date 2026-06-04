@@ -24,6 +24,7 @@ import { FarmerFarms } from './pages/farmer/FarmerFarms';
 import { FarmerTrucks } from './pages/farmer/FarmerTrucks';
 import { FarmerPayments } from './pages/farmer/FarmerPayments';
 import { FarmerReports } from './pages/farmer/FarmerReports';
+import { FarmerExpenses } from './pages/farmer/FarmerExpenses';
 import { Profile } from './pages/shared/Profile';
 import { Settings } from './pages/shared/Settings';
 import { AuditLogs } from './pages/shared/AuditLogs';
@@ -151,6 +152,11 @@ export default function App() {
             <Route path="/dashboard/farmer/reports" element={
               <PrivateRoute allowedRoles={['FARMER']}>
                 <FarmerReports />
+              </PrivateRoute>
+            } />
+            <Route path="/dashboard/farmer/expenses" element={
+              <PrivateRoute allowedRoles={['FARMER']}>
+                <FarmerExpenses />
               </PrivateRoute>
             } />
             
