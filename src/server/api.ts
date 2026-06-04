@@ -699,6 +699,54 @@ apiRouter.delete('/sugar-types/:id', authMiddleware, roleGuard(['ADMIN']), async
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 });
 
+// --- PRICING ROUTES ---
+apiRouter.get('/pricings', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const pricings = await prisma.pricing.findMany({
+      include: { variant: true, sugarType: true }, orderBy: { effectiveDate: 'desc' }
+    });
+    res.json({ pricings });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+});
+
+apiRouter.post('/pricings', authMiddleware, roleGuard(['ADMIN']), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { variantId, sugarTypeId, pricePerKg, effectiveDate } = req.body;
+    if (!variantId || !sugarTypeId || pricePerKg == null) {
+      res.status(400).json({ message: 'variantId, sugarTypeId, pricePerKg are required' });
+      return;
+    }
+    const pricing = await prisma.pricing.create({
+      data: { variantId, sugarTypeId, pricePerKg: Number(pricePerKg), effectiveDate: effectiveDate ? new Date(effectiveDate) : undefined }
+    });
+    res.status(201).json(pricing);
+  } catch (e: any) {
+    if (e.code === 'P2002') { res.status(409).json({ message: 'Pricing for this variant + sugar type already exists' }); return; }
+    res.status(500).json({ message: e.message });
+  }
+});
+
+apiRouter.patch('/pricings/:id', authMiddleware, roleGuard(['ADMIN']), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { pricePerKg, effectiveDate, isActive } = req.body;
+    const pricing = await prisma.pricing.update({
+      where: { id: req.params.id },
+      data: { ...(pricePerKg != null && { pricePerKg: Number(pricePerKg) }), ...(effectiveDate && { effectiveDate: new Date(effectiveDate) }), ...(isActive !== undefined && { isActive }) }
+    });
+    res.json(pricing);
+  } catch (e: any) {
+    if (e.code === 'P2002') { res.status(409).json({ message: 'Pricing for this variant + sugar type already exists' }); return; }
+    res.status(500).json({ message: e.message });
+  }
+});
+
+apiRouter.delete('/pricings/:id', authMiddleware, roleGuard(['ADMIN']), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    await prisma.pricing.delete({ where: { id: req.params.id } });
+    res.json({ message: 'Pricing deleted' });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+});
+
 // --- TICKETS ROUTES ---
 // Operator creates ticket
 apiRouter.post('/tickets', authMiddleware, roleGuard(['FARMER']), async (req: AuthRequest, res: Response): Promise<void> => {

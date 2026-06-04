@@ -25,7 +25,7 @@
 - [x] 1.5 Add SugarcaneVariant model
   - id, name (unique), characteristics?, isActive Boolean @default(true)
 
-- [ ] 1.6 Add SugarType model
+- [x] 1.6 Add SugarType model
   - id, name (unique), description?, isActive Boolean @default(true)
 
 - [ ] 1.7 Add Pricing model
