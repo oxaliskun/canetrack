@@ -32,7 +32,7 @@
   - id, variantId, sugarTypeId, pricePerKg Float, effectiveDate DateTime, isActive Boolean @default(true)
   - One price per variant+type combo
 
-- [ ] 1.8 Add ExpenseCategory model
+- [x] 1.8 Add ExpenseCategory model
   - id, name (unique), type (DELIVERY/FARM), description?, isActive Boolean @default(true)
 
 - [ ] 1.9 Add Expense model (per delivery)

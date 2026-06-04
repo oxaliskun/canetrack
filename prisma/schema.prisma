@@ -36,6 +36,7 @@ model User {
   notifications   Notification[]
   verificationDocuments VerificationDocument[]
   trucks              Truck[]
+  expenses            Expense[]
 }
 
 model VerificationDocument {
@@ -112,6 +113,22 @@ model ExpenseCategory {
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt @default(now())
+
+  expenses Expense[]
+}
+
+model Expense {
+  id         String   @id @default(cuid())
+  quedanId   String
+  userId     String
+  categoryId String
+  amount     Float
+  receiptUrl String?
+  notes      String?
+  createdAt  DateTime @default(now())
+
+  user     User             @relation(fields: [userId], references: [id])
+  category ExpenseCategory  @relation(fields: [categoryId], references: [id])
 }
 
 model Farm {
