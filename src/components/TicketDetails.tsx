@@ -70,6 +70,7 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
   const [loading, setLoading] = useState(true);
   const { isDark } = useTheme();
   const totalExp = expenses.reduce((sum: number, e: any) => sum + Number(e.amount), 0);
+  const isLocked = ticket && (ticket.status === 'RECONCILED' || ticket.status === 'DISPUTED');
 
   useEffect(() => {
     Promise.all([
@@ -527,7 +528,7 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
                                 {exp.notes && <span className={`text-xs truncate hidden sm:inline ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{exp.notes}</span>}
                                 {exp.receiptUrl && <button type="button" onClick={() => setLightboxUrl(exp.receiptUrl)} className="shrink-0"><img src={exp.receiptUrl} alt="Receipt" className="w-7 h-7 rounded-lg object-cover border border-blue-500/30 hover:border-blue-500 transition-colors" /></button>}
                               </div>
-                              <button onClick={() => handleDeleteExpense(exp.id)} className={`p-1.5 rounded-lg shrink-0 ${isDark ? 'text-slate-500 hover:text-red-400 hover:bg-red-900/30' : 'text-slate-400 hover:text-red-600 hover:bg-red-50'}`} title="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
+                              <button onClick={() => handleDeleteExpense(exp.id)} disabled={isLocked} className={`p-1.5 rounded-lg shrink-0 transition-colors ${isLocked ? 'text-slate-600 cursor-not-allowed' : isDark ? 'text-slate-500 hover:text-red-400 hover:bg-red-900/30' : 'text-slate-400 hover:text-red-600 hover:bg-red-50'}`} title={isLocked ? 'Locked' : 'Delete'}><Trash2 className="w-3.5 h-3.5" /></button>
                             </div>
                           ))}
                         </div>
@@ -549,7 +550,11 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
                         </div>
                       )}
                     </div>
-                    {showExpForm ? (
+                    {isLocked ? (
+                      <div className={`mt-3 p-3 rounded-xl border text-center text-sm font-medium ${isDark ? 'border-slate-700 bg-slate-800/50 text-slate-400' : 'border-slate-200 bg-slate-50 text-slate-500'}`}>
+                        Expenses are locked — quedan is {ticket.status.toLowerCase()}.
+                      </div>
+                    ) : showExpForm ? (
                       <form onSubmit={handleAddExpense} className={`mt-3 p-4 sm:p-5 rounded-2xl border space-y-3 ${isDark ? 'border-slate-700 bg-slate-800/50' : 'border-slate-200 bg-slate-50'}`}>
                         <select required value={expForm.categoryId} onChange={e => setExpForm({...expForm, categoryId: e.target.value})} className={`w-full px-4 py-2.5 border rounded-xl outline-none text-sm font-medium min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'}`}>
                           <option value="">Select category...</option>
@@ -566,7 +571,7 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
                           <button type="button" onClick={() => { setShowExpForm(false); setExpForm({ categoryId: '', amount: '', notes: '' }); setExpPhoto(null); setExpPhotoPreview(null); }} className={`px-5 py-2.5 rounded-xl font-bold text-sm min-h-[44px] ${isDark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}`}>Cancel</button>
                         </div>
                       </form>
-                    ) : (
+                    ) : !isLocked && (
                       <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setShowExpForm(true)} className="mt-3 w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold py-3 rounded-xl text-sm shadow-lg shadow-emerald-600/25 min-h-[44px]"><Plus className="w-4 h-4" /> Add Expense</motion.button>
                     )}
                   </div>

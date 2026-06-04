@@ -161,7 +161,7 @@
   - Per farm: seasonal total
   - Profit/Loss = Payment - Expenses
 
-- [ ] 5.6 Lock on reconcile/dispute
+- [x] 5.6 Lock on reconcile/dispute
   - When quedan status = RECONCILED or DISPUTED
   - All expense buttons disabled, read-only view
   - Server-side check returns 403

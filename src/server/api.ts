@@ -872,6 +872,12 @@ apiRouter.post('/expenses', authMiddleware, roleGuard(['FARMER']), async (req: A
       res.status(400).json({ message: 'quedanId, categoryId, amount are required' });
       return;
     }
+    const ticket = await prisma.weightTicket.findUnique({ where: { id: quedanId }, select: { status: true } });
+    if (!ticket) { res.status(404).json({ message: 'Quedan not found' }); return; }
+    if (ticket.status === 'RECONCILED' || ticket.status === 'DISPUTED') {
+      res.status(403).json({ message: 'Cannot modify expenses on a reconciled or disputed quedan' });
+      return;
+    }
     const expense = await prisma.expense.create({
       data: { quedanId, userId: req.user!.userId, categoryId, amount: Number(amount), receiptUrl, notes }
     });
@@ -907,8 +913,15 @@ apiRouter.patch('/expenses/:id', authMiddleware, roleGuard(['FARMER']), async (r
 
 apiRouter.delete('/expenses/:id', authMiddleware, roleGuard(['FARMER']), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const existing = await prisma.expense.findFirst({ where: { id: req.params.id, userId: req.user!.userId } });
+    const existing = await prisma.expense.findFirst({
+      where: { id: req.params.id, userId: req.user!.userId },
+      include: { quedan: { select: { status: true } } }
+    });
     if (!existing) { res.status(404).json({ message: 'Expense not found' }); return; }
+    if (existing.quedan.status === 'RECONCILED' || existing.quedan.status === 'DISPUTED') {
+      res.status(403).json({ message: 'Cannot modify expenses on a reconciled or disputed quedan' });
+      return;
+    }
     await prisma.expense.delete({ where: { id: req.params.id } });
     res.json({ message: 'Expense deleted' });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
