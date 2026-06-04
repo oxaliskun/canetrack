@@ -104,8 +104,7 @@ export function Login() {
         setAttempts(0); localStorage.setItem('login_attempts', '0');
         login(data.token, data.user);
         const roleMap: Record<string, string> = {
-          FARMER: '/dashboard/farmer', OPERATOR: '/dashboard/operator',
-          RECEIVER: '/dashboard/receiver', ADMIN: '/dashboard/admin'
+          FARMER: '/dashboard/farmer', ADMIN: '/dashboard/admin'
         };
         navigate(roleMap[data.user.role]);
       }
@@ -582,9 +581,9 @@ export function Login() {
 
             <div className={`mt-6 sm:mt-8 lg:mt-12 rounded-xl sm:rounded-2xl p-4 sm:p-5 relative overflow-hidden border ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700' : 'bg-gradient-to-br from-slate-50 to-white border-slate-100'}`}>
                 <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-emerald-400 to-emerald-600" />
-                <h4 className={`text-[11px] sm:text-xs font-bold uppercase tracking-widest mb-2 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Staff & Administration</h4>
+                <h4 className={`text-[11px] sm:text-xs font-bold uppercase tracking-widest mb-2 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>For Administrators</h4>
                 <p className={`text-xs sm:text-sm font-medium leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-                  <span className={`font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>Operator</span> and <span className={`font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>Receiver</span> accounts cannot be created here. They must be provisioned internally by an Administrator.
+                  Admin accounts are created internally. Farmers register here and must be verified by an administrator.
                 </p>
 
             </div>

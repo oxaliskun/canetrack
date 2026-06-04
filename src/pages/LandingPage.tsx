@@ -528,7 +528,7 @@ export function LandingPage() {
                 </div>
                 <span className="text-xl font-bold text-white">CaneTrack</span>
               </div>
-              <p className="text-slate-400 max-w-sm leading-relaxed mb-6">A transparent, efficient, and fair platform for sugarcane farmers, operators, and administrators. Built with trust at its core.</p>
+              <p className="text-slate-400 max-w-sm leading-relaxed mb-6">A transparent, efficient, and fair platform for sugarcane farmers and administrators. Built with trust at its core.</p>
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2 text-sm">
                   <CheckCircle className="w-4 h-4 text-emerald-500" /> Secure

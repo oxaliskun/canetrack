@@ -28,14 +28,6 @@ export function Sidebar({ role, userName, onClose }: SidebarProps) {
           { name: 'Reports', path: '/dashboard/admin/reports', icon: BarChart },
           { name: 'Activity Logs', path: '/dashboard/admin/audit-logs', icon: History },
         ];
-      case 'OPERATOR':
-        return [
-           { name: 'Terminal', path: '/dashboard/operator', icon: Home },
-        ];
-      case 'RECEIVER':
-        return [
-           { name: 'Queue', path: '/dashboard/receiver', icon: Home },
-        ];
       case 'FARMER':
         return [
            { name: 'My Performance', path: '/dashboard/farmer', icon: FileText },
@@ -56,20 +48,24 @@ export function Sidebar({ role, userName, onClose }: SidebarProps) {
   const getRoleIcon = () => {
     switch (role) {
       case 'ADMIN': return <Shield className="w-4 h-4 text-purple-600" />;
-      case 'OPERATOR': return <Truck className="w-4 h-4 text-blue-600" />;
-      case 'RECEIVER': return <CheckCircle className="w-4 h-4 text-orange-600" />;
       case 'FARMER': return <Sprout className="w-4 h-4 text-emerald-600" />;
-      default: return null;
+      default: return <User className="w-4 h-4 text-slate-600" />;
+    }
+  };
+
+  const getGradient = () => {
+    switch (role) {
+      case 'ADMIN': return 'from-purple-500 to-purple-600 shadow-purple-500/20';
+      case 'FARMER': return 'from-emerald-500 to-emerald-600 shadow-emerald-500/20';
+      default: return 'from-slate-500 to-slate-600 shadow-slate-500/20';
     }
   };
 
   const getRoleColor = () => {
     switch (role) {
       case 'ADMIN': return 'from-purple-500 to-purple-600 shadow-purple-500/20';
-      case 'OPERATOR': return 'from-blue-500 to-blue-600 shadow-blue-500/20';
-      case 'RECEIVER': return 'from-orange-500 to-orange-600 shadow-orange-500/20';
       case 'FARMER': return 'from-emerald-500 to-emerald-600 shadow-emerald-500/20';
-      default: return 'from-emerald-500 to-emerald-600 shadow-emerald-500/20';
+      default: return 'from-slate-500 to-slate-600 shadow-slate-500/20';
     }
   };
 

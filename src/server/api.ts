@@ -443,7 +443,7 @@ apiRouter.post('/upload', authMiddleware, (req: AuthRequest, res: Response): voi
 
 // --- TICKETS ROUTES ---
 // Operator creates ticket
-apiRouter.post('/tickets', authMiddleware, roleGuard(['OPERATOR']), async (req: AuthRequest, res: Response): Promise<void> => {
+apiRouter.post('/tickets', authMiddleware, roleGuard(['FARMER']), async (req: AuthRequest, res: Response): Promise<void> => {
    try {
      const { truckPlate, farmId, grossWeight, tareWeight, notes } = req.body;
      const millWeight = Number(grossWeight) - Number(tareWeight);
@@ -468,7 +468,7 @@ apiRouter.post('/tickets', authMiddleware, roleGuard(['OPERATOR']), async (req: 
          totalValue: millWeight * pricePerKg,
          status: 'PENDING',
          notes,
-         operatorId: req.user!.userId
+          farmerId: req.user!.userId
        },
        include: {
          farm: true
@@ -506,7 +506,7 @@ apiRouter.get('/tickets', authMiddleware, async (req: AuthRequest, res: Response
       where,
       include: { 
         farm: true, 
-        operator: { select: { name: true } }, 
+        farmer: { select: { name: true } }, 
         reconciliation: true 
       },
       orderBy: { createdAt: 'desc' }
@@ -524,8 +524,8 @@ apiRouter.get('/tickets/:id', authMiddleware, async (req: AuthRequest, res: Resp
       where: { id },
       include: {
         farm: { include: { owner: { select: { name: true, email: true, contactNumber: true, address: true } } } },
-        operator: { select: { name: true, email: true, contactNumber: true } },
-        reconciliation: { include: { receiver: { select: { name: true, email: true, contactNumber: true } } } }
+        farmer: { select: { name: true, email: true, contactNumber: true } },
+        reconciliation: { include: { admin: { select: { name: true, email: true, contactNumber: true } } } }
       }
     });
     if (!ticket) {
@@ -548,7 +548,7 @@ apiRouter.get('/tickets/:id', authMiddleware, async (req: AuthRequest, res: Resp
       type: 'CREATED',
       date: ticket.createdAt,
       label: 'Ticket Created',
-      description: `Ticket ${ticket.ticketNo} was encoded by ${ticket.operator?.name || 'Operator'}`
+      description: `Ticket ${ticket.ticketNo} was encoded by ${ticket.farmer?.name || 'Farmer'}`
     });
 
     if (ticket.reconciliation) {
@@ -587,7 +587,7 @@ apiRouter.get('/tickets/:id', authMiddleware, async (req: AuthRequest, res: Resp
 });
 
 // --- RECONCILIATION ROUTES ---
-apiRouter.post('/reconciliation/:ticketId', authMiddleware, roleGuard(['RECEIVER']), async (req: AuthRequest, res: Response): Promise<void> => {
+apiRouter.post('/reconciliation/:ticketId', authMiddleware, roleGuard(['ADMIN']), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { ticketId } = req.params;
     const { refineryWeight, notes } = req.body;
@@ -619,7 +619,7 @@ apiRouter.post('/reconciliation/:ticketId', authMiddleware, roleGuard(['RECEIVER
         percentDiff,
         flagged,
         notes,
-        receiverId: req.user!.userId
+        adminId: req.user!.userId
       }
     });
 
@@ -662,14 +662,14 @@ apiRouter.post('/reconciliation/:ticketId', authMiddleware, roleGuard(['RECEIVER
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 });
 
-apiRouter.get('/reconciliation', authMiddleware, roleGuard(['ADMIN', 'RECEIVER']), async (req: AuthRequest, res: Response) => {
+apiRouter.get('/reconciliation', authMiddleware, roleGuard(['ADMIN']), async (req: AuthRequest, res: Response) => {
   try {
     const records = await prisma.reconciliationRecord.findMany({
       include: {
         ticket: {
           include: { farm: true }
         },
-        receiver: { select: { name: true } }
+        admin: { select: { name: true } }
       },
       orderBy: { createdAt: 'desc' }
     });
@@ -711,7 +711,7 @@ apiRouter.patch('/reconciliation/:id/resolve', authMiddleware, roleGuard(['ADMIN
 });
 
 // --- FARMS & USERS ---
-// All active farms (for operator dropdown)
+// All active farms (for dropdown)
 apiRouter.get('/farms', authMiddleware, async (req: AuthRequest, res: Response) => {
    try {
      const farms = await prisma.farm.findMany({
@@ -854,15 +854,15 @@ apiRouter.delete('/users/:id', authMiddleware, roleGuard(['ADMIN']), async (req:
      await prisma.notification.deleteMany({ where: { userId: id } });
      // Delete audit logs
      await prisma.auditLog.deleteMany({ where: { userId: id } });
-     // Delete reconciliation records where user is receiver
-     await prisma.reconciliationRecord.deleteMany({ where: { receiverId: id } });
+      // Delete reconciliation records where user is admin
+      await prisma.reconciliationRecord.deleteMany({ where: { adminId: id } });
 
-     // Delete tickets & their reconciliations where user is operator
-     const opTickets = await prisma.weightTicket.findMany({ where: { operatorId: id }, select: { id: true } });
-     for (const t of opTickets) {
-       await prisma.reconciliationRecord.deleteMany({ where: { ticketId: t.id } });
-     }
-     await prisma.weightTicket.deleteMany({ where: { operatorId: id } });
+      // Delete tickets & their reconciliations where user is farmer
+      const tickets = await prisma.weightTicket.findMany({ where: { farmerId: id }, select: { id: true } });
+      for (const t of tickets) {
+        await prisma.reconciliationRecord.deleteMany({ where: { ticketId: t.id } });
+      }
+      await prisma.weightTicket.deleteMany({ where: { farmerId: id } });
 
      // Delete farms & their tickets & reconciliations where user is farmer
      const farms = await prisma.farm.findMany({ where: { ownerId: id }, select: { id: true } });

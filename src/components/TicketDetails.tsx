@@ -190,18 +190,18 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
     </div>
     <div class="info-group">
       <h4>Operator</h4>
-      <div class="field"><div class="field-value">${ticket.operator?.name || '-'}</div></div>
-      <div class="field"><div class="field-label">Email</div><div class="field-value">${ticket.operator?.email || '-'}</div></div>
-      <div class="field"><div class="field-label">Contact</div><div class="field-value">${ticket.operator?.contactNumber || '-'}</div></div>
+      <div class="field"><div class="field-value">${ticket.farmer?.name || '-'}</div></div>
+      <div class="field"><div class="field-label">Email</div><div class="field-value">${ticket.farmer?.email || '-'}</div></div>
+      <div class="field"><div class="field-label">Contact</div><div class="field-value">${ticket.farmer?.contactNumber || '-'}</div></div>
     </div>
   </div>
 
   ${ticket.reconciliation ? `
   <div class="info-group" style="margin-bottom: 16px;">
     <h4>Receiver</h4>
-    <div class="field"><div class="field-value">${ticket.reconciliation.receiver?.name || '-'}</div></div>
-    <div class="field"><div class="field-label">Email</div><div class="field-value">${ticket.reconciliation.receiver?.email || '-'}</div></div>
-    <div class="field"><div class="field-label">Contact</div><div class="field-value">${ticket.reconciliation.receiver?.contactNumber || '-'}</div></div>
+    <div class="field"><div class="field-value">${ticket.reconciliation.admin?.name || '-'}</div></div>
+    <div class="field"><div class="field-label">Email</div><div class="field-value">${ticket.reconciliation.admin?.email || '-'}</div></div>
+    <div class="field"><div class="field-label">Contact</div><div class="field-value">${ticket.reconciliation.admin?.contactNumber || '-'}</div></div>
   </div>
   ` : ''}
 
@@ -370,17 +370,17 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
                           </div>
                           <span className={`text-xs font-extrabold uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Operator</span>
                         </div>
-                        <p className={`font-bold text-base ${isDark ? 'text-white' : 'text-slate-900'}`}>{ticket.operator?.name || '-'}</p>
-                        {ticket.operator?.email && (
+                        <p className={`font-bold text-base ${isDark ? 'text-white' : 'text-slate-900'}`}>{ticket.farmer?.name || '-'}</p>
+                        {ticket.farmer?.email && (
                           <div className="flex items-center gap-1.5 mt-2 text-xs">
                             <Mail className={`w-3 h-3 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} />
-                            <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>{ticket.operator.email}</span>
+                            <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>{ticket.farmer.email}</span>
                           </div>
                         )}
-                        {ticket.operator?.contactNumber && (
+                        {ticket.farmer?.contactNumber && (
                           <div className="flex items-center gap-1.5 mt-1 text-xs">
                             <Phone className={`w-3 h-3 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} />
-                            <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>{ticket.operator.contactNumber}</span>
+                            <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>{ticket.farmer.contactNumber}</span>
                           </div>
                         )}
                       </div>
@@ -394,17 +394,17 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
                         </div>
                         {ticket.reconciliation ? (
                           <>
-                            <p className={`font-bold text-base ${isDark ? 'text-white' : 'text-slate-900'}`}>{ticket.reconciliation.receiver?.name || '-'}</p>
-                            {ticket.reconciliation.receiver?.email && (
+                            <p className={`font-bold text-base ${isDark ? 'text-white' : 'text-slate-900'}`}>{ticket.reconciliation.admin?.name || '-'}</p>
+                            {ticket.reconciliation.admin?.email && (
                               <div className="flex items-center gap-1.5 mt-2 text-xs">
                                 <Mail className={`w-3 h-3 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} />
-                                <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>{ticket.reconciliation.receiver.email}</span>
+                                <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>{ticket.reconciliation.admin.email}</span>
                               </div>
                             )}
-                            {ticket.reconciliation.receiver?.contactNumber && (
+                            {ticket.reconciliation.admin?.contactNumber && (
                               <div className="flex items-center gap-1.5 mt-1 text-xs">
                                 <Phone className={`w-3 h-3 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} />
-                                <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>{ticket.reconciliation.receiver.contactNumber}</span>
+                                <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>{ticket.reconciliation.admin.contactNumber}</span>
                               </div>
                             )}
                           </>

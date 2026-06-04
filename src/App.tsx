@@ -6,7 +6,7 @@ import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { Login } from './pages/Login';
 import { Sidebar } from './components/Sidebar';
-import { FarmerDashboard, OperatorDashboard, ReceiverDashboard, AdminDashboard } from './pages/Dashboards';
+import { FarmerDashboard, AdminDashboard } from './pages/Dashboards';
 import { AdminUsers } from './pages/admin/AdminUsers';
 import { AdminTickets } from './pages/admin/AdminTickets';
 import { AdminReports } from './pages/admin/AdminReports';
@@ -123,30 +123,18 @@ export default function App() {
               </PrivateRoute>
             } />
             
-            <Route path="/dashboard/operator" element={
-              <PrivateRoute allowedRoles={['OPERATOR']}>
-                <OperatorDashboard />
-              </PrivateRoute>
-            } />
-            
-            <Route path="/dashboard/receiver" element={
-              <PrivateRoute allowedRoles={['RECEIVER']}>
-                <ReceiverDashboard />
-              </PrivateRoute>
-            } />
-            
             <Route path="/dashboard/settings" element={
-              <PrivateRoute allowedRoles={['ADMIN', 'OPERATOR', 'RECEIVER', 'FARMER']}>
+              <PrivateRoute allowedRoles={['FARMER', 'ADMIN']}>
                 <Settings />
               </PrivateRoute>
             } />
             <Route path="/dashboard/profile" element={
-              <PrivateRoute allowedRoles={['ADMIN', 'OPERATOR', 'RECEIVER', 'FARMER']}>
+              <PrivateRoute allowedRoles={['FARMER', 'ADMIN']}>
                 <Profile />
               </PrivateRoute>
             } />
             <Route path="/dashboard/activity-logs" element={
-              <PrivateRoute allowedRoles={['ADMIN', 'OPERATOR', 'RECEIVER', 'FARMER']}>
+              <PrivateRoute allowedRoles={['FARMER', 'ADMIN']}>
                 <AuditLogs />
               </PrivateRoute>
             } />

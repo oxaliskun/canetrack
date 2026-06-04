@@ -14,7 +14,7 @@ model User {
   name           String
   email          String   @unique
   passwordHash   String
-  role           String   // FARMER, OPERATOR, RECEIVER, ADMIN
+  role           String   // FARMER, ADMIN
   isActive       Boolean  @default(true)
   contactNumber    String?
   address          String?
@@ -25,8 +25,8 @@ model User {
   updatedAt      DateTime @updatedAt @default(now())
 
   farms           Farm[]                 @relation("FarmerFarms")
-  tickets         WeightTicket[]         @relation("OperatorTickets")
-  reconciliations ReconciliationRecord[] @relation("ReceiverReconciliations")
+  tickets         WeightTicket[]         @relation("FarmerTickets")
+  reconciliations ReconciliationRecord[] @relation("AdminReconciliations")
   auditLogs       AuditLog[]             @relation("UserAudits")
   notifications   Notification[]
 }
@@ -60,13 +60,13 @@ model WeightTicket {
   totalValue     Float     @default(0)
   status         String    @default("PENDING") // PENDING, SUBMITTED, RECONCILED, DISPUTED
   notes          String?
-  operatorId     String
+  farmerId       String
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt @default(now())
   verifiedAt     DateTime?
 
   farm           Farm       @relation(fields: [farmId], references: [id])
-  operator       User       @relation("OperatorTickets", fields: [operatorId], references: [id])
+  farmer         User       @relation("FarmerTickets", fields: [farmerId], references: [id])
   reconciliation ReconciliationRecord?
 }
 
@@ -78,14 +78,14 @@ model ReconciliationRecord {
   percentDiff    Float
   flagged        Boolean  @default(false)
   notes          String?
-  receiverId     String
+  adminId        String
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt @default(now())
   reconciledAt   DateTime @default(now())
   resolvedAt     DateTime?
 
   ticket   WeightTicket @relation(fields: [ticketId], references: [id])
-  receiver User         @relation("ReceiverReconciliations", fields: [receiverId], references: [id])
+  admin    User         @relation("AdminReconciliations", fields: [adminId], references: [id])
 }
 
 model AuditLog {

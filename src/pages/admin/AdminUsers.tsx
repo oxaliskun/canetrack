@@ -11,7 +11,7 @@ import { SearchInput } from '../../components/SearchInput';
 export function AdminUsers() {
   const [users, setUsers] = useState([]);
   const [showAddUser, setShowAddUser] = useState(false);
-  const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: 'OPERATOR', contactNumber: '', address: '' });
+  const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: 'FARMER', contactNumber: '', address: '' });
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const { isDark } = useTheme();
@@ -35,7 +35,7 @@ export function AdminUsers() {
       await api.post('/users', newUser);
         toast.success('User created successfully');
         setShowAddUser(false);
-        setNewUser({ name: '', email: '', password: '', role: 'OPERATOR', contactNumber: '', address: '' });
+        setNewUser({ name: '', email: '', password: '', role: 'FARMER', contactNumber: '', address: '' });
        fetchUsers();
      } catch (error: any) {
        toast.error(error.response?.data?.message || 'Failed to create user.');
@@ -125,7 +125,7 @@ export function AdminUsers() {
                <div>
                  <label className={`block text-xs font-extrabold uppercase tracking-widest mb-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Role Permissions</label>
                  <select value={newUser.role} onChange={e=>setNewUser({...newUser, role: e.target.value})} className={`w-full px-4 sm:px-5 py-3 border rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all font-bold cursor-pointer min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-700'}`}>
-                   <option value="OPERATOR">Operator</option><option value="RECEIVER">Receiver</option><option value="ADMIN">Admin</option>
+                    <option value="FARMER">Farmer</option><option value="ADMIN">Admin</option>
                  </select>
                </div>
             </div>
