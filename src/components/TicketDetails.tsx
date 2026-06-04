@@ -85,6 +85,7 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
   const totalExp = expenses.reduce((sum: number, e: any) => sum + Number(e.amount), 0);
   const isLocked = ticket && (ticket.status === 'RECONCILED' || ticket.status === 'DISPUTED');
   const qualityFactor = ticket?.brix != null && ticket?.pol != null ? (Number(ticket.brix) + Number(ticket.pol)) / 200 : null;
+  const profitLoss = ticket?.payment ? Number(ticket.payment.netAmount) - totalExp : null;
 
   useEffect(() => {
     Promise.all([
@@ -734,6 +735,13 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
                           <div className="flex justify-between text-sm"><span className={`font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Gross</span><span className="font-mono font-bold">₱{Number(ticket.payment.grossAmount).toFixed(2)}</span></div>
                           <div className="flex justify-between text-sm"><span className={`font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Deductions</span><span className="font-mono font-bold text-red-500">-₱{Number(ticket.payment.deductions).toFixed(2)}</span></div>
                           <div className="flex justify-between text-sm font-bold border-t pt-2 mt-2"><span>Net Paid</span><span className="font-mono text-emerald-500">₱{Number(ticket.payment.netAmount).toFixed(2)}</span></div>
+                          {totalExp > 0 && <div className="flex justify-between text-sm"><span className={`font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Total Expenses</span><span className="font-mono font-bold text-red-500">-₱{totalExp.toFixed(2)}</span></div>}
+                          {profitLoss !== null && (
+                            <div className={`flex justify-between text-sm font-bold border-t pt-2 mt-2 ${profitLoss >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                              <span>Profit / Loss</span>
+                              <span className="font-mono">{profitLoss >= 0 ? '+' : ''}₱{profitLoss.toFixed(2)}</span>
+                            </div>
+                          )}
                           {ticket.payment.notes && <div className={`text-xs mt-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{ticket.payment.notes}</div>}
                           {ticket.payment.proofUrl && <button type="button" onClick={() => setLightboxUrl(ticket.payment.proofUrl)} className="mt-2"><img src={ticket.payment.proofUrl} alt="Payment proof" className="h-16 rounded-xl object-cover border border-blue-500/30 hover:border-blue-500" /></button>}
                         </div>

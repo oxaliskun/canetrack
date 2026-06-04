@@ -224,7 +224,7 @@
   - Table: quedan #, date, method, gross, deductions, net, status
   - Total earnings summary
 
-- [ ] 8.4 Payment on quedan detail
+- [x] 8.4 Payment on quedan detail
   - Show payment info card: method, ref, amounts, date
   - Profit/Loss = Net Payment - Total Expenses
 
