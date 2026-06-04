@@ -241,7 +241,7 @@
   - Farms: per farm totals
   - Trucks: per truck trips and kg
 
-- [ ] 9.3 Admin dashboard
+- [x] 9.3 Admin dashboard
   - Cards: pending verifications, total farmers, total quedans (month), open disputes
   - Recent pending verifications list
   - Open disputes list

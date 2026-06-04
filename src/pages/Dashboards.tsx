@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import api from '../api/axiosInstance';
 import { formatWeight, formatDate, formatCurrency, resolveProfilePic } from '../lib/utils';
 import { FileText, CheckCircle, AlertTriangle, Clock, Activity, DollarSign, Database, Plus, Users, UserPlus, TrendingUp, Printer, Bell, Download, Sprout, Shield, BarChart3, Truck, Scale, Leaf, Phone, MapPin, Eye, FlaskConical, ChevronDown, Camera, Building2, Wallet, Weight } from 'lucide-react';
@@ -620,16 +620,27 @@ export function OperatorDashboard() {
 export function AdminDashboard() {
   const [stats, setStats] = useState<any>({});
   const [pendingTickets, setPendingTickets] = useState([]);
+  const [disputedTickets, setDisputedTickets] = useState([]);
+  const [farmerCount, setFarmerCount] = useState(0);
+  const [monthlyCount, setMonthlyCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const { isDark } = useTheme();
 
   const fetchData = async () => {
-    const [sumRes, pendingRes] = await Promise.all([
+    const [sumRes, pendingRes, disputedRes, usersRes, ticketsRes] = await Promise.all([
       api.get('/summary'),
-      api.get('/tickets?status=PENDING')
+      api.get('/tickets?status=PENDING'),
+      api.get('/tickets?status=DISPUTED'),
+      api.get('/users'),
+      api.get('/tickets')
     ]);
     setStats(sumRes.data);
     setPendingTickets(pendingRes.data.tickets);
+    setDisputedTickets(disputedRes.data.tickets);
+    setFarmerCount(usersRes.data.filter((u: any) => u.role === 'FARMER').length);
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    setMonthlyCount(ticketsRes.data.tickets.filter((t: any) => new Date(t.createdAt) >= monthStart).length);
     setLoading(false);
   };
 
@@ -679,10 +690,10 @@ export function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-        <StatCard label="Platform Transactions" value={formatCurrency(stats.totalValue || 0)} icon={DollarSign} colorClass={{bg: 'bg-emerald-100', text: 'text-emerald-700'}} delay={0.1} />
-        <StatCard label="Total Deliveries" value={stats.totalTickets || 0} icon={FileText} colorClass={{bg: 'bg-blue-100', text: 'text-blue-700'}} delay={0.2} />
-        <StatCard label="Healthy Syncs" value={stats.reconciled || 0} icon={CheckCircle} colorClass={{bg: 'bg-green-100', text: 'text-green-700'}} delay={0.3} />
-        <StatCard label="Active Disputes" value={stats.disputed || 0} icon={AlertTriangle} colorClass={{bg: 'bg-red-100', text: 'text-red-700'}} delay={0.4} />
+        <StatCard label="Pending Verifications" value={stats.pending || 0} subtitle="Awaiting review" icon={Clock} colorClass={{bg: 'bg-orange-100', text: 'text-orange-700'}} delay={0.1} />
+        <StatCard label="Total Farmers" value={farmerCount} subtitle="Registered accounts" icon={Users} colorClass={{bg: 'bg-blue-100', text: 'text-blue-700'}} delay={0.2} />
+        <StatCard label="Monthly Quedans" value={monthlyCount} subtitle="This month" icon={FileText} colorClass={{bg: 'bg-emerald-100', text: 'text-emerald-700'}} delay={0.3} />
+        <StatCard label="Open Disputes" value={stats.disputed || 0} subtitle="Needs resolution" icon={AlertTriangle} colorClass={{bg: 'bg-red-100', text: 'text-red-700'}} delay={0.4} />
       </div>
 
       {pendingTickets.length > 0 && (
@@ -720,6 +731,42 @@ export function AdminDashboard() {
                           <AlertTriangle className="w-3.5 h-3.5 inline mr-1" /> Dispute
                         </motion.button>
                       </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </TableWrapper>
+      )}
+
+      {/* Open Disputes */}
+      {disputedTickets.length > 0 && (
+        <TableWrapper title="Open Disputes" icon={AlertTriangle} delay={0.6}>
+          <div className="overflow-x-auto scrollbar-hide">
+            <table className="w-full text-left text-sm whitespace-nowrap table-card-view">
+              <thead className={`border-b uppercase text-[10px] font-extrabold tracking-widest ${isDark ? 'bg-slate-800/80 border-slate-700 text-slate-400' : 'bg-slate-50/80 border-slate-100 text-slate-500'}`}>
+                <tr>
+                  <th className="px-4 sm:px-6 py-4 sm:py-5">Quedan</th>
+                  <th className="px-4 sm:px-6 py-4 sm:py-5">Farmer</th>
+                  <th className="px-4 sm:px-6 py-4 sm:py-5">Reason</th>
+                  <th className="px-4 sm:px-6 py-4 sm:py-5">Created</th>
+                  <th className="px-4 sm:px-6 py-4 sm:py-5 text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody className={`divide-y font-medium ${isDark ? 'divide-slate-700 text-slate-300' : 'divide-slate-100 text-slate-700'}`}>
+                {disputedTickets.map((t: any) => (
+                  <tr key={t.id} className={`transition-colors ${isDark ? 'hover:bg-slate-800/50' : 'hover:bg-slate-50'}`}>
+                    <td data-label="Quedan" className="px-4 sm:px-6 py-4 sm:py-5">
+                      <p className={`font-mono font-bold text-sm ${isDark ? 'text-red-400' : 'text-red-700'}`}>{t.ticketNo}</p>
+                    </td>
+                    <td data-label="Farmer" className="px-4 sm:px-6 py-4 sm:py-5 text-xs sm:text-sm">{t.farmer?.name || t.farm?.owner?.name || '-'}</td>
+                    <td data-label="Reason" className={`px-4 sm:px-6 py-4 sm:py-5 text-xs sm:text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{t.disputeNotes || '-'}</td>
+                    <td data-label="Created" className={`px-4 sm:px-6 py-4 sm:py-5 text-xs sm:text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{formatDate(t.createdAt)}</td>
+                    <td data-label="Action" className="px-4 sm:px-6 py-4 sm:py-5 text-center">
+                      <Link to={`/dashboard/admin/disputes`} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider border transition-colors shadow-sm bg-purple-500 text-white border-purple-500 hover:bg-purple-400">
+                        <Eye className="w-3.5 h-3.5" /> Review
+                      </Link>
                     </td>
                   </tr>
                 ))}
