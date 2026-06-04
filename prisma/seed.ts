@@ -52,7 +52,9 @@ async function main() {
     await prisma.user.upsert({
       where: { email: user.email },
       update: {
-        passwordHash: hashedPassword // Ensure password is 'password'
+        passwordHash: hashedPassword,
+        verificationStatus: 'VERIFIED',
+        isActive: true,
       },
       create: user,
     });
