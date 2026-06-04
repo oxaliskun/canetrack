@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axiosInstance';
 import { formatWeight, formatDate, formatCurrency, resolveProfilePic } from '../lib/utils';
-import { FileText, CheckCircle, AlertTriangle, Clock, Activity, DollarSign, Database, Plus, Users, UserPlus, TrendingUp, Printer, Bell, Download, Sprout, Shield, BarChart3, Truck, Scale, Leaf, Phone, MapPin, Eye } from 'lucide-react';
+import { FileText, CheckCircle, AlertTriangle, Clock, Activity, DollarSign, Database, Plus, Users, UserPlus, TrendingUp, Printer, Bell, Download, Sprout, Shield, BarChart3, Truck, Scale, Leaf, Phone, MapPin, Eye, FlaskConical, ChevronDown } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
@@ -276,7 +276,7 @@ function TruckIcon(props: any) {
 }
 
 export function OperatorDashboard() {
-  const [form, setForm] = useState({ truckPlate: '', truckId: '', farmId: '', grossWeight: '', tareWeight: '' });
+  const [form, setForm] = useState({ truckPlate: '', truckId: '', farmId: '', grossWeight: '', tareWeight: '', brix: '', pol: '', sampleCollected: false });
   const [farms, setFarms] = useState([]);
   const [trucks, setTrucks] = useState([]);
   const [activeTickets, setActiveTickets] = useState([]);
@@ -316,7 +316,7 @@ export function OperatorDashboard() {
       await api.post('/tickets', form);
       toast.success('Quedan encoded successfully.');
       fetchTickets();
-      setForm({ truckPlate: '', truckId: '', farmId: '', grossWeight: '', tareWeight: '' });
+      setForm({ truckPlate: '', truckId: '', farmId: '', grossWeight: '', tareWeight: '', brix: '', pol: '', sampleCollected: false });
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to encode ticket.');
     }
@@ -388,6 +388,35 @@ export function OperatorDashboard() {
                   {Math.max(0, (Number(form.grossWeight) || 0) - (Number(form.tareWeight) || 0))} kg
                 </span>
               </div>
+
+              <details className={`rounded-xl sm:rounded-2xl border overflow-hidden group ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
+                <summary className={`flex items-center justify-between px-4 sm:px-5 py-3 sm:py-3.5 cursor-pointer text-xs sm:text-sm font-bold select-none min-h-[44px] ${isDark ? 'bg-slate-800 text-slate-300 hover:bg-slate-700' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'}`}>
+                  <span className="flex items-center gap-2"><FlaskConical className="w-4 h-4" /> Quality Analysis</span>
+                  <ChevronDown className="w-4 h-4 transition-transform group-open:rotate-180" />
+                </summary>
+                <div className="p-4 sm:p-5 space-y-4 border-t ${isDark ? 'border-slate-700' : 'border-slate-200'}">
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                    <div>
+                      <label className={`block text-[10px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Brix (0–100)</label>
+                      <input type="number" min="0" max="100" step="0.1" value={form.brix} onChange={e => setForm({...form, brix: e.target.value})} className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-mono text-sm font-bold shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400'}`} placeholder="0.0" />
+                    </div>
+                    <div>
+                      <label className={`block text-[10px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Pol (0–100)</label>
+                      <input type="number" min="0" max="100" step="0.1" value={form.pol} onChange={e => setForm({...form, pol: e.target.value})} className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-mono text-sm font-bold shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400'}`} placeholder="0.0" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className={`block text-[10px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Purity (auto-computed)</label>
+                    <div className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl font-mono text-sm font-black shadow-sm min-h-[44px] flex items-center ${isDark ? 'bg-slate-800/50 border-slate-700 text-emerald-400' : 'bg-slate-50 border-slate-200 text-emerald-600'}`}>
+                      {form.brix && Number(form.brix) > 0 ? ((Number(form.pol) || 0) / Number(form.brix) * 100).toFixed(2) + '%' : '—'}
+                    </div>
+                  </div>
+                  <label className="flex items-center gap-3 cursor-pointer pt-1">
+                    <input type="checkbox" checked={form.sampleCollected} onChange={e => setForm({...form, sampleCollected: e.target.checked})} className="w-5 h-5 rounded-lg border-2 accent-emerald-500 cursor-pointer" />
+                    <span className={`text-sm font-bold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>Sample Collected</span>
+                  </label>
+                </div>
+              </details>
             </div>
             <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold py-3.5 sm:py-4 rounded-xl sm:rounded-2xl transition-all shadow-lg shadow-blue-600/30 text-base sm:text-lg min-h-[48px]">
                Issue Quedan

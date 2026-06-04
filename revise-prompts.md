@@ -109,7 +109,7 @@
   - "Ticket No" → "Quedan No" (QDN-2026-00001)
   - All frontend labels updated
 
-- [ ] 4.2 Add quality fields to quedan form
+- [x] 4.2 Add quality fields to quedan form
   - Brix (0-100), Pol (0-100), Purity auto-computed (Pol/Brix*100) read-only
   - Sample Collected checkbox
 
