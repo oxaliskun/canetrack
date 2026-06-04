@@ -545,6 +545,29 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
                     </div>
                   )}
 
+                  {/* Dispute Info */}
+                  {ticket.disputeNotes && (
+                    <div>
+                      <SectionTitle title="Dispute Details" icon={AlertTriangle} />
+                      <div className={`p-5 rounded-2xl border-2 ${isDark ? 'border-red-800 bg-red-950/20' : 'border-red-200 bg-red-50'}`}>
+                        <div className="flex items-start gap-3">
+                          <div className={`p-2 rounded-xl shrink-0 ${isDark ? 'bg-red-900/50 text-red-400' : 'bg-red-100 text-red-600'}`}>
+                            <AlertTriangle className="w-5 h-5" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className={`font-bold text-sm ${isDark ? 'text-red-400' : 'text-red-700'}`}>Dispute Reason</p>
+                            <p className={`text-sm mt-1 leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{ticket.disputeNotes}</p>
+                            {ticket.disputePhotoUrl && (
+                              <button type="button" onClick={() => setLightboxUrl(ticket.disputePhotoUrl)} className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-blue-500 hover:text-blue-400">
+                                <img src={ticket.disputePhotoUrl} alt="Dispute photo" className="h-12 rounded-lg object-cover border border-red-500/30" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Resolution Notes */}
                   {ticket.reconciliation?.notes && (
                     <div>

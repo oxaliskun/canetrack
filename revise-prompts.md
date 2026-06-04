@@ -195,7 +195,7 @@
   - All expense edits disabled
   - "Locked" label on expenses section
 
-- [ ] 7.3 Admin dispute review
+- [x] 7.3 Admin dispute review
   - Route: /dashboard/admin/disputes
   - Table of disputed quedans: #, farmer, farm, date, reason
   - Click → full quedan detail with dispute highlighted
