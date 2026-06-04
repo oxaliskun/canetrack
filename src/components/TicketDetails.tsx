@@ -72,6 +72,8 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
   const [disputeReason, setDisputeReason] = useState('');
   const [disputePhoto, setDisputePhoto] = useState<File | null>(null);
   const [disputePhotoPreview, setDisputePhotoPreview] = useState<string | null>(null);
+  const [showResolveModal, setShowResolveModal] = useState(false);
+  const [resolveForm, setResolveForm] = useState({ adjustedWeight: '', adjustedPrice: '', notes: '' });
   const [loading, setLoading] = useState(true);
   const { isDark } = useTheme();
   const { user } = useAuth();
@@ -147,6 +149,22 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
       setTicket(res.data.ticket);
       setTimeline(res.data.timeline || []);
     } catch (e: any) { toast.error(e.response?.data?.message || 'Failed to flag dispute'); }
+  };
+
+  const handleAcceptAdjust = async () => {
+    if (!resolveForm.notes.trim() || resolveForm.notes.trim().length < 10) { toast.error('Please provide resolution notes (min 10 characters)'); return; }
+    try {
+      const payload: any = { status: 'RECONCILED', notes: resolveForm.notes.trim(), disputeFinal: true };
+      if (resolveForm.adjustedWeight) payload.adjustedWeight = Number(resolveForm.adjustedWeight);
+      if (resolveForm.adjustedPrice) payload.adjustedPrice = Number(resolveForm.adjustedPrice);
+      await api.patch(`/tickets/${ticketId}`, payload);
+      toast.success('Dispute resolved — quedan reconciled');
+      setShowResolveModal(false);
+      setResolveForm({ adjustedWeight: '', adjustedPrice: '', notes: '' });
+      const res = await api.get(`/tickets/${ticketId}`);
+      setTicket(res.data.ticket);
+      setTimeline(res.data.timeline || []);
+    } catch (e: any) { toast.error(e.response?.data?.message || 'Failed to resolve dispute'); }
   };
 
   const handlePrint = () => {
@@ -366,6 +384,12 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
                         <button onClick={() => setShowDisputeModal(true)}
                           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider border transition-all shadow-sm ${isDark ? 'bg-red-950/30 border-red-800 text-red-400 hover:bg-red-900/50 hover:text-red-300' : 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100'}`}>
                           <AlertTriangle className="w-4 h-4" /> Flag Dispute
+                        </button>
+                      )}
+                      {user?.role === 'ADMIN' && ticket?.status === 'DISPUTED' && (
+                        <button onClick={() => { setResolveForm({ adjustedWeight: String(ticket.millWeight || ''), adjustedPrice: String(ticket.adjustedPrice || ticket.pricePerKg || ''), notes: '' }); setShowResolveModal(true); }}
+                          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider border transition-all shadow-sm ${isDark ? 'bg-emerald-950/30 border-emerald-800 text-emerald-400 hover:bg-emerald-900/50 hover:text-emerald-300' : 'bg-emerald-50 border-emerald-200 text-emerald-600 hover:bg-emerald-100'}`}>
+                          <CheckCircle className="w-4 h-4" /> Accept & Adjust
                         </button>
                       )}
                       <button
@@ -730,6 +754,58 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
                       <AlertTriangle className="w-4 h-4" /> Flag Dispute
                     </motion.button>
                     <button onClick={() => { setShowDisputeModal(false); setDisputeReason(''); setDisputePhoto(null); setDisputePhotoPreview(null); }} className={`px-6 py-3 rounded-xl font-bold text-sm min-h-[44px] ${isDark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}`}>Cancel</button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {/* Accept & Adjust Modal */}
+      <AnimatePresence>
+        {showResolveModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[60] flex items-center justify-center p-4" onClick={() => setShowResolveModal(false)}>
+            <div className={`absolute inset-0 backdrop-blur-sm ${isDark ? 'bg-black/60' : 'bg-slate-900/50'}`} />
+            <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className={`relative w-full max-w-lg rounded-2xl border shadow-2xl overflow-hidden ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700 shadow-black/40' : 'bg-white border-slate-200 shadow-slate-200/40'}`}
+              onClick={e => e.stopPropagation()}>
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-500 via-emerald-400 to-emerald-500" />
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-emerald-100"><CheckCircle className="w-5 h-5 text-emerald-600" /></div>
+                    <div>
+                      <h2 className={`text-lg font-extrabold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Accept & Adjust</h2>
+                      <p className={`text-xs font-medium mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Resolve dispute and reconcile quedan</p>
+                    </div>
+                  </div>
+                  <button onClick={() => { setShowResolveModal(false); setResolveForm({ adjustedWeight: '', adjustedPrice: '', notes: '' }); }} className={`p-1.5 rounded-lg transition-colors ${isDark ? 'text-slate-500 hover:text-white hover:bg-slate-700' : 'text-slate-400 hover:text-slate-900 hover:bg-slate-100'}`}><X className="w-5 h-5" /></button>
+                </div>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Adjusted Weight (kg)</label>
+                      <input type="number" step="0.01" min="0" value={resolveForm.adjustedWeight} onChange={e => setResolveForm({...resolveForm, adjustedWeight: e.target.value})} placeholder="Weight"
+                        className={`w-full px-4 py-3 border rounded-xl outline-none text-sm font-mono font-bold focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400'}`} />
+                    </div>
+                    <div>
+                      <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Adjusted Price (₱/kg)</label>
+                      <input type="number" step="0.01" min="0" value={resolveForm.adjustedPrice} onChange={e => setResolveForm({...resolveForm, adjustedPrice: e.target.value})} placeholder="Price"
+                        className={`w-full px-4 py-3 border rounded-xl outline-none text-sm font-mono font-bold focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400'}`} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Resolution Notes *</label>
+                    <textarea rows={4} value={resolveForm.notes} onChange={e => setResolveForm({...resolveForm, notes: e.target.value})} placeholder="Describe the resolution (min 10 characters)..."
+                      className={`w-full px-4 py-3 border rounded-xl outline-none text-sm font-medium resize-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400'}`} />
+                    <p className={`text-xs mt-1 ml-1 font-medium ${resolveForm.notes.trim().length < 10 ? 'text-red-500' : isDark ? 'text-slate-500' : 'text-slate-400'}`}>{resolveForm.notes.length}/10 min characters</p>
+                  </div>
+                  <div className="flex gap-3 pt-2">
+                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleAcceptAdjust}
+                      className="flex-1 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold py-3 rounded-xl text-sm shadow-lg shadow-emerald-600/25 min-h-[44px] flex items-center justify-center gap-2">
+                      <CheckCircle className="w-4 h-4" /> Accept & Reconcile
+                    </motion.button>
+                    <button onClick={() => { setShowResolveModal(false); setResolveForm({ adjustedWeight: '', adjustedPrice: '', notes: '' }); }} className={`px-6 py-3 rounded-xl font-bold text-sm min-h-[44px] ${isDark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}`}>Cancel</button>
                   </div>
                 </div>
               </div>

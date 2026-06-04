@@ -1253,7 +1253,7 @@ apiRouter.patch('/tickets/:id', authMiddleware, async (req: AuthRequest, res: Re
     if (disputePhotoUrl !== undefined) updateData.disputePhotoUrl = disputePhotoUrl;
     if (disputeFinal !== undefined) updateData.disputeFinal = disputeFinal === true;
 
-    if (req.user!.role === 'ADMIN' && status === 'VERIFIED') {
+    if (req.user!.role === 'ADMIN' && (status === 'VERIFIED' || (status === 'RECONCILED' && ticket.status === 'DISPUTED'))) {
       updateData.verifiedAt = new Date();
       updateData.verifiedBy = req.user!.userId;
     }

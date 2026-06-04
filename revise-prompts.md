@@ -200,7 +200,7 @@
   - Table of disputed quedans: #, farmer, farm, date, reason
   - Click → full quedan detail with dispute highlighted
 
-- [ ] 7.4 Admin accept
+- [x] 7.4 Admin accept
   - "Accept & Adjust" → modal: adjust weight, adjust price, notes
   - Status → RECONCILED, farmer notified
 
