@@ -151,6 +151,24 @@ async function main() {
     });
   }
 
+  // Seed Sugar Types
+  const sugarTypes = [
+    { name: 'Raw Sugar', description: 'Unrefined sugar directly from sugarcane processing' },
+    { name: 'Brown Sugar', description: 'Soft, moist sugar with molasses content' },
+    { name: 'Refined Sugar', description: 'Highly processed white sugar, 99.9% sucrose' },
+    { name: 'Muscovado', description: 'Traditional unrefined cane sugar with rich molasses flavor' },
+    { name: 'Molasses', description: 'Thick, dark syrup byproduct of sugar refining' },
+  ];
+
+  console.log('Seeding sugar types...');
+  for (const st of sugarTypes) {
+    await prisma.sugarType.upsert({
+      where: { name: st.name },
+      update: {},
+      create: st,
+    });
+  }
+
   console.log('Seed completed successfully.');
 }
 

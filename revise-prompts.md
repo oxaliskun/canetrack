@@ -172,7 +172,7 @@
   - CRUD: name, characteristics, active status
   - Seed: Phil 93-93, Phil 99-1793, VMC 86-550, VMC 92-129, Phil 2000-2567
 
-- [ ] 6.2 Admin sugar type management
+- [x] 6.2 Admin sugar type management
   - CRUD: name, description, active status
   - Seed: Raw Sugar, Brown Sugar, Refined Sugar, Muscovado, Molasses
 
