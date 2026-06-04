@@ -1120,7 +1120,8 @@ apiRouter.get('/tickets', authMiddleware, async (req: AuthRequest, res: Response
         sugarType: true,
         variant: true,
         truck: true,
-        deliveryReceipts: true
+        deliveryReceipts: true,
+        payment: true
       },
       orderBy: { createdAt: 'desc' }
     });
@@ -1143,9 +1144,7 @@ apiRouter.get('/tickets/:id', authMiddleware, async (req: AuthRequest, res: Resp
         variant: true,
         truck: true,
         deliveryReceipts: true,
-        sugarType: true,
-        variant: true,
-        truck: true
+        payment: true
       }
     });
     if (!ticket) {

@@ -152,6 +152,7 @@ model FarmExpense {
 model Payment {
   id           String    @id @default(cuid())
   quedanId     String    @unique
+  quedan       WeightTicket @relation(fields: [quedanId], references: [id])
   method       String    // BANK_TRANSFER, GCASH, CASH, CHECK
   referenceNumber String?
   grossAmount  Float
@@ -231,6 +232,7 @@ model WeightTicket {
   variant        SugarcaneVariant?    @relation(fields: [variantId], references: [id])
   truck          Truck?               @relation(fields: [truckId], references: [id])
   deliveryReceipts DeliveryReceipt[]
+  payment        Payment?
 }
 
 model ReconciliationRecord {

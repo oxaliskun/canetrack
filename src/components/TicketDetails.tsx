@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Printer, Clock, User, Truck, Scale, AlertTriangle, CheckCircle, FileText, Calendar, MapPin, Phone, Mail, Eye, Plus, Minus, Building2, Wallet, Camera, Trash2 } from 'lucide-react';
+import { X, Printer, Clock, User, Truck, Scale, AlertTriangle, CheckCircle, FileText, Calendar, MapPin, Phone, Mail, Eye, Plus, Minus, Building2, Wallet, Camera, Trash2, DollarSign } from 'lucide-react';
 import api from '../api/axiosInstance';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../hooks/useAuth';
@@ -76,6 +76,9 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
   const [resolveForm, setResolveForm] = useState({ adjustedWeight: '', adjustedPrice: '', notes: '' });
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [payForm, setPayForm] = useState({ method: 'BANK_TRANSFER', referenceNumber: '', grossAmount: '', deductions: '0', netAmount: '', notes: '' });
+  const [payProof, setPayProof] = useState<File | null>(null);
   const [loading, setLoading] = useState(true);
   const { isDark } = useTheme();
   const { user } = useAuth();
@@ -180,6 +183,35 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
       setTicket(res.data.ticket);
       setTimeline(res.data.timeline || []);
     } catch (e: any) { toast.error(e.response?.data?.message || 'Failed to reject dispute'); }
+  };
+
+  const handleProcessPayment = async () => {
+    if (!payForm.method) { toast.error('Select a payment method'); return; }
+    const gross = parseFloat(payForm.grossAmount);
+    const deductions = parseFloat(payForm.deductions || '0');
+    const net = gross - deductions;
+    if (isNaN(gross) || gross <= 0) { toast.error('Enter a valid gross amount'); return; }
+    try {
+      let proofUrl = '';
+      if (payProof) {
+        const fd = new FormData();
+        fd.append('file', payProof);
+        const { data } = await api.post('/upload', fd);
+        proofUrl = data.url;
+      }
+      await api.post('/payments', {
+        quedanId: ticketId, method: payForm.method, referenceNumber: payForm.referenceNumber || undefined,
+        grossAmount: gross, deductions, netAmount: net, notes: payForm.notes || undefined, proofUrl: proofUrl || undefined
+      });
+      await api.patch(`/tickets/${ticketId}`, { status: 'PAID' });
+      toast.success('Payment processed successfully');
+      setShowPaymentModal(false);
+      setPayForm({ method: 'BANK_TRANSFER', referenceNumber: '', grossAmount: '', deductions: '0', netAmount: '', notes: '' });
+      setPayProof(null);
+      const res = await api.get(`/tickets/${ticketId}`);
+      setTicket(res.data.ticket);
+      setTimeline(res.data.timeline || []);
+    } catch (e: any) { toast.error(e.response?.data?.message || 'Failed to process payment'); }
   };
 
   const handlePrint = () => {
@@ -411,6 +443,12 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
                         <button onClick={() => { setRejectReason(''); setShowRejectModal(true); }}
                           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider border transition-all shadow-sm ${isDark ? 'bg-red-950/30 border-red-800 text-red-400 hover:bg-red-900/50 hover:text-red-300' : 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100'}`}>
                           <X className="w-4 h-4" /> Reject Dispute
+                        </button>
+                      )}
+                      {user?.role === 'ADMIN' && ticket?.status === 'RECONCILED' && !ticket.payment && (
+                        <button onClick={() => { setPayForm({ method: 'BANK_TRANSFER', referenceNumber: '', grossAmount: String(ticket.totalValue || ''), deductions: '0', netAmount: String(ticket.totalValue || ''), notes: '' }); setShowPaymentModal(true); }}
+                          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider border transition-all shadow-sm ${isDark ? 'bg-blue-950/30 border-blue-800 text-blue-400 hover:bg-blue-900/50 hover:text-blue-300' : 'bg-blue-50 border-blue-200 text-blue-600 hover:bg-blue-100'}`}>
+                          <DollarSign className="w-4 h-4" /> Process Payment
                         </button>
                       )}
                       <button
@@ -685,6 +723,24 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
                     )}
                   </div>
 
+                  {/* Payment Info */}
+                  {ticket.payment && (
+                    <div>
+                      <SectionTitle title="Payment" icon={DollarSign} />
+                      <div className={`rounded-2xl border overflow-hidden ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
+                        <div className={`px-5 py-4 space-y-2 ${isDark ? 'bg-slate-800/50' : 'bg-slate-50'}`}>
+                          <div className="flex justify-between text-sm"><span className={`font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Method</span><span className="font-bold">{ticket.payment.method}</span></div>
+                          {ticket.payment.referenceNumber && <div className="flex justify-between text-sm"><span className={`font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Reference</span><span className="font-mono font-bold">{ticket.payment.referenceNumber}</span></div>}
+                          <div className="flex justify-between text-sm"><span className={`font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Gross</span><span className="font-mono font-bold">₱{Number(ticket.payment.grossAmount).toFixed(2)}</span></div>
+                          <div className="flex justify-between text-sm"><span className={`font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Deductions</span><span className="font-mono font-bold text-red-500">-₱{Number(ticket.payment.deductions).toFixed(2)}</span></div>
+                          <div className="flex justify-between text-sm font-bold border-t pt-2 mt-2"><span>Net Paid</span><span className="font-mono text-emerald-500">₱{Number(ticket.payment.netAmount).toFixed(2)}</span></div>
+                          {ticket.payment.notes && <div className={`text-xs mt-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{ticket.payment.notes}</div>}
+                          {ticket.payment.proofUrl && <button type="button" onClick={() => setLightboxUrl(ticket.payment.proofUrl)} className="mt-2"><img src={ticket.payment.proofUrl} alt="Payment proof" className="h-16 rounded-xl object-cover border border-blue-500/30 hover:border-blue-500" /></button>}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Timeline */}
                   {timeline.length > 0 && (
                     <div>
@@ -867,6 +923,93 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
                       <X className="w-4 h-4" /> Reject & Finalize
                     </motion.button>
                     <button onClick={() => { setShowRejectModal(false); setRejectReason(''); }} className={`px-6 py-3 rounded-xl font-bold text-sm min-h-[44px] ${isDark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}`}>Cancel</button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {/* Payment Modal */}
+      <AnimatePresence>
+        {showPaymentModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[60] flex items-center justify-center p-4" onClick={() => setShowPaymentModal(false)}>
+            <div className={`absolute inset-0 backdrop-blur-sm ${isDark ? 'bg-black/60' : 'bg-slate-900/50'}`} />
+            <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className={`relative w-full max-w-lg rounded-2xl border shadow-2xl overflow-hidden ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700 shadow-black/40' : 'bg-white border-slate-200 shadow-slate-200/40'}`}
+              onClick={e => e.stopPropagation()}>
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-blue-400 to-blue-500" />
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-blue-100"><DollarSign className="w-5 h-5 text-blue-600" /></div>
+                    <div>
+                      <h2 className={`text-lg font-extrabold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Process Payment</h2>
+                      <p className={`text-xs font-medium mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Record payment for this quedan</p>
+                    </div>
+                  </div>
+                  <button onClick={() => { setShowPaymentModal(false); setPayForm({ method: 'BANK_TRANSFER', referenceNumber: '', grossAmount: '', deductions: '0', netAmount: '', notes: '' }); setPayProof(null); }} className={`p-1.5 rounded-lg transition-colors ${isDark ? 'text-slate-500 hover:text-white hover:bg-slate-700' : 'text-slate-400 hover:text-slate-900 hover:bg-slate-100'}`}><X className="w-5 h-5" /></button>
+                </div>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Method *</label>
+                      <select value={payForm.method} onChange={e => setPayForm({...payForm, method: e.target.value})} className={`w-full px-4 py-3 border rounded-xl outline-none text-sm font-medium focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}>
+                        <option value="BANK_TRANSFER">Bank Transfer</option>
+                        <option value="GCASH">GCash</option>
+                        <option value="CASH">Cash</option>
+                        <option value="CHECK">Check</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Reference #</label>
+                      <input value={payForm.referenceNumber} onChange={e => setPayForm({...payForm, referenceNumber: e.target.value})} placeholder="Optional"
+                        className={`w-full px-4 py-3 border rounded-xl outline-none text-sm font-mono font-bold focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400'}`} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Gross Amount *</label>
+                      <input type="number" step="0.01" min="0" value={payForm.grossAmount} onChange={e => {
+                        const gross = parseFloat(e.target.value) || 0;
+                        const ded = parseFloat(payForm.deductions) || 0;
+                        setPayForm({...payForm, grossAmount: e.target.value, netAmount: String(Math.max(0, gross - ded))});
+                      }} className={`w-full px-4 py-3 border rounded-xl outline-none text-sm font-mono font-bold focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400'}`} />
+                    </div>
+                    <div>
+                      <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Deductions</label>
+                      <input type="number" step="0.01" min="0" value={payForm.deductions} onChange={e => {
+                        const ded = parseFloat(e.target.value) || 0;
+                        const gross = parseFloat(payForm.grossAmount) || 0;
+                        setPayForm({...payForm, deductions: e.target.value, netAmount: String(Math.max(0, gross - ded))});
+                      }} className={`w-full px-4 py-3 border rounded-xl outline-none text-sm font-mono font-bold focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400'}`} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Net Amount</label>
+                    <div className={`w-full px-4 py-3 border rounded-xl text-sm font-mono font-bold min-h-[44px] flex items-center ${isDark ? 'bg-slate-800 border-slate-700 text-emerald-400' : 'bg-slate-50 border-slate-200 text-emerald-700'}`}>
+                      ₱{(parseFloat(payForm.netAmount) || 0).toFixed(2)}
+                    </div>
+                  </div>
+                  <div>
+                    <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Notes</label>
+                    <input value={payForm.notes} onChange={e => setPayForm({...payForm, notes: e.target.value})} placeholder="Optional payment notes"
+                      className={`w-full px-4 py-3 border rounded-xl outline-none text-sm font-medium focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400'}`} />
+                  </div>
+                  <div>
+                    <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Proof of Payment</label>
+                    <input type="file" accept="image/*" onChange={e => {
+                      const file = e.target.files?.[0] || null;
+                      if (file) { if (!file.type.startsWith('image/')) { toast.error('Only images allowed'); return; } if (file.size > 5*1024*1024) { toast.error('Max 5MB'); return; } }
+                      setPayProof(file);
+                    }} className={`w-full text-sm file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:cursor-pointer min-h-[44px] ${isDark ? 'text-slate-300 file:bg-blue-600 file:text-white' : 'text-slate-600 file:bg-blue-500 file:text-white'}`} />
+                  </div>
+                  <div className="flex gap-3 pt-2">
+                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleProcessPayment}
+                      className="flex-1 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold py-3 rounded-xl text-sm shadow-lg shadow-blue-600/25 min-h-[44px] flex items-center justify-center gap-2">
+                      <DollarSign className="w-4 h-4" /> Process Payment
+                    </motion.button>
+                    <button onClick={() => { setShowPaymentModal(false); setPayForm({ method: 'BANK_TRANSFER', referenceNumber: '', grossAmount: '', deductions: '0', netAmount: '', notes: '' }); setPayProof(null); }} className={`px-6 py-3 rounded-xl font-bold text-sm min-h-[44px] ${isDark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}`}>Cancel</button>
                   </div>
                 </div>
               </div>

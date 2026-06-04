@@ -211,7 +211,7 @@
 
 ## Phase 8: Payments
 
-- [ ] 8.1 Admin payment form
+- [x] 8.1 Admin payment form
   - Button on reconciled quedans: "Process Payment"
   - Form: method, reference, gross (auto-filled), deductions, net (auto), notes, proof
   - Creates Payment record
