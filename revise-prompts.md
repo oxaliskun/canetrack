@@ -139,7 +139,7 @@
 
 ## Phase 5: Expenses
 
-- [ ] 5.1 Per-delivery expense form
+- [x] 5.1 Per-delivery expense form
   - Component on quedan detail page
   - Add expense: category dropdown (DELIVERY type), amount, notes, receipt photo
   - List of expenses with total

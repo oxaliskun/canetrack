@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Printer, Clock, User, Truck, Scale, AlertTriangle, CheckCircle, FileText, Calendar, MapPin, Phone, Mail, Eye, Plus, Minus, Building2 } from 'lucide-react';
+import { X, Printer, Clock, User, Truck, Scale, AlertTriangle, CheckCircle, FileText, Calendar, MapPin, Phone, Mail, Eye, Plus, Minus, Building2, Wallet, Camera, Trash2 } from 'lucide-react';
 import api from '../api/axiosInstance';
 import { useTheme } from '../context/ThemeContext';
+import { toast } from 'sonner';
 import { StatusBadge } from './StatusBadge';
 import { formatWeight, formatDate } from '../lib/utils';
 
@@ -59,18 +60,51 @@ function SectionTitle({ title, icon: Icon }: { title: string; icon?: any }) {
 export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
   const [ticket, setTicket] = useState<any>(null);
   const [timeline, setTimeline] = useState<any[]>([]);
+  const [expenses, setExpenses] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [expForm, setExpForm] = useState({ categoryId: '', amount: '', notes: '' });
+  const [expPhoto, setExpPhoto] = useState<File | null>(null);
+  const [showExpForm, setShowExpForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const { isDark } = useTheme();
 
   useEffect(() => {
-    api.get(`/tickets/${ticketId}`)
-      .then(res => {
-        setTicket(res.data.ticket);
-        setTimeline(res.data.timeline || []);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+    Promise.all([
+      api.get(`/tickets/${ticketId}`).then(res => { setTicket(res.data.ticket); setTimeline(res.data.timeline || []); }),
+      api.get(`/expenses?quedanId=${ticketId}`).then(res => setExpenses(res.data.expenses)),
+      api.get('/expense-categories').then(res => setCategories(res.data.categories.filter((c: any) => c.type === 'DELIVERY' && c.isActive)))
+    ]).then(() => setLoading(false)).catch(() => setLoading(false));
   }, [ticketId]);
+
+  const handleAddExpense = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!expForm.categoryId || !expForm.amount) return;
+    try {
+      let receiptUrl = '';
+      if (expPhoto) {
+        const fd = new FormData();
+        fd.append('file', expPhoto);
+        const { data } = await api.post('/upload', fd);
+        receiptUrl = data.url;
+      }
+      await api.post('/expenses', { quedanId: ticketId, categoryId: expForm.categoryId, amount: Number(expForm.amount), notes: expForm.notes, receiptUrl });
+      const res = await api.get(`/expenses?quedanId=${ticketId}`);
+      setExpenses(res.data.expenses);
+      setExpForm({ categoryId: '', amount: '', notes: '' });
+      setExpPhoto(null);
+      setShowExpForm(false);
+      toast.success('Expense added');
+    } catch (e: any) { toast.error(e.response?.data?.message || 'Failed to add expense'); }
+  };
+
+  const handleDeleteExpense = async (id: string) => {
+    if (!confirm('Delete this expense?')) return;
+    try {
+      await api.delete(`/expenses/${id}`);
+      setExpenses(prev => prev.filter(e => e.id !== id));
+      toast.success('Expense deleted');
+    } catch (e: any) { toast.error(e.response?.data?.message || 'Delete failed'); }
+  };
 
   const handlePrint = () => {
     if (!ticket) return;
@@ -464,6 +498,51 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
                       </div>
                     </div>
                   )}
+
+                  {/* Expenses */}
+                  <div>
+                    <SectionTitle title={`Delivery Expenses (${expenses.length})`} icon={Wallet} />
+                    <div className={`rounded-2xl border overflow-hidden ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
+                      {expenses.length > 0 && (
+                        <div className="divide-y">
+                          {expenses.map((exp: any) => (
+                            <div key={exp.id} className={`flex items-center justify-between px-4 sm:px-5 py-3 text-sm ${isDark ? 'divide-slate-700 hover:bg-slate-800/50' : 'hover:bg-slate-50'}`}>
+                              <div className="flex items-center gap-3 min-w-0">
+                                <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider shrink-0 ${isDark ? 'bg-slate-700 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>{exp.category?.name}</span>
+                                <span className={`font-mono font-bold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>₱{Number(exp.amount).toFixed(2)}</span>
+                                {exp.notes && <span className={`text-xs truncate hidden sm:inline ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{exp.notes}</span>}
+                                {exp.receiptUrl && <a href={exp.receiptUrl} target="_blank" rel="noreferrer" className="text-blue-500 hover:text-blue-400 shrink-0"><Camera className="w-3.5 h-3.5" /></a>}
+                              </div>
+                              <button onClick={() => handleDeleteExpense(exp.id)} className={`p-1.5 rounded-lg shrink-0 ${isDark ? 'text-slate-500 hover:text-red-400 hover:bg-red-900/30' : 'text-slate-400 hover:text-red-600 hover:bg-red-50'}`} title="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <div className={`flex items-center justify-between px-4 sm:px-5 py-3 text-sm font-bold border-t ${isDark ? 'border-slate-700 bg-slate-800/50 text-white' : 'border-slate-200 bg-slate-50 text-slate-900'}`}>
+                        <span>Total</span>
+                        <span className="font-mono">₱{expenses.reduce((sum: number, e: any) => sum + Number(e.amount), 0).toFixed(2)}</span>
+                      </div>
+                    </div>
+                    {showExpForm ? (
+                      <form onSubmit={handleAddExpense} className={`mt-3 p-4 sm:p-5 rounded-2xl border space-y-3 ${isDark ? 'border-slate-700 bg-slate-800/50' : 'border-slate-200 bg-slate-50'}`}>
+                        <select required value={expForm.categoryId} onChange={e => setExpForm({...expForm, categoryId: e.target.value})} className={`w-full px-4 py-2.5 border rounded-xl outline-none text-sm font-medium min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'}`}>
+                          <option value="">Select category...</option>
+                          {categories.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        </select>
+                        <div className="grid grid-cols-2 gap-3">
+                          <input required type="number" step="0.01" min="0" value={expForm.amount} onChange={e => setExpForm({...expForm, amount: e.target.value})} placeholder="Amount" className={`w-full px-4 py-2.5 border rounded-xl outline-none text-sm font-mono font-bold min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-400'}`} />
+                          <input type="file" accept="image/*" onChange={e => setExpPhoto(e.target.files?.[0] || null)} className={`w-full text-sm file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:cursor-pointer min-h-[44px] ${isDark ? 'text-slate-300 file:bg-emerald-600 file:text-white' : 'text-slate-600 file:bg-emerald-500 file:text-white'}`} />
+                        </div>
+                        <input value={expForm.notes} onChange={e => setExpForm({...expForm, notes: e.target.value})} placeholder="Notes (optional)" className={`w-full px-4 py-2.5 border rounded-xl outline-none text-sm font-medium min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-400'}`} />
+                        <div className="flex gap-2">
+                          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit" className="flex-1 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold py-2.5 rounded-xl text-sm shadow-lg shadow-emerald-600/25 min-h-[44px]"><Plus className="w-4 h-4 inline mr-1" /> Add Expense</motion.button>
+                          <button type="button" onClick={() => { setShowExpForm(false); setExpForm({ categoryId: '', amount: '', notes: '' }); setExpPhoto(null); }} className={`px-5 py-2.5 rounded-xl font-bold text-sm min-h-[44px] ${isDark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}`}>Cancel</button>
+                        </div>
+                      </form>
+                    ) : (
+                      <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setShowExpForm(true)} className="mt-3 w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold py-3 rounded-xl text-sm shadow-lg shadow-emerald-600/25 min-h-[44px]"><Plus className="w-4 h-4" /> Add Expense</motion.button>
+                    )}
+                  </div>
 
                   {/* Timeline */}
                   {timeline.length > 0 && (
