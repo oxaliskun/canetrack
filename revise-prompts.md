@@ -191,7 +191,7 @@
   - Modal: reason textarea (required, min 10 chars), optional photo
   - Status → DISPUTED, notification to admin
 
-- [ ] 7.2 Expenses frozen on dispute
+- [x] 7.2 Expenses frozen on dispute
   - All expense edits disabled
   - "Locked" label on expenses section
 
