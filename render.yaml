@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: canetrack
+    env: node
+    buildCommand: npm install && npx prisma generate && npx prisma db push --accept-data-loss && npx prisma db seed
+    startCommand: npm start
