@@ -13,6 +13,7 @@ import { AdminUsers } from './pages/admin/AdminUsers';
 import { AdminTickets } from './pages/admin/AdminTickets';
 import { AdminReports } from './pages/admin/AdminReports';
 import { AdminAuditLogs } from './pages/admin/AdminAuditLogs';
+import { AdminVerifications } from './pages/admin/AdminVerifications';
 import { FarmerFarms } from './pages/farmer/FarmerFarms';
 import { Profile } from './pages/shared/Profile';
 import { Settings } from './pages/shared/Settings';
@@ -155,6 +156,7 @@ export default function App() {
               <Route path="tickets" element={<AdminTickets />} />
               <Route path="reports" element={<AdminReports />} />
               <Route path="audit-logs" element={<AdminAuditLogs />} />
+              <Route path="verifications" element={<AdminVerifications />} />
             </Route>
 
             {/* Fallback 404 Route */}

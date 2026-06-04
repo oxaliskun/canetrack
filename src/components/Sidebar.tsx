@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Home, FileText, LogOut, Users, FilePlus, Leaf, Settings, BarChart, User, Shield, Truck, CheckCircle, Sprout, Bell, Moon, Sun, History, X } from 'lucide-react';
+import { Home, FileText, LogOut, Users, FilePlus, Leaf, Settings, BarChart, User, Shield, Truck, CheckCircle, Sprout, Bell, Moon, Sun, History, X, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
 import { NotificationDropdown } from './NotificationDropdown';
@@ -27,6 +27,7 @@ export function Sidebar({ role, userName, onClose }: SidebarProps) {
           { name: 'Tickets', path: '/dashboard/admin/tickets', icon: FileText },
           { name: 'Reports', path: '/dashboard/admin/reports', icon: BarChart },
           { name: 'Activity Logs', path: '/dashboard/admin/audit-logs', icon: History },
+          { name: 'Verifications', path: '/dashboard/admin/verifications', icon: ShieldCheck },
         ];
       case 'FARMER':
         return [

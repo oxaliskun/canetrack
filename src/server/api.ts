@@ -545,9 +545,10 @@ apiRouter.get('/documents', authMiddleware, async (req: AuthRequest, res: Respon
 
 apiRouter.get('/admin/documents', authMiddleware, roleGuard(['ADMIN']), async (req: AuthRequest, res: Response) => {
   try {
-    const { status } = req.query;
+    const { status, userId } = req.query;
     const where: any = {};
     if (status) where.status = status;
+    if (userId) where.userId = userId as string;
     const docs = await prisma.verificationDocument.findMany({
       where, include: { user: { select: { name: true, email: true } } }, orderBy: { createdAt: 'desc' }
     });

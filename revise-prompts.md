@@ -67,7 +67,7 @@
   - Creates VerificationDocuments linked to farm
   - Farm created with verificationStatus=PENDING
 
-- [ ] 2.3 Block access until verified
+- [x] 2.3 Block access until verified
   - After login, check verificationStatus
   - PENDING → /pending-verification (status page)
   - REJECTED → /verification-rejected (show reason + resubmit button)
