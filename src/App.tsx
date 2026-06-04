@@ -145,7 +145,7 @@ export default function App() {
               </PrivateRoute>
             } />
             <Route path="/dashboard/farmer/payments" element={
-              <PrivateRoute allowedRoles={['FARMER']}>
+              <PrivateRoute allowedRoles={['FARMER', 'ADMIN']}>
                 <FarmerPayments />
               </PrivateRoute>
             } />
