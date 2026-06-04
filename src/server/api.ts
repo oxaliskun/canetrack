@@ -658,6 +658,47 @@ apiRouter.delete('/variants/:id', authMiddleware, roleGuard(['ADMIN']), async (r
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 });
 
+// --- SUGAR TYPE ROUTES ---
+apiRouter.get('/sugar-types', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const sugarTypes = await prisma.sugarType.findMany({ orderBy: { name: 'asc' } });
+    res.json({ sugarTypes });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+});
+
+apiRouter.post('/sugar-types', authMiddleware, roleGuard(['ADMIN']), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { name, description } = req.body;
+    if (!name) { res.status(400).json({ message: 'Name is required' }); return; }
+    const sugarType = await prisma.sugarType.create({ data: { name, description } });
+    res.status(201).json(sugarType);
+  } catch (e: any) {
+    if (e.code === 'P2002') { res.status(409).json({ message: 'Sugar type name already exists' }); return; }
+    res.status(500).json({ message: e.message });
+  }
+});
+
+apiRouter.patch('/sugar-types/:id', authMiddleware, roleGuard(['ADMIN']), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { name, description, isActive } = req.body;
+    const sugarType = await prisma.sugarType.update({
+      where: { id: req.params.id },
+      data: { ...(name && { name }), ...(description !== undefined && { description }), ...(isActive !== undefined && { isActive }) }
+    });
+    res.json(sugarType);
+  } catch (e: any) {
+    if (e.code === 'P2002') { res.status(409).json({ message: 'Sugar type name already exists' }); return; }
+    res.status(500).json({ message: e.message });
+  }
+});
+
+apiRouter.delete('/sugar-types/:id', authMiddleware, roleGuard(['ADMIN']), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    await prisma.sugarType.delete({ where: { id: req.params.id } });
+    res.json({ message: 'Sugar type deleted' });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+});
+
 // --- TICKETS ROUTES ---
 // Operator creates ticket
 apiRouter.post('/tickets', authMiddleware, roleGuard(['FARMER']), async (req: AuthRequest, res: Response): Promise<void> => {

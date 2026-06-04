@@ -22,7 +22,7 @@
   - id, plateNumber (unique), make, model, capacity (Float), color?, ownerId (userId, farmer), isArchived Boolean @default(false)
   - Linked to User
 
-- [ ] 1.5 Add SugarcaneVariant model
+- [x] 1.5 Add SugarcaneVariant model
   - id, name (unique), characteristics?, isActive Boolean @default(true)
 
 - [ ] 1.6 Add SugarType model
