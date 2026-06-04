@@ -42,6 +42,7 @@ export function FarmerFarms() {
   const [docFiles, setDocFiles] = useState<File[]>([]);
   const [docPreviews, setDocPreviews] = useState<string[]>([]);
   const [expCategories, setExpCategories] = useState<any[]>([]);
+  const [farmExpenses, setFarmExpenses] = useState<Record<string, number>>({});
   const [expForm, setExpForm] = useState({ farmId: '', categoryId: '', amount: '', notes: '', date: new Date().toISOString().split('T')[0] });
   const [expPhoto, setExpPhoto] = useState<File | null>(null);
   const [expPhotoPreview, setExpPhotoPreview] = useState<string | null>(null);
@@ -61,6 +62,11 @@ export function FarmerFarms() {
   useEffect(() => {
     fetchFarms();
     api.get('/expense-categories').then(res => setExpCategories(res.data.categories.filter((c: any) => c.type === 'FARM' && c.isActive)));
+    api.get('/farm-expenses').then(res => {
+      const grouped: Record<string, number> = {};
+      res.data.farmExpenses.forEach((e: any) => { grouped[e.farmId] = (grouped[e.farmId] || 0) + Number(e.amount); });
+      setFarmExpenses(grouped);
+    });
   }, []);
 
   const openAdd = () => {
@@ -286,6 +292,12 @@ export function FarmerFarms() {
                       <div className="flex items-center gap-2.5">
                         <Leaf className={`w-4 h-4 shrink-0 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} />
                         <span className={`text-sm font-medium ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{farm.cropType}</span>
+                      </div>
+                    )}
+                    {farmExpenses[farm.id] > 0 && (
+                      <div className="flex items-center gap-2.5">
+                        <Wallet className={`w-4 h-4 shrink-0 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} />
+                        <span className={`text-sm font-medium ${isDark ? 'text-amber-400' : 'text-amber-700'}`}>₱{farmExpenses[farm.id].toFixed(2)} seasonal expenses</span>
                       </div>
                     )}
                     {farm.description && (

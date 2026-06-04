@@ -69,6 +69,7 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const { isDark } = useTheme();
+  const totalExp = expenses.reduce((sum: number, e: any) => sum + Number(e.amount), 0);
 
   useEffect(() => {
     Promise.all([
@@ -532,9 +533,21 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
                         </div>
                       )}
                       <div className={`flex items-center justify-between px-4 sm:px-5 py-3 text-sm font-bold border-t ${isDark ? 'border-slate-700 bg-slate-800/50 text-white' : 'border-slate-200 bg-slate-50 text-slate-900'}`}>
-                        <span>Total</span>
-                        <span className="font-mono">₱{expenses.reduce((sum: number, e: any) => sum + Number(e.amount), 0).toFixed(2)}</span>
+                        <span>Total Expenses</span>
+                        <span className="font-mono">₱{totalExp.toFixed(2)}</span>
                       </div>
+                      {ticket.totalValue && (
+                        <div className={`flex items-center justify-between px-4 sm:px-5 py-3 text-sm font-bold border-t ${isDark ? 'border-slate-700 bg-slate-800/50 text-white' : 'border-slate-200 bg-slate-50 text-slate-900'}`}>
+                          <span>Total Payment</span>
+                          <span className="font-mono">₱{Number(ticket.totalValue).toFixed(2)}</span>
+                        </div>
+                      )}
+                      {ticket.totalValue && (
+                        <div className={`flex items-center justify-between px-4 sm:px-5 py-3 text-sm font-bold border-t-2 ${isDark ? 'border-emerald-700 bg-emerald-950/30 text-emerald-400' : 'border-emerald-300 bg-emerald-50 text-emerald-700'}`}>
+                          <span>Net Proceeds</span>
+                          <span className="font-mono">₱{(Number(ticket.totalValue) - totalExp).toFixed(2)}</span>
+                        </div>
+                      )}
                     </div>
                     {showExpForm ? (
                       <form onSubmit={handleAddExpense} className={`mt-3 p-4 sm:p-5 rounded-2xl border space-y-3 ${isDark ? 'border-slate-700 bg-slate-800/50' : 'border-slate-200 bg-slate-50'}`}>
