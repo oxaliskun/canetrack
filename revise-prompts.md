@@ -204,7 +204,7 @@
   - "Accept & Adjust" → modal: adjust weight, adjust price, notes
   - Status → RECONCILED, farmer notified
 
-- [ ] 7.5 Admin reject
+- [x] 7.5 Admin reject
   - "Reject Dispute" → modal: reason textarea
   - Status → DISPUTED (permanent), disputeFinal = true
   - No payment for permanent disputes
