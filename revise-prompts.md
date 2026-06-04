@@ -133,7 +133,7 @@
   - Farmer cannot edit
   - Displayed on quedan form, detail, and list
 
-- [ ] 4.8 Admin verifies quedan
+- [x] 4.8 Admin verifies quedan
   - Admin reviews → VERIFIED or DISPUTED
   - Audit log entry
 

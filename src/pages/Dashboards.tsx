@@ -591,21 +591,43 @@ export function OperatorDashboard() {
 
 export function AdminDashboard() {
   const [stats, setStats] = useState<any>({});
+  const [pendingTickets, setPendingTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const { isDark } = useTheme();
 
   const fetchData = async () => {
-    api.get('/summary').then(res => {
-       setStats(res.data);
-       setLoading(false);
-    });
+    const [sumRes, pendingRes] = await Promise.all([
+      api.get('/summary'),
+      api.get('/tickets?status=PENDING')
+    ]);
+    setStats(sumRes.data);
+    setPendingTickets(pendingRes.data.tickets);
+    setLoading(false);
   };
-  
+
   useEffect(() => { fetchData(); }, []);
+
+  const handleVerify = async (id: string) => {
+    try {
+      await api.patch(`/tickets/${id}`, { status: 'VERIFIED' });
+      toast.success('Quedan verified successfully');
+      fetchData();
+    } catch (e: any) { toast.error(e.response?.data?.message || 'Verify failed'); }
+  };
+
+  const handleDispute = async (id: string) => {
+    const reason = prompt('Enter dispute reason:');
+    if (!reason) return;
+    try {
+      await api.patch(`/tickets/${id}`, { status: 'DISPUTED', disputeNotes: reason });
+      toast.success('Quedan flagged as disputed');
+      fetchData();
+    } catch (e: any) { toast.error(e.response?.data?.message || 'Dispute failed'); }
+  };
 
   if (loading) return (
      <div className="h-[60vh] flex items-center justify-center">
-      <div className={`w-12 h-12 border-4 rounded-full animate-spin ${isDark ? 'border-purple-500/30 border-t-purple-400' : 'border-purple-500/30 border-t-purple-500'}`} />
+      <div className={`w-12 h-12 border-4 rounded-full animate-spin ${isDark ? 'bg-purple-500/30 border-t-purple-400' : 'bg-purple-500/30 border-t-purple-500'}`} />
     </div>
   );
 
@@ -634,6 +656,50 @@ export function AdminDashboard() {
         <StatCard label="Healthy Syncs" value={stats.reconciled || 0} icon={CheckCircle} colorClass={{bg: 'bg-green-100', text: 'text-green-700'}} delay={0.3} />
         <StatCard label="Active Disputes" value={stats.disputed || 0} icon={AlertTriangle} colorClass={{bg: 'bg-red-100', text: 'text-red-700'}} delay={0.4} />
       </div>
+
+      {pendingTickets.length > 0 && (
+        <TableWrapper title="Pending Verification" icon={Clock} delay={0.5}>
+          <div className="overflow-x-auto scrollbar-hide">
+            <table className="w-full text-left text-sm whitespace-nowrap table-card-view">
+              <thead className={`border-b uppercase text-[10px] font-extrabold tracking-widest ${isDark ? 'bg-slate-800/80 border-slate-700 text-slate-400' : 'bg-slate-50/80 border-slate-100 text-slate-500'}`}>
+                <tr>
+                  <th className="px-4 sm:px-6 py-4 sm:py-5">Quedan</th>
+                  <th className="px-4 sm:px-6 py-4 sm:py-5">Farmer</th>
+                  <th className="px-4 sm:px-6 py-4 sm:py-5">Truck</th>
+                  <th className="px-4 sm:px-6 py-4 sm:py-5">Mill Weight</th>
+                  <th className="px-4 sm:px-6 py-4 sm:py-5">Created</th>
+                  <th className="px-4 sm:px-6 py-4 sm:py-5 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody className={`divide-y font-medium ${isDark ? 'divide-slate-700 text-slate-300' : 'divide-slate-100 text-slate-700'}`}>
+                {pendingTickets.map((t: any) => (
+                  <tr key={t.id} className={`transition-colors ${isDark ? 'hover:bg-slate-800/50' : 'hover:bg-slate-50'}`}>
+                    <td data-label="Quedan" className="px-4 sm:px-6 py-4 sm:py-5">
+                      <p className={`font-mono font-bold text-sm ${isDark ? 'text-blue-400' : 'text-blue-700'}`}>{t.ticketNo}</p>
+                    </td>
+                    <td data-label="Farmer" className="px-4 sm:px-6 py-4 sm:py-5 text-xs sm:text-sm">{t.farmer?.name || t.farm?.owner?.name || '-'}</td>
+                    <td data-label="Truck" className={`px-4 sm:px-6 py-4 sm:py-5 font-mono text-xs sm:text-sm font-bold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{t.truckPlate}</td>
+                    <td data-label="Weight" className="px-4 sm:px-6 py-4 sm:py-5 font-mono text-sm font-bold">{formatWeight(t.millWeight)}</td>
+                    <td data-label="Created" className={`px-4 sm:px-6 py-4 sm:py-5 text-xs sm:text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{formatDate(t.createdAt)}</td>
+                    <td data-label="Actions" className="px-4 sm:px-6 py-4 sm:py-5">
+                      <div className="flex items-center justify-center gap-2">
+                        <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => handleVerify(t.id)}
+                          className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider border transition-colors shadow-sm min-h-[36px] bg-emerald-500 text-white border-emerald-500 hover:bg-emerald-400">
+                          <CheckCircle className="w-3.5 h-3.5 inline mr-1" /> Verify
+                        </motion.button>
+                        <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => handleDispute(t.id)}
+                          className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider border transition-colors shadow-sm min-h-[36px] bg-red-500 text-white border-red-500 hover:bg-red-400">
+                          <AlertTriangle className="w-3.5 h-3.5 inline mr-1" /> Dispute
+                        </motion.button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </TableWrapper>
+      )}
 
       <div className={`p-5 sm:p-8 lg:p-10 rounded-2xl sm:rounded-[2.5rem] mt-8 sm:mt-12 relative overflow-hidden flex flex-col md:flex-row items-center justify-between shadow-2xl ${isDark ? 'bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800 text-white shadow-black/40' : 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white'}`}>
          <div className="absolute top-0 right-0 w-48 sm:w-96 h-48 sm:h-96 bg-purple-500/20 blur-[80px] sm:blur-[120px] rounded-full mix-blend-screen" />
