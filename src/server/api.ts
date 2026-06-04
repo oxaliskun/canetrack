@@ -490,6 +490,66 @@ apiRouter.post('/upload', authMiddleware, (req: AuthRequest, res: Response): voi
   });
 });
 
+// --- DOCUMENTS ROUTES ---
+apiRouter.post('/documents', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { documentType, imageUrl, farmId } = req.body;
+    if (!documentType || !imageUrl) {
+      res.status(400).json({ message: 'Document type and image URL are required' });
+      return;
+    }
+    const doc = await prisma.verificationDocument.create({
+      data: { userId: req.user!.userId, documentType, imageUrl, farmId: farmId || null }
+    });
+    res.status(201).json(doc);
+  } catch (e: any) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
+apiRouter.get('/documents', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { farmId } = req.query;
+    const where: any = { userId: req.user!.userId };
+    if (farmId) where.farmId = farmId as string;
+    const docs = await prisma.verificationDocument.findMany({ where, orderBy: { createdAt: 'desc' } });
+    res.json({ documents: docs });
+  } catch (e: any) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
+apiRouter.get('/admin/documents', authMiddleware, roleGuard(['ADMIN']), async (req: AuthRequest, res: Response) => {
+  try {
+    const { status } = req.query;
+    const where: any = {};
+    if (status) where.status = status;
+    const docs = await prisma.verificationDocument.findMany({
+      where, include: { user: { select: { name: true, email: true } } }, orderBy: { createdAt: 'desc' }
+    });
+    res.json({ documents: docs });
+  } catch (e: any) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
+apiRouter.patch('/documents/:id/status', authMiddleware, roleGuard(['ADMIN']), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { status, rejectionReason } = req.body;
+    if (!['APPROVED', 'REJECTED'].includes(status)) {
+      res.status(400).json({ message: 'Status must be APPROVED or REJECTED' });
+      return;
+    }
+    const doc = await prisma.verificationDocument.update({
+      where: { id }, data: { status, rejectionReason: rejectionReason || null }
+    });
+    res.json(doc);
+  } catch (e: any) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
 // --- TICKETS ROUTES ---
 // Operator creates ticket
 apiRouter.post('/tickets', authMiddleware, roleGuard(['FARMER']), async (req: AuthRequest, res: Response): Promise<void> => {

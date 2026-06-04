@@ -8,7 +8,7 @@
   - Farmer creates tickets now, admin reconciles
   - Remove operator/receiver dashboards (routes + pages)
 
-- [ ] 1.2 Add verificationStatus to User model
+- [x] 1.2 Add verificationStatus to User model
   - Fields: verificationStatus String @default("PENDING") (PENDING/VERIFIED/REJECTED), rejectionReason String?, verifiedAt DateTime?, verifiedBy String?, assignedMill String? (fixed mill/central assigned by admin)
   - New users = PENDING — cannot access dashboard until VERIFIED
   - Login returns error if PENDING or REJECTED
