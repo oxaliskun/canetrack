@@ -15,8 +15,10 @@ interface Farm {
   cropType: string | null;
   description: string | null;
   isArchived: boolean;
+  verificationStatus: string;
   ownerId: string;
   createdAt: string;
+  updatedAt: string;
 }
 
 interface FarmForm {
@@ -37,6 +39,8 @@ export function FarmerFarms() {
   const [editFarm, setEditFarm] = useState<Farm | null>(null);
   const [form, setForm] = useState<FarmForm>(emptyForm);
   const [search, setSearch] = useState('');
+  const [docFiles, setDocFiles] = useState<File[]>([]);
+  const [docPreviews, setDocPreviews] = useState<string[]>([]);
   const { isDark } = useTheme();
 
   const fetchFarms = () => {
@@ -54,6 +58,8 @@ export function FarmerFarms() {
   const openAdd = () => {
     setEditFarm(null);
     setForm(emptyForm);
+    setDocFiles([]);
+    setDocPreviews([]);
     setModalOpen(true);
   };
 
@@ -84,11 +90,19 @@ export function FarmerFarms() {
         });
         toast.success('Farm updated successfully');
       } else {
+        const docUrls: string[] = [];
+        for (const file of docFiles) {
+          const fd = new FormData();
+          fd.append('file', file);
+          const upRes = await api.post('/upload', fd);
+          docUrls.push(upRes.data.url);
+        }
         await api.post('/farms', {
           ...form,
           hectares: form.hectares ? Number(form.hectares) : null,
+          documentUrls: docUrls,
         });
-        toast.success('Farm added successfully');
+        toast.success('Farm added successfully. Waiting for admin verification.');
       }
       setModalOpen(false);
       fetchFarms();
@@ -313,8 +327,30 @@ export function FarmerFarms() {
                     <div>
                       <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Barangay</label>
                       <input value={form.barangay} onChange={e => setForm({...form, barangay: e.target.value})} className={`w-full px-4 sm:px-5 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium text-sm shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400'}`} placeholder="Optional" />
-                    </div>
+                  </div>
+                  {!editFarm && (
                     <div>
+                      <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Land Title / Tax Declaration</label>
+                      <input type="file" accept="image/*" multiple
+                        className={`w-full py-2.5 px-4 border rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-emerald-500 file:text-white hover:file:bg-emerald-400 min-h-[44px] ${isDark ? 'bg-slate-800/50 border-slate-700 text-white' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`}
+                        onChange={e => {
+                          const files = Array.from(e.target.files || []);
+                          setDocFiles(prev => [...prev, ...files]);
+                          setDocPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]);
+                        }} />
+                      {docPreviews.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {docPreviews.map((p, i) => (
+                            <div key={i} className="flex items-center gap-2 bg-slate-800/50 rounded-lg p-1.5 border border-slate-700">
+                              <img src={p} alt="" className="h-8 w-12 object-cover rounded" />
+                              <button type="button" onClick={() => { setDocFiles(prev => prev.filter((_, j) => j !== i)); setDocPreviews(prev => prev.filter((_, j) => j !== i)); }} className="text-xs text-red-400 hover:text-red-300 font-bold pr-1">X</button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  <div>
                       <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Size (hectares)</label>
                       <input type="number" step="0.01" min="0" value={form.hectares} onChange={e => setForm({...form, hectares: e.target.value})} className={`w-full px-4 sm:px-5 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium text-sm shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400'}`} placeholder="0.00" />
                     </div>

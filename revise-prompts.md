@@ -54,7 +54,7 @@
 
 ## Phase 2: Registration & Verification
 
-- [ ] 2.1 Add ID upload on registration
+- [x] 2.1 Add ID upload on registration
   - Login.tsx: file input for valid ID after contact number
   - Upload via /api/upload, send URL to /auth/register
   - User created with verificationStatus=PENDING

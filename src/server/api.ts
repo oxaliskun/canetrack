@@ -1353,7 +1353,7 @@ apiRouter.get('/farms/mine', authMiddleware, roleGuard(['FARMER']), async (req: 
 // Create a farm (FARMER only)
 apiRouter.post('/farms', authMiddleware, roleGuard(['FARMER']), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { farmName, location, barangay, hectares, cropType, description } = req.body;
+    const { farmName, location, barangay, hectares, cropType, description, documentUrls } = req.body;
     if (!farmName || !location) {
       res.status(400).json({ message: 'Farm name and location are required' });
       return;
@@ -1366,9 +1366,17 @@ apiRouter.post('/farms', authMiddleware, roleGuard(['FARMER']), async (req: Auth
         hectares: hectares ? Number(hectares) : null,
         cropType: cropType || null,
         description: description || null,
-        ownerId: req.user!.userId
+        ownerId: req.user!.userId,
+        verificationStatus: 'PENDING'
       }
     });
+    if (documentUrls && Array.isArray(documentUrls)) {
+      for (const url of documentUrls) {
+        await prisma.verificationDocument.create({
+          data: { userId: req.user!.userId, documentType: 'LAND_TITLE', imageUrl: url, farmId: farm.id, status: 'PENDING' }
+        });
+      }
+    }
     await writeAuditLog(req.user!.userId, 'CREATE_FARM', farm.id, 'Farm');
     res.status(201).json(farm);
   } catch(e: any) { res.status(500).json({ message: e.message }); }
