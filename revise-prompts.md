@@ -73,7 +73,7 @@
   - REJECTED → /verification-rejected (show reason + resubmit button)
   - VERIFIED → normal dashboard
 
-- [ ] 2.4 Admin verification page
+- [x] 2.4 Admin verification page
   - Route: /dashboard/admin/verifications
   - List of pending farmers: name, email, registered date, docs count
   - Click → modal: show farmer info + document images (full view)

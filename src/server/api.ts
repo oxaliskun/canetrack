@@ -318,6 +318,13 @@ apiRouter.post('/auth/resubmit-verification', authMiddleware, async (req: AuthRe
     const user = await prisma.user.findUnique({ where: { id: req.user!.userId } });
     if (!user || user.role !== 'FARMER') { res.status(404).json({ message: 'Farmer not found' }); return; }
     if (user.verificationStatus !== 'REJECTED') { res.status(400).json({ message: 'Account is not in rejected state' }); return; }
+
+    // Mark old documents as replaced
+    await prisma.verificationDocument.updateMany({
+      where: { userId: req.user!.userId, status: 'PENDING' },
+      data: { status: 'REJECTED', rejectionReason: 'Replaced by new submission' }
+    });
+
     await prisma.user.update({
       where: { id: req.user!.userId },
       data: { verificationStatus: 'PENDING', rejectionReason: null }

@@ -10,7 +10,7 @@ export function VerificationRejected() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isDark } = useTheme();
-  const { user } = useAuth();
+  const { user, login } = useAuth();
   const reason = (location.state as any)?.reason || user?.rejectionReason || 'Your documents did not meet the requirements.';
   const [idFile, setIdFile] = useState<File | null>(null);
   const [idPreview, setIdPreview] = useState('');
@@ -25,6 +25,7 @@ export function VerificationRejected() {
       fd.append('file', idFile);
       const upRes = await api.post('/upload', fd);
       await api.post('/auth/resubmit-verification', { idImageUrl: upRes.data.url });
+      if (user) login('', { ...user, verificationStatus: 'PENDING', rejectionReason: undefined });
       setDone(true);
     } catch (err: any) {
       alert(err.response?.data?.message || 'Resubmission failed');
