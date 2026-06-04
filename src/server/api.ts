@@ -550,6 +550,73 @@ apiRouter.patch('/documents/:id/status', authMiddleware, roleGuard(['ADMIN']), a
   }
 });
 
+// --- TRUCK ROUTES ---
+apiRouter.post('/trucks', authMiddleware, roleGuard(['FARMER']), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { plateNumber, make, model, capacity, color } = req.body;
+    if (!plateNumber || !make || !model || !capacity) {
+      res.status(400).json({ message: 'plateNumber, make, model, capacity are required' });
+      return;
+    }
+    const truck = await prisma.truck.create({
+      data: { plateNumber: plateNumber.toUpperCase(), make, model, capacity: Number(capacity), color, ownerId: req.user!.userId }
+    });
+    res.status(201).json(truck);
+  } catch (e: any) {
+    if (e.code === 'P2002') { res.status(409).json({ message: 'Plate number already exists' }); return; }
+    res.status(500).json({ message: e.message });
+  }
+});
+
+apiRouter.get('/trucks', authMiddleware, roleGuard(['FARMER']), async (req: AuthRequest, res: Response) => {
+  try {
+    const trucks = await prisma.truck.findMany({ where: { ownerId: req.user!.userId }, orderBy: { createdAt: 'desc' } });
+    res.json({ trucks });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+});
+
+apiRouter.get('/trucks/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const truck = await prisma.truck.findFirst({ where: { id: req.params.id, ownerId: req.user!.userId } });
+    if (!truck) { res.status(404).json({ message: 'Truck not found' }); return; }
+    res.json(truck);
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+});
+
+apiRouter.patch('/trucks/:id', authMiddleware, roleGuard(['FARMER']), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const existing = await prisma.truck.findFirst({ where: { id: req.params.id, ownerId: req.user!.userId } });
+    if (!existing) { res.status(404).json({ message: 'Truck not found' }); return; }
+    const { plateNumber, make, model, capacity, color } = req.body;
+    const truck = await prisma.truck.update({
+      where: { id: req.params.id },
+      data: { ...(plateNumber && { plateNumber: plateNumber.toUpperCase() }), ...(make && { make }), ...(model && { model }), ...(capacity && { capacity: Number(capacity) }), ...(color !== undefined && { color }) }
+    });
+    res.json(truck);
+  } catch (e: any) {
+    if (e.code === 'P2002') { res.status(409).json({ message: 'Plate number already exists' }); return; }
+    res.status(500).json({ message: e.message });
+  }
+});
+
+apiRouter.delete('/trucks/:id', authMiddleware, roleGuard(['FARMER']), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const existing = await prisma.truck.findFirst({ where: { id: req.params.id, ownerId: req.user!.userId } });
+    if (!existing) { res.status(404).json({ message: 'Truck not found' }); return; }
+    await prisma.truck.delete({ where: { id: req.params.id } });
+    res.json({ message: 'Truck deleted' });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+});
+
+apiRouter.get('/admin/trucks', authMiddleware, roleGuard(['ADMIN']), async (req: AuthRequest, res: Response) => {
+  try {
+    const trucks = await prisma.truck.findMany({
+      include: { owner: { select: { name: true, email: true } } }, orderBy: { createdAt: 'desc' }
+    });
+    res.json({ trucks });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+});
+
 // --- TICKETS ROUTES ---
 // Operator creates ticket
 apiRouter.post('/tickets', authMiddleware, roleGuard(['FARMER']), async (req: AuthRequest, res: Response): Promise<void> => {

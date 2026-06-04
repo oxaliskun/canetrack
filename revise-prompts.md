@@ -14,7 +14,7 @@
   - Login returns error if PENDING or REJECTED
   - Create PendingVerification.tsx page for redirect
 
-- [ ] 1.3 Add VerificationDocument model
+- [x] 1.3 Add VerificationDocument model
   - id, userId, documentType (ID/LAND_TITLE/TAX_DECLARATION/LEASE/CERTIFICATE), imageUrl, status (PENDING/APPROVED/REJECTED), rejectionReason?, createdAt
   - Linked to User
 

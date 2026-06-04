@@ -35,6 +35,7 @@ model User {
   auditLogs       AuditLog[]             @relation("UserAudits")
   notifications   Notification[]
   verificationDocuments VerificationDocument[]
+  trucks              Truck[]
 }
 
 model VerificationDocument {
@@ -48,6 +49,21 @@ model VerificationDocument {
   createdAt      DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id])
+}
+
+model Truck {
+  id          String   @id @default(cuid())
+  plateNumber String   @unique
+  make        String
+  model       String
+  capacity    Float
+  color       String?
+  ownerId     String
+  isArchived  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt @default(now())
+
+  owner User @relation(fields: [ownerId], references: [id])
 }
 
 model Farm {
