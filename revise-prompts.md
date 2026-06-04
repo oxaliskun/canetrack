@@ -233,7 +233,7 @@
 - [x] 9.1 Farmer summary cards
   - Total KG (month), Total Earnings (month), Total Expenses, Net Profit
 
-- [ ] 9.2 Farmer reports
+- [x] 9.2 Farmer reports
   - Deliveries: date, quedan #, farm, variant, sugar type, net kg, status
   - Earnings: month, total kg, avg price, gross, deductions, net
   - Expenses: by category (pie chart), by month

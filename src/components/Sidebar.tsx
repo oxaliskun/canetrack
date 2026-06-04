@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Home, FileText, LogOut, Users, FilePlus, Leaf, Settings, BarChart, User, Shield, Truck, CheckCircle, Sprout, Bell, Moon, Sun, History, X, ShieldCheck, Tags, Package, DollarSign, AlertTriangle } from 'lucide-react';
+import { Home, FileText, LogOut, Users, FilePlus, Leaf, Settings, BarChart, User, Shield, Truck, CheckCircle, Sprout, Bell, Moon, Sun, History, X, ShieldCheck, Tags, Package, DollarSign, AlertTriangle, PieChart } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
 import { NotificationDropdown } from './NotificationDropdown';
@@ -39,8 +39,9 @@ export function Sidebar({ role, userName, onClose }: SidebarProps) {
         return [
            { name: 'My Performance', path: '/dashboard/farmer', icon: FileText },
            { name: 'My Farms', path: '/dashboard/farmer/farms', icon: Sprout },
-          { name: 'My Trucks', path: '/dashboard/farmer/trucks', icon: Truck },
-          { name: 'Payments', path: '/dashboard/farmer/payments', icon: DollarSign }
+           { name: 'My Trucks', path: '/dashboard/farmer/trucks', icon: Truck },
+           { name: 'Payments', path: '/dashboard/farmer/payments', icon: DollarSign },
+           { name: 'Reports', path: '/dashboard/farmer/reports', icon: PieChart }
         ];
       default: return [];
     }
