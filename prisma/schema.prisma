@@ -115,6 +115,7 @@ model ExpenseCategory {
   updatedAt   DateTime @updatedAt @default(now())
 
   expenses Expense[]
+  farmExpenses FarmExpense[]
 }
 
 model Expense {
@@ -128,6 +129,20 @@ model Expense {
   createdAt  DateTime @default(now())
 
   user     User             @relation(fields: [userId], references: [id])
+  category ExpenseCategory  @relation(fields: [categoryId], references: [id])
+}
+
+model FarmExpense {
+  id         String   @id @default(cuid())
+  farmId     String
+  categoryId String
+  amount     Float
+  receiptUrl String?
+  notes      String?
+  date       DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  farm     Farm             @relation(fields: [farmId], references: [id])
   category ExpenseCategory  @relation(fields: [categoryId], references: [id])
 }
 
@@ -146,6 +161,7 @@ model Farm {
 
   owner   User           @relation("FarmerFarms", fields: [ownerId], references: [id])
   tickets WeightTicket[]
+  farmExpenses FarmExpense[]
 }
 
 model WeightTicket {

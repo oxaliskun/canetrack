@@ -35,7 +35,7 @@
 - [x] 1.8 Add ExpenseCategory model
   - id, name (unique), type (DELIVERY/FARM), description?, isActive Boolean @default(true)
 
-- [ ] 1.9 Add Expense model (per delivery)
+- [x] 1.9 Add Expense model (per delivery)
   - id, quedanId, categoryId, amount Float, receiptUrl?, notes?, createdAt
 
 - [ ] 1.10 Add FarmExpense model (per farm, seasonal)

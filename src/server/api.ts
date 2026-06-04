@@ -840,6 +840,62 @@ apiRouter.delete('/expenses/:id', authMiddleware, roleGuard(['FARMER']), async (
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 });
 
+// --- FARM EXPENSE ROUTES ---
+apiRouter.post('/farm-expenses', authMiddleware, roleGuard(['FARMER']), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { farmId, categoryId, amount, receiptUrl, notes, date } = req.body;
+    if (!farmId || !categoryId || amount == null) {
+      res.status(400).json({ message: 'farmId, categoryId, amount are required' });
+      return;
+    }
+    const farm = await prisma.farm.findFirst({ where: { id: farmId, ownerId: req.user!.userId } });
+    if (!farm) { res.status(404).json({ message: 'Farm not found' }); return; }
+    const farmExpense = await prisma.farmExpense.create({
+      data: { farmId, categoryId, amount: Number(amount), receiptUrl, notes, date: date ? new Date(date) : undefined }
+    });
+    res.status(201).json(farmExpense);
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+});
+
+apiRouter.get('/farm-expenses', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { farmId } = req.query;
+    const where: any = {};
+    if (req.user!.role === 'FARMER') where.farm = { ownerId: req.user!.userId };
+    if (farmId) where.farmId = farmId as string;
+    const expenses = await prisma.farmExpense.findMany({
+      where, include: { category: true, farm: { select: { id: true, farmName: true } } }, orderBy: { date: 'desc' }
+    });
+    res.json({ farmExpenses: expenses });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+});
+
+apiRouter.patch('/farm-expenses/:id', authMiddleware, roleGuard(['FARMER']), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const existing = await prisma.farmExpense.findFirst({
+      where: { id: req.params.id, farm: { ownerId: req.user!.userId } }
+    });
+    if (!existing) { res.status(404).json({ message: 'Farm expense not found' }); return; }
+    const { amount, receiptUrl, notes, categoryId, date } = req.body;
+    const expense = await prisma.farmExpense.update({
+      where: { id: req.params.id },
+      data: { ...(amount != null && { amount: Number(amount) }), ...(receiptUrl !== undefined && { receiptUrl }), ...(notes !== undefined && { notes }), ...(categoryId && { categoryId }), ...(date && { date: new Date(date) }) }
+    });
+    res.json(expense);
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+});
+
+apiRouter.delete('/farm-expenses/:id', authMiddleware, roleGuard(['FARMER']), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const existing = await prisma.farmExpense.findFirst({
+      where: { id: req.params.id, farm: { ownerId: req.user!.userId } }
+    });
+    if (!existing) { res.status(404).json({ message: 'Farm expense not found' }); return; }
+    await prisma.farmExpense.delete({ where: { id: req.params.id } });
+    res.json({ message: 'Farm expense deleted' });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+});
+
 // --- TICKETS ROUTES ---
 // Operator creates ticket
 apiRouter.post('/tickets', authMiddleware, roleGuard(['FARMER']), async (req: AuthRequest, res: Response): Promise<void> => {
