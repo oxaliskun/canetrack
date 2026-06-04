@@ -206,7 +206,7 @@ model WeightTicket {
   totalValue       Float     @default(0)
   status           String    @default("PENDING") // PENDING, VERIFIED, RECONCILED, DISPUTED, PAID
   notes            String?
-  farmerId         String
+  farmerId         String?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt @default(now())
   verifiedAt       DateTime?
@@ -226,7 +226,7 @@ model WeightTicket {
   adjustedPrice    Float?
 
   farm           Farm                 @relation(fields: [farmId], references: [id])
-  farmer         User                 @relation("FarmerTickets", fields: [farmerId], references: [id])
+  farmer         User?                @relation("FarmerTickets", fields: [farmerId], references: [id])
   reconciliation ReconciliationRecord?
   sugarType      SugarType?           @relation(fields: [sugarTypeId], references: [id])
   variant        SugarcaneVariant?    @relation(fields: [variantId], references: [id])
@@ -243,14 +243,14 @@ model ReconciliationRecord {
   percentDiff    Float
   flagged        Boolean  @default(false)
   notes          String?
-  adminId        String
+  adminId        String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt @default(now())
   reconciledAt   DateTime @default(now())
   resolvedAt     DateTime?
 
   ticket   WeightTicket @relation(fields: [ticketId], references: [id])
-  admin    User         @relation("AdminReconciliations", fields: [adminId], references: [id])
+  admin    User?        @relation("AdminReconciliations", fields: [adminId], references: [id])
 }
 
 model AuditLog {
