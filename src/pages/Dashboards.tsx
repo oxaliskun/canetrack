@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axiosInstance';
 import { formatWeight, formatDate, formatCurrency, resolveProfilePic } from '../lib/utils';
-import { FileText, CheckCircle, AlertTriangle, Clock, Activity, DollarSign, Database, Plus, Users, UserPlus, TrendingUp, Printer, Bell, Download, Sprout, Shield, BarChart3, Truck, Scale, Leaf, Phone, MapPin, Eye, FlaskConical, ChevronDown } from 'lucide-react';
+import { FileText, CheckCircle, AlertTriangle, Clock, Activity, DollarSign, Database, Plus, Users, UserPlus, TrendingUp, Printer, Bell, Download, Sprout, Shield, BarChart3, Truck, Scale, Leaf, Phone, MapPin, Eye, FlaskConical, ChevronDown, Camera } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
@@ -286,6 +286,9 @@ export function OperatorDashboard() {
   const [view, setView] = useState('ENCODE'); // 'ENCODE' | 'HISTORY'
   const [loading, setLoading] = useState(true);
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
+  const [photos, setPhotos] = useState<File[]>([]);
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
   const { user } = useAuth();
   const { isDark } = useTheme();
   
@@ -314,16 +317,40 @@ export function OperatorDashboard() {
     </div>
   );
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []).slice(0, 3);
+    setPhotos(files);
+    setPhotoPreviews(files.map(f => URL.createObjectURL(f)));
+  };
+
+  const removePhoto = (i: number) => {
+    URL.revokeObjectURL(photoPreviews[i]);
+    setPhotos(p => p.filter((_, idx) => idx !== i));
+    setPhotoPreviews(p => p.filter((_, idx) => idx !== i));
+  };
+
+  useEffect(() => { return () => photoPreviews.forEach(URL.revokeObjectURL); }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setUploading(true);
     try {
-      await api.post('/tickets', form);
+      const { data } = await api.post('/tickets', form);
+      const ticketId = data.id;
+      for (const photo of photos) {
+        const fd = new FormData();
+        fd.append('file', photo);
+        const { data: uploadData } = await api.post('/upload', fd);
+        await api.post('/delivery-receipts', { quedanId: ticketId, imageUrl: uploadData.url });
+      }
       toast.success('Quedan encoded successfully.');
       fetchTickets();
       setForm({ truckPlate: '', truckId: '', farmId: '', grossWeight: '', tareWeight: '', brix: '', pol: '', sampleCollected: false, variantId: '', sugarTypeId: '' });
+      setPhotos([]);
+      setPhotoPreviews([]);
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to encode ticket.');
-    }
+    } finally { setUploading(false); }
   };
 
   return (
@@ -435,8 +462,23 @@ export function OperatorDashboard() {
                   </label>
                 </div>
               </details>
+
+              <div className={`rounded-xl sm:rounded-2xl border p-4 sm:p-5 space-y-3 ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
+                <label className={`flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}><Camera className="w-4 h-4" /> Delivery Receipt Photos ({photos.length}/3)</label>
+                {photoPreviews.length > 0 && (
+                  <div className="flex gap-2 flex-wrap">
+                    {photoPreviews.map((preview, i) => (
+                      <div key={i} className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden border shrink-0">
+                        <img src={preview} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
+                        <button type="button" onClick={() => removePhoto(i)} className="absolute top-1 right-1 w-5 h-5 bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-bold">×</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <input type="file" multiple accept="image/*" onChange={handleFileChange} className={`w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:cursor-pointer min-h-[44px] ${isDark ? 'text-slate-300 file:bg-emerald-600 file:text-white' : 'text-slate-600 file:bg-emerald-500 file:text-white'}`} />
+              </div>
             </div>
-            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold py-3.5 sm:py-4 rounded-xl sm:rounded-2xl transition-all shadow-lg shadow-blue-600/30 text-base sm:text-lg min-h-[48px]">
+            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} disabled={uploading} className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold py-3.5 sm:py-4 rounded-xl sm:rounded-2xl transition-all shadow-lg shadow-blue-600/30 text-base sm:text-lg min-h-[48px] disabled:opacity-50">
                Issue Quedan
             </motion.button>
           </form>

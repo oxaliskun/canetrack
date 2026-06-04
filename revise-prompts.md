@@ -124,7 +124,7 @@
 - [x] 4.5 Auto-computed net weight
   - Gross - Tare = Net (read-only, updates in real-time)
 
-- [ ] 4.6 Delivery receipt photo upload
+- [x] 4.6 Delivery receipt photo upload
   - Up to 3 photos, preview before upload
   - Uploaded on form submit
 
