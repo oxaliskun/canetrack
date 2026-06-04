@@ -220,7 +220,7 @@ export function FarmerDashboard() {
           <table className="w-full text-left text-xs sm:text-sm table-card-view">
             <thead className={`border-b uppercase text-[10px] font-extrabold tracking-widest ${isDark ? 'bg-slate-800/80 border-slate-700 text-slate-400' : 'bg-slate-50/80 border-slate-100 text-slate-500'}`}>
               <tr>
-                <th className="px-4 sm:px-6 py-4 sm:py-5">Ticket No</th>
+                <th className="px-4 sm:px-6 py-4 sm:py-5">Quedan No</th>
                 <th className="px-4 sm:px-6 py-4 sm:py-5">Created</th>
                 <th className="px-4 sm:px-6 py-4 sm:py-5">Updated</th>
                 <th className="px-4 sm:px-6 py-4 sm:py-5">Status</th>
@@ -231,7 +231,7 @@ export function FarmerDashboard() {
             <tbody className={`divide-y font-medium ${isDark ? 'divide-slate-700 text-slate-300' : 'divide-slate-100 text-slate-700'}`}>
               {tickets.map((t: any) => (
                   <tr key={t.id} className={`transition-colors group cursor-default ${isDark ? 'hover:bg-emerald-950/30 hover:text-emerald-400' : 'hover:bg-emerald-50 hover:text-emerald-900'}`}>
-                    <td className={`px-4 sm:px-6 py-4 sm:py-5 font-mono text-xs sm:text-sm font-bold group-hover:text-emerald-500 ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`} data-label="Ticket">{t.ticketNo}</td>
+                    <td className={`px-4 sm:px-6 py-4 sm:py-5 font-mono text-xs sm:text-sm font-bold group-hover:text-emerald-500 ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`} data-label="Quedan">{t.ticketNo}</td>
                     <td className="px-4 sm:px-6 py-4 sm:py-5" data-label="Created">{formatDate(t.createdAt)}</td>
                     <td className={`px-4 sm:px-6 py-4 sm:py-5 text-xs sm:text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`} data-label="Updated">{formatDate(t.updatedAt)}</td>
                     <td className="px-4 sm:px-6 py-4 sm:py-5" data-label="Status"><StatusBadge status={t.status} /></td>
@@ -242,7 +242,7 @@ export function FarmerDashboard() {
                           <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
                         </button>
                         <button onClick={() => {
-                          const content = `CaneTrack Statement\nTicket: ${t.ticketNo}\nPlate: ${t.truckPlate}\nStatus: ${t.status}\nMill Wt: ${formatWeight(t.millWeight)}\nValue: ${formatCurrency(t.totalValue)}\nDate: ${new Date(t.createdAt).toLocaleString()}\n\n-- Retain for your records --`;
+                          const content = `CaneTrack Statement\nQuedan: ${t.ticketNo}\nPlate: ${t.truckPlate}\nStatus: ${t.status}\nMill Wt: ${formatWeight(t.millWeight)}\nValue: ${formatCurrency(t.totalValue)}\nDate: ${new Date(t.createdAt).toLocaleString()}\n\n-- Retain for your records --`;
                           const printWindow = window.open('', '', 'width=400,height=600');
                           if(printWindow) {
                             printWindow.document.write(`<pre style="font-family: monospace; font-size: 14px; padding: 20px;">${content}</pre>`);
@@ -314,7 +314,7 @@ export function OperatorDashboard() {
     e.preventDefault();
     try {
       await api.post('/tickets', form);
-      toast.success('Ticket encoded successfully.');
+      toast.success('Quedan encoded successfully.');
       fetchTickets();
       setForm({ truckPlate: '', truckId: '', farmId: '', grossWeight: '', tareWeight: '' });
     } catch (error: any) {
@@ -341,7 +341,7 @@ export function OperatorDashboard() {
           </div>
           <div className={`flex p-1 rounded-xl ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>
              <button onClick={() => setView('ENCODE')} className={`px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg text-xs sm:text-sm font-bold transition-all min-h-[36px] ${view==='ENCODE' ? (isDark ? 'bg-slate-700 shadow-sm text-white' : 'bg-white shadow-sm text-slate-900') : (isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700')}`}>Encode & Active</button>
-             <button onClick={() => setView('HISTORY')} className={`px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg text-xs sm:text-sm font-bold transition-all min-h-[36px] ${view==='HISTORY' ? (isDark ? 'bg-slate-700 shadow-sm text-white' : 'bg-white shadow-sm text-slate-900') : (isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700')}`}>Ticket History</button>
+             <button onClick={() => setView('HISTORY')} className={`px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg text-xs sm:text-sm font-bold transition-all min-h-[36px] ${view==='HISTORY' ? (isDark ? 'bg-slate-700 shadow-sm text-white' : 'bg-white shadow-sm text-slate-900') : (isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700')}`}>Quedan History</button>
           </div>
         </div>
       </div>
@@ -390,7 +390,7 @@ export function OperatorDashboard() {
               </div>
             </div>
             <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold py-3.5 sm:py-4 rounded-xl sm:rounded-2xl transition-all shadow-lg shadow-blue-600/30 text-base sm:text-lg min-h-[48px]">
-               Issue Ticket
+               Issue Quedan
             </motion.button>
           </form>
         </motion.div>
@@ -400,7 +400,7 @@ export function OperatorDashboard() {
               <table className="w-full text-left text-xs sm:text-sm table-card-view">
                 <thead className={`border-b uppercase text-[10px] font-extrabold tracking-widest ${isDark ? 'bg-slate-800/80 border-slate-700 text-slate-400' : 'bg-slate-50 border-slate-100 text-slate-500'}`}>
                   <tr>
-                    <th className="px-4 sm:px-6 py-4 sm:py-5">Ticket</th>
+                    <th className="px-4 sm:px-6 py-4 sm:py-5">Quedan</th>
                     <th className="px-4 sm:px-6 py-4 sm:py-5">Truck</th>
                     <th className="px-4 sm:px-6 py-4 sm:py-5">Created</th>
                     <th className="px-4 sm:px-6 py-4 sm:py-5">Mill Weight</th>
@@ -411,7 +411,7 @@ export function OperatorDashboard() {
                 <tbody className={`divide-y font-medium ${isDark ? 'divide-slate-700 text-slate-300' : 'divide-slate-100 text-slate-700'}`}>
                   {activeTickets.map((t: any) => (
                     <tr key={t.id} className={`transition-colors group ${isDark ? 'hover:bg-slate-800/50' : 'hover:bg-slate-50'}`}>
-                      <td className="px-4 sm:px-6 py-4 sm:py-5 font-mono text-blue-500 text-xs sm:text-sm font-bold" data-label="Ticket">{t.ticketNo}</td>
+                      <td className="px-4 sm:px-6 py-4 sm:py-5 font-mono text-blue-500 text-xs sm:text-sm font-bold" data-label="Quedan">{t.ticketNo}</td>
                       <td className={`px-4 sm:px-6 py-4 sm:py-5`} data-label="Truck"><span className={`font-mono font-bold rounded-md px-2 py-1 text-xs sm:text-sm ${isDark ? 'bg-slate-800' : 'bg-slate-100'}`}>{t.truckPlate}</span></td>
                       <td className={`px-4 sm:px-6 py-4 sm:py-5 text-xs sm:text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`} data-label="Created">{formatDate(t.createdAt)}</td>
                       <td className="px-4 sm:px-6 py-4 sm:py-5 font-mono text-sm sm:text-base lg:text-lg font-bold" data-label="Weight">{formatWeight(t.millWeight)}</td>
@@ -422,7 +422,7 @@ export function OperatorDashboard() {
                            <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
                          </button>
                          <button onClick={() => {
-                           const content = `CaneTrack Ticket: ${t.ticketNo}\nPlate: ${t.truckPlate}\nGross: ${t.grossWeight}kg\nTare: ${t.tareWeight}kg\nMill Weight: ${t.millWeight}kg\nDate: ${new Date(t.createdAt).toLocaleString()}\n\n-- Keep this receipt --`;
+                           const content = `CaneTrack Quedan: ${t.ticketNo}\nPlate: ${t.truckPlate}\nGross: ${t.grossWeight}kg\nTare: ${t.tareWeight}kg\nMill Weight: ${t.millWeight}kg\nDate: ${new Date(t.createdAt).toLocaleString()}\n\n-- Keep this receipt --`;
                            const printWindow = window.open('', '', 'width=400,height=600');
                            if(printWindow) {
                              printWindow.document.write(`<pre style="font-family: monospace; font-size: 14px; padding: 20px;">${content}</pre>`);
@@ -451,8 +451,8 @@ export function OperatorDashboard() {
               <table className="w-full text-left text-xs sm:text-sm table-card-view">
                <thead className={`border-b uppercase text-[10px] font-extrabold tracking-widest ${isDark ? 'bg-slate-800/80 border-slate-700 text-slate-400' : 'bg-slate-50 border-slate-100 text-slate-500'}`}>
                   <tr>
-                    <th className="px-4 sm:px-6 py-4 sm:py-5">Ticket</th>
-                    <th className="px-4 sm:px-6 py-4 sm:py-5">Farm</th>
+                     <th className="px-4 sm:px-6 py-4 sm:py-5">Quedan</th>
+                     <th className="px-4 sm:px-6 py-4 sm:py-5">Farm</th>
                     <th className="px-4 sm:px-6 py-4 sm:py-5">Created</th>
                     <th className="px-4 sm:px-6 py-4 sm:py-5">Updated</th>
                     <th className="px-4 sm:px-6 py-4 sm:py-5">Mill Weight</th>
@@ -463,7 +463,7 @@ export function OperatorDashboard() {
                 <tbody className={`divide-y font-medium ${isDark ? 'divide-slate-700 text-slate-300' : 'divide-slate-100 text-slate-700'}`}>
                   {historyTickets.map((t: any) => (
                     <tr key={t.id} className={`transition-colors group ${isDark ? 'hover:bg-slate-800/50' : 'hover:bg-slate-50'}`}>
-                      <td className="px-4 sm:px-6 py-4 sm:py-5 font-mono text-blue-500 text-xs sm:text-sm font-bold" data-label="Ticket">{t.ticketNo}</td>
+                      <td className="px-4 sm:px-6 py-4 sm:py-5 font-mono text-blue-500 text-xs sm:text-sm font-bold" data-label="Quedan">{t.ticketNo}</td>
                       <td className="px-4 sm:px-6 py-4 sm:py-5 font-bold text-xs sm:text-sm" data-label="Farm">{t.farm?.farmName || '-'}</td>
                       <td className={`px-4 sm:px-6 py-4 sm:py-5 text-xs sm:text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`} data-label="Created">{formatDate(t.createdAt)}</td>
                       <td className={`px-4 sm:px-6 py-4 sm:py-5 text-xs sm:text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`} data-label="Updated">{formatDate(t.updatedAt)}</td>
@@ -597,7 +597,7 @@ export function ReceiverDashboard() {
       if (data.flagged) {
         toast.warning(`Discrepancy detected! ${data.difference} kg variance.`);
       } else {
-        toast.success('Ticket reconciled successfully.');
+        toast.success('Quedan reconciled successfully.');
       }
       setSelectedTicket(null);
       setRefineryWeight('');
@@ -643,7 +643,7 @@ export function ReceiverDashboard() {
                 <div className="absolute top-0 left-0 w-full h-1.5 sm:h-2 bg-gradient-to-r from-orange-500 via-orange-400 to-red-400" />
                 <div className={`absolute -bottom-10 -right-10 w-32 h-32 rounded-full blur-2xl opacity-50 pointer-events-none ${isDark ? 'bg-orange-950/50' : 'bg-orange-50'}`} />
                 <div className={`flex items-center justify-between mb-6 sm:mb-8 pb-4 sm:pb-6 ${isDark ? 'border-slate-700' : 'border-slate-100 border-b'}`}>
-                   <h3 className={`font-extrabold text-lg sm:text-xl tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Evaluate Ticket</h3>
+                   <h3 className={`font-extrabold text-lg sm:text-xl tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Evaluate Quedan</h3>
                    <span className={`font-mono font-black px-3 sm:px-4 py-1.5 rounded-xl border text-xs sm:text-sm ${isDark ? 'text-orange-400 bg-orange-900/30 border-orange-800' : 'text-orange-700 bg-orange-50 border-orange-200'}`}>{selectedTicket.ticketNo}</span>
                 </div>
                <form onSubmit={handleReconcile} className="space-y-5 sm:space-y-6 lg:space-y-8">
@@ -716,7 +716,7 @@ export function ReceiverDashboard() {
               <table className="w-full text-left text-xs sm:text-sm table-card-view">
                 <thead className={`border-b uppercase text-[10px] font-extrabold tracking-widest ${isDark ? 'bg-slate-800/80 border-slate-700 text-slate-400' : 'bg-slate-50/80 border-slate-100 text-slate-500'}`}>
                   <tr>
-                    <th className="px-4 sm:px-6 py-4 sm:py-5">Ticket</th>
+                    <th className="px-4 sm:px-6 py-4 sm:py-5">Quedan</th>
                     <th className="px-4 sm:px-6 py-4 sm:py-5">Reconciled</th>
                     <th className="px-4 sm:px-6 py-4 sm:py-5">Resolved</th>
                     <th className="px-4 sm:px-6 py-4 sm:py-5 text-center">Variance (kg)</th>
@@ -727,7 +727,7 @@ export function ReceiverDashboard() {
                 <tbody className={`divide-y font-medium ${isDark ? 'divide-slate-700 text-slate-300' : 'divide-slate-100 text-slate-700'}`}>
                   {history.map((r: any) => (
                     <tr key={r.id} className={`transition-colors ${isDark ? 'hover:bg-slate-800/50' : 'hover:bg-slate-50'}`}>
-                      <td className={`px-4 sm:px-6 py-4 sm:py-5 font-mono font-bold max-w-[120px] sm:max-w-[150px] truncate text-xs sm:text-sm ${isDark ? 'text-orange-400' : 'text-orange-700'}`} data-label="Ticket">{r.ticket.ticketNo}</td>
+                      <td className={`px-4 sm:px-6 py-4 sm:py-5 font-mono font-bold max-w-[120px] sm:max-w-[150px] truncate text-xs sm:text-sm ${isDark ? 'text-orange-400' : 'text-orange-700'}`} data-label="Quedan">{r.ticket.ticketNo}</td>
                       <td className={`px-4 sm:px-6 py-4 sm:py-5 text-xs sm:text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`} data-label="Reconciled">{formatDate(r.reconciledAt)}</td>
                       <td className={`px-4 sm:px-6 py-4 sm:py-5 text-xs sm:text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`} data-label="Resolved">{r.resolvedAt ? formatDate(r.resolvedAt) : '-'}</td>
                       <td className="px-4 sm:px-6 py-4 sm:py-5 font-mono text-center" data-label="Variance">

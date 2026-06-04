@@ -10,8 +10,8 @@ import { SearchInput } from '../../components/SearchInput';
 const ACTION_LABELS: Record<string, string> = {
   LOGIN: 'User Login',
   LOGOUT: 'User Logout',
-  CREATE_TICKET: 'Ticket Created',
-  RECONCILE_OK: 'Ticket Reconciled',
+  CREATE_TICKET: 'Quedan Created',
+  RECONCILE_OK: 'Quedan Reconciled',
   RECONCILE_DISPUTED: 'Dispute Flagged',
   RESOLVE_DISPUTE: 'Dispute Resolved',
   CREATE_FARM: 'Farm Created',

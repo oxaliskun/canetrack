@@ -24,7 +24,7 @@ export function Sidebar({ role, userName, onClose }: SidebarProps) {
         return [
           { name: 'Dashboard', path: '/dashboard/admin', icon: Home },
           { name: 'Users', path: '/dashboard/admin/users', icon: Users },
-          { name: 'Tickets', path: '/dashboard/admin/tickets', icon: FileText },
+          { name: 'Quedans', path: '/dashboard/admin/tickets', icon: FileText },
           { name: 'Reports', path: '/dashboard/admin/reports', icon: BarChart },
           { name: 'Activity Logs', path: '/dashboard/admin/audit-logs', icon: History },
           { name: 'Verifications', path: '/dashboard/admin/verifications', icon: ShieldCheck },

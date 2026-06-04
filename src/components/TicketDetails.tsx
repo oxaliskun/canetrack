@@ -83,7 +83,7 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
 
     const printContent = `<!DOCTYPE html>
 <html>
-<head><title>CaneTrack - Ticket ${ticket.ticketNo}</title>
+<head><title>CaneTrack - Quedan ${ticket.ticketNo}</title>
 <style>
   @page { margin: 15mm; }
   * { box-sizing: border-box; margin: 0; padding: 0; }

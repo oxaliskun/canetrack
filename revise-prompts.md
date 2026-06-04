@@ -104,7 +104,7 @@
 
 ## Phase 4: Quedan (Delivery Ticket)
 
-- [ ] 4.1 Rename WeightTicket to Quedan in all UI text
+- [x] 4.1 Rename WeightTicket to Quedan in all UI text
   - "Weight Ticket" → "Quedan" / "Delivery Ticket"
   - "Ticket No" → "Quedan No" (QDN-2026-00001)
   - All frontend labels updated

@@ -65,7 +65,7 @@ export function AdminTickets() {
           <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-3 border ${isDark ? 'bg-blue-900/30 text-blue-400 border-blue-800' : 'bg-blue-100 text-blue-700 border-blue-200'}`}>
              <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" /> Live Monitoring
           </div>
-          <h1 className={`text-xl sm:text-2xl lg:text-4xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Ticket & Dispute Monitor</h1>
+          <h1 className={`text-xl sm:text-2xl lg:text-4xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Quedan & Dispute Monitor</h1>
         </div>
       </div>
 
@@ -78,7 +78,7 @@ export function AdminTickets() {
              <SearchInput 
                value={search} 
                onChange={setSearch} 
-               placeholder="Search Ticket or Plate..." 
+               placeholder="Search Quedan or Plate..." 
                className="w-full sm:w-64"
              />
              <select 
@@ -97,7 +97,7 @@ export function AdminTickets() {
           <table className="w-full text-left text-sm whitespace-nowrap table-card-view">
             <thead className={`border-b uppercase text-[10px] font-extrabold tracking-widest ${isDark ? 'bg-slate-800/80 border-slate-700 text-slate-400' : 'bg-slate-50/80 border-slate-100 text-slate-500'}`}>
                 <tr>
-                  <th className="px-4 sm:px-6 py-4 sm:py-5">Ticket Core</th>
+                  <th className="px-4 sm:px-6 py-4 sm:py-5">Quedan Details</th>
                   <th className="px-4 sm:px-6 py-4 sm:py-5">Reconciled</th>
                   <th className="px-4 sm:px-6 py-4 sm:py-5">Resolved</th>
                   <th className="px-4 sm:px-6 py-4 sm:py-5">Weights</th>
@@ -113,7 +113,7 @@ export function AdminTickets() {
                   const varianceValue = Math.abs(r.difference * r.ticket.pricePerKg); 
                   return (
                 <tr key={r.id} className={`transition-colors ${isDark ? 'hover:bg-slate-800/50' : 'hover:bg-slate-50'}`}>
-                  <td data-label="Ticket" className="px-4 sm:px-6 py-4 sm:py-5">
+                  <td data-label="Quedan" className="px-4 sm:px-6 py-4 sm:py-5">
                      <p className={`font-mono font-bold text-sm truncate ${isDark ? 'text-blue-400' : 'text-blue-700'}`}>{r.ticket.ticketNo}</p>
                      <p className={`text-[10px] font-bold tracking-widest uppercase mt-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{formatDate(r.createdAt)}</p>
                   </td>
