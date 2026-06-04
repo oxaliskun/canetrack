@@ -619,10 +619,10 @@ apiRouter.patch('/trucks/:id', authMiddleware, roleGuard(['FARMER']), async (req
   try {
     const existing = await prisma.truck.findFirst({ where: { id: req.params.id, ownerId: req.user!.userId } });
     if (!existing) { res.status(404).json({ message: 'Truck not found' }); return; }
-    const { plateNumber, make, model, capacity, color } = req.body;
+    const { plateNumber, make, model, capacity, color, isArchived } = req.body;
     const truck = await prisma.truck.update({
       where: { id: req.params.id },
-      data: { ...(plateNumber && { plateNumber: plateNumber.toUpperCase() }), ...(make && { make }), ...(model && { model }), ...(capacity && { capacity: Number(capacity) }), ...(color !== undefined && { color }) }
+      data: { ...(plateNumber && { plateNumber: plateNumber.toUpperCase() }), ...(make && { make }), ...(model && { model }), ...(capacity && { capacity: Number(capacity) }), ...(color !== undefined && { color }), ...(isArchived !== undefined && { isArchived }) }
     });
     res.json(truck);
   } catch (e: any) {
@@ -642,10 +642,52 @@ apiRouter.delete('/trucks/:id', authMiddleware, roleGuard(['FARMER']), async (re
 
 apiRouter.get('/admin/trucks', authMiddleware, roleGuard(['ADMIN']), async (req: AuthRequest, res: Response) => {
   try {
+    const { ownerId } = req.query;
+    const where: any = {};
+    if (ownerId) where.ownerId = ownerId as string;
     const trucks = await prisma.truck.findMany({
-      include: { owner: { select: { name: true, email: true } } }, orderBy: { createdAt: 'desc' }
+      where, include: { owner: { select: { name: true, email: true } } }, orderBy: { createdAt: 'desc' }
     });
     res.json({ trucks });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+});
+
+apiRouter.post('/admin/trucks', authMiddleware, roleGuard(['ADMIN']), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { plateNumber, make, model, capacity, color, ownerId } = req.body;
+    if (!plateNumber || !make || !model || !capacity || !ownerId) {
+      res.status(400).json({ message: 'plateNumber, make, model, capacity, ownerId are required' });
+      return;
+    }
+    const truck = await prisma.truck.create({
+      data: { plateNumber: plateNumber.toUpperCase(), make, model, capacity: Number(capacity), color, ownerId }
+    });
+    const result = await prisma.truck.findUnique({ where: { id: truck.id }, include: { owner: { select: { name: true, email: true } } } });
+    res.status(201).json(result);
+  } catch (e: any) {
+    if (e.code === 'P2002') { res.status(409).json({ message: 'Plate number already exists' }); return; }
+    res.status(500).json({ message: e.message });
+  }
+});
+
+apiRouter.patch('/admin/trucks/:id', authMiddleware, roleGuard(['ADMIN']), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { plateNumber, make, model, capacity, color, isArchived, ownerId } = req.body;
+    const truck = await prisma.truck.update({
+      where: { id: req.params.id },
+      data: { ...(plateNumber && { plateNumber: plateNumber.toUpperCase() }), ...(make && { make }), ...(model && { model }), ...(capacity && { capacity: Number(capacity) }), ...(color !== undefined && { color }), ...(isArchived !== undefined && { isArchived }), ...(ownerId && { ownerId }) },
+      include: { owner: { select: { name: true, email: true } } }
+    });
+    res.json(truck);
+  } catch (e: any) {
+    if (e.code === 'P2002') { res.status(409).json({ message: 'Plate number already exists' }); return; }
+    res.status(500).json({ message: e.message }); }
+});
+
+apiRouter.delete('/admin/trucks/:id', authMiddleware, roleGuard(['ADMIN']), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    await prisma.truck.delete({ where: { id: req.params.id } });
+    res.json({ message: 'Truck deleted' });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 });
 

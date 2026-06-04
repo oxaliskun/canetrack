@@ -14,7 +14,9 @@ import { AdminTickets } from './pages/admin/AdminTickets';
 import { AdminReports } from './pages/admin/AdminReports';
 import { AdminAuditLogs } from './pages/admin/AdminAuditLogs';
 import { AdminVerifications } from './pages/admin/AdminVerifications';
+import { AdminTrucks } from './pages/admin/AdminTrucks';
 import { FarmerFarms } from './pages/farmer/FarmerFarms';
+import { FarmerTrucks } from './pages/farmer/FarmerTrucks';
 import { Profile } from './pages/shared/Profile';
 import { Settings } from './pages/shared/Settings';
 import { AuditLogs } from './pages/shared/AuditLogs';
@@ -129,6 +131,11 @@ export default function App() {
                 <FarmerFarms />
               </PrivateRoute>
             } />
+            <Route path="/dashboard/farmer/trucks" element={
+              <PrivateRoute allowedRoles={['FARMER']}>
+                <FarmerTrucks />
+              </PrivateRoute>
+            } />
             
             <Route path="/dashboard/settings" element={
               <PrivateRoute allowedRoles={['FARMER', 'ADMIN']}>
@@ -157,6 +164,7 @@ export default function App() {
               <Route path="reports" element={<AdminReports />} />
               <Route path="audit-logs" element={<AdminAuditLogs />} />
               <Route path="verifications" element={<AdminVerifications />} />
+              <Route path="trucks" element={<AdminTrucks />} />
             </Route>
 
             {/* Fallback 404 Route */}

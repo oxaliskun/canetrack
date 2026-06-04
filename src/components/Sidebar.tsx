@@ -28,11 +28,13 @@ export function Sidebar({ role, userName, onClose }: SidebarProps) {
           { name: 'Reports', path: '/dashboard/admin/reports', icon: BarChart },
           { name: 'Activity Logs', path: '/dashboard/admin/audit-logs', icon: History },
           { name: 'Verifications', path: '/dashboard/admin/verifications', icon: ShieldCheck },
+          { name: 'Trucks', path: '/dashboard/admin/trucks', icon: Truck },
         ];
       case 'FARMER':
         return [
            { name: 'My Performance', path: '/dashboard/farmer', icon: FileText },
-           { name: 'My Farms', path: '/dashboard/farmer/farms', icon: Sprout }
+           { name: 'My Farms', path: '/dashboard/farmer/farms', icon: Sprout },
+          { name: 'My Trucks', path: '/dashboard/farmer/trucks', icon: Truck }
         ];
       default: return [];
     }
