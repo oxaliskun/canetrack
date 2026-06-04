@@ -38,7 +38,7 @@
 - [x] 1.9 Add Expense model (per delivery)
   - id, quedanId, categoryId, amount Float, receiptUrl?, notes?, createdAt
 
-- [ ] 1.10 Add FarmExpense model (per farm, seasonal)
+- [x] 1.10 Add FarmExpense model (per farm, seasonal)
   - id, farmId, categoryId, amount Float, receiptUrl?, notes?, date DateTime, createdAt
 
 - [ ] 1.11 Add Payment model

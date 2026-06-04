@@ -146,6 +146,21 @@ model FarmExpense {
   category ExpenseCategory  @relation(fields: [categoryId], references: [id])
 }
 
+model Payment {
+  id           String    @id @default(cuid())
+  quedanId     String    @unique
+  method       String    // BANK_TRANSFER, GCASH, CASH, CHECK
+  referenceNumber String?
+  grossAmount  Float
+  deductions   Float     @default(0)
+  netAmount    Float
+  status       String    @default("PENDING") // PENDING, PARTIAL, PAID
+  datePaid     DateTime?
+  proofUrl     String?
+  notes        String?
+  createdAt    DateTime  @default(now())
+}
+
 model Farm {
   id          String   @id @default(cuid())
   farmName    String

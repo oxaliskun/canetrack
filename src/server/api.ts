@@ -896,6 +896,57 @@ apiRouter.delete('/farm-expenses/:id', authMiddleware, roleGuard(['FARMER']), as
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 });
 
+// --- PAYMENT ROUTES ---
+apiRouter.post('/payments', authMiddleware, roleGuard(['ADMIN']), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { quedanId, method, referenceNumber, grossAmount, deductions, netAmount, status, datePaid, proofUrl, notes } = req.body;
+    if (!quedanId || !method || grossAmount == null || netAmount == null) {
+      res.status(400).json({ message: 'quedanId, method, grossAmount, netAmount are required' });
+      return;
+    }
+    const payment = await prisma.payment.create({
+      data: { quedanId, method, referenceNumber, grossAmount: Number(grossAmount), deductions: Number(deductions || 0), netAmount: Number(netAmount), status: status || 'PENDING', datePaid: datePaid ? new Date(datePaid) : null, proofUrl, notes }
+    });
+    res.status(201).json(payment);
+  } catch (e: any) {
+    if (e.code === 'P2002') { res.status(409).json({ message: 'Payment for this quedan already exists' }); return; }
+    res.status(500).json({ message: e.message });
+  }
+});
+
+apiRouter.get('/payments', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const payments = await prisma.payment.findMany({ orderBy: { createdAt: 'desc' } });
+    res.json({ payments });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+});
+
+apiRouter.get('/payments/:quedanId', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const payment = await prisma.payment.findUnique({ where: { quedanId: req.params.quedanId } });
+    if (!payment) { res.status(404).json({ message: 'Payment not found' }); return; }
+    res.json(payment);
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+});
+
+apiRouter.patch('/payments/:id', authMiddleware, roleGuard(['ADMIN']), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { method, referenceNumber, grossAmount, deductions, netAmount, status, datePaid, proofUrl, notes } = req.body;
+    const payment = await prisma.payment.update({
+      where: { id: req.params.id },
+      data: { ...(method && { method }), ...(referenceNumber !== undefined && { referenceNumber }), ...(grossAmount != null && { grossAmount: Number(grossAmount) }), ...(deductions != null && { deductions: Number(deductions) }), ...(netAmount != null && { netAmount: Number(netAmount) }), ...(status && { status }), ...(datePaid !== undefined && { datePaid: datePaid ? new Date(datePaid) : null }), ...(proofUrl !== undefined && { proofUrl }), ...(notes !== undefined && { notes }) }
+    });
+    res.json(payment);
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+});
+
+apiRouter.delete('/payments/:id', authMiddleware, roleGuard(['ADMIN']), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    await prisma.payment.delete({ where: { id: req.params.id } });
+    res.json({ message: 'Payment deleted' });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+});
+
 // --- TICKETS ROUTES ---
 // Operator creates ticket
 apiRouter.post('/tickets', authMiddleware, roleGuard(['FARMER']), async (req: AuthRequest, res: Response): Promise<void> => {
