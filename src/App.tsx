@@ -16,6 +16,7 @@ import { AdminAuditLogs } from './pages/admin/AdminAuditLogs';
 import { AdminVerifications } from './pages/admin/AdminVerifications';
 import { AdminTrucks } from './pages/admin/AdminTrucks';
 import { AdminExpenseCategories } from './pages/admin/AdminExpenseCategories';
+import { AdminVariants } from './pages/admin/AdminVariants';
 import { FarmerFarms } from './pages/farmer/FarmerFarms';
 import { FarmerTrucks } from './pages/farmer/FarmerTrucks';
 import { Profile } from './pages/shared/Profile';
@@ -167,6 +168,7 @@ export default function App() {
               <Route path="verifications" element={<AdminVerifications />} />
               <Route path="trucks" element={<AdminTrucks />} />
               <Route path="expense-categories" element={<AdminExpenseCategories />} />
+              <Route path="variants" element={<AdminVariants />} />
             </Route>
 
             {/* Fallback 404 Route */}

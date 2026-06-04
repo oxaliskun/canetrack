@@ -30,6 +30,7 @@ export function Sidebar({ role, userName, onClose }: SidebarProps) {
           { name: 'Verifications', path: '/dashboard/admin/verifications', icon: ShieldCheck },
           { name: 'Trucks', path: '/dashboard/admin/trucks', icon: Truck },
           { name: 'Expense Categories', path: '/dashboard/admin/expense-categories', icon: Tags },
+          { name: 'Variants', path: '/dashboard/admin/variants', icon: Sprout },
         ];
       case 'FARMER':
         return [

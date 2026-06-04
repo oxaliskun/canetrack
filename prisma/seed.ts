@@ -133,6 +133,24 @@ async function main() {
     });
   }
 
+  // Seed Sugarcane Variants
+  const sugarcaneVariants = [
+    { name: 'Phil 93-93', characteristics: 'High yielding, good ratooning ability, suited for mill sites' },
+    { name: 'Phil 99-1793', characteristics: 'High sugar content, resistant to smut disease' },
+    { name: 'VMC 86-550', characteristics: 'Early maturing, high tonnage, good for clay soil' },
+    { name: 'VMC 92-129', characteristics: 'Very high sugar recovery, moderately resistant to borer' },
+    { name: 'Phil 2000-2567', characteristics: 'Excellent ratooning, good drought tolerance, high biomass' },
+  ];
+
+  console.log('Seeding sugarcane variants...');
+  for (const v of sugarcaneVariants) {
+    await prisma.sugarcaneVariant.upsert({
+      where: { name: v.name },
+      update: {},
+      create: v,
+    });
+  }
+
   console.log('Seed completed successfully.');
 }
 

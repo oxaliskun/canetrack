@@ -168,7 +168,7 @@
 
 ## Phase 6: Variants, Types & Pricing
 
-- [ ] 6.1 Admin variant management
+- [x] 6.1 Admin variant management
   - CRUD: name, characteristics, active status
   - Seed: Phil 93-93, Phil 99-1793, VMC 86-550, VMC 92-129, Phil 2000-2567
 
