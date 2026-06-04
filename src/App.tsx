@@ -22,6 +22,7 @@ import { AdminPricing } from './pages/admin/AdminPricing';
 import { AdminDisputes } from './pages/admin/AdminDisputes';
 import { FarmerFarms } from './pages/farmer/FarmerFarms';
 import { FarmerTrucks } from './pages/farmer/FarmerTrucks';
+import { FarmerPayments } from './pages/farmer/FarmerPayments';
 import { Profile } from './pages/shared/Profile';
 import { Settings } from './pages/shared/Settings';
 import { AuditLogs } from './pages/shared/AuditLogs';
@@ -139,6 +140,11 @@ export default function App() {
             <Route path="/dashboard/farmer/trucks" element={
               <PrivateRoute allowedRoles={['FARMER']}>
                 <FarmerTrucks />
+              </PrivateRoute>
+            } />
+            <Route path="/dashboard/farmer/payments" element={
+              <PrivateRoute allowedRoles={['FARMER']}>
+                <FarmerPayments />
               </PrivateRoute>
             } />
             

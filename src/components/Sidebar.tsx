@@ -39,7 +39,8 @@ export function Sidebar({ role, userName, onClose }: SidebarProps) {
         return [
            { name: 'My Performance', path: '/dashboard/farmer', icon: FileText },
            { name: 'My Farms', path: '/dashboard/farmer/farms', icon: Sprout },
-          { name: 'My Trucks', path: '/dashboard/farmer/trucks', icon: Truck }
+          { name: 'My Trucks', path: '/dashboard/farmer/trucks', icon: Truck },
+          { name: 'Payments', path: '/dashboard/farmer/payments', icon: DollarSign }
         ];
       default: return [];
     }

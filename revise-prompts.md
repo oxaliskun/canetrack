@@ -219,7 +219,7 @@
 - [x] 8.2 Payment proof upload
   - Upload screenshot/OR image
 
-- [ ] 8.3 Farmer payment history
+- [x] 8.3 Farmer payment history
   - Route: /dashboard/farmer/payments
   - Table: quedan #, date, method, gross, deductions, net, status
   - Total earnings summary
