@@ -105,6 +105,34 @@ async function main() {
     },
   });
 
+  // Seed Expense Categories
+  const expenseCategories = [
+    // Delivery type
+    { name: 'Diesel', type: 'DELIVERY', description: 'Fuel cost for truck during delivery' },
+    { name: 'Toll Fee', type: 'DELIVERY', description: 'Toll road expenses during transport' },
+    { name: 'Truck Repair', type: 'DELIVERY', description: 'Maintenance and repair costs' },
+    { name: 'Loading Labor', type: 'DELIVERY', description: 'Labor cost for loading cane' },
+    { name: 'Unloading Labor', type: 'DELIVERY', description: 'Labor cost for unloading cane' },
+    { name: 'Meals', type: 'DELIVERY', description: 'Driver/crew meal expenses' },
+    // Farm type
+    { name: 'Fertilizer', type: 'FARM', description: 'Fertilizer cost for the season' },
+    { name: 'Pesticide', type: 'FARM', description: 'Pesticide and herbicide costs' },
+    { name: 'Irrigation', type: 'FARM', description: 'Irrigation system and water costs' },
+    { name: 'Farm Labor', type: 'FARM', description: 'General farm labor wages' },
+    { name: 'Land Rental', type: 'FARM', description: 'Land lease or rental fees' },
+    { name: 'Equipment Rental', type: 'FARM', description: 'Heavy equipment rental costs' },
+    { name: 'Miscellaneous', type: 'FARM', description: 'Other farm-related expenses' },
+  ];
+
+  console.log('Seeding expense categories...');
+  for (const cat of expenseCategories) {
+    await prisma.expenseCategory.upsert({
+      where: { name: cat.name },
+      update: {},
+      create: cat,
+    });
+  }
+
   console.log('Seed completed successfully.');
 }
 

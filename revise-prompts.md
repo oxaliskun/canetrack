@@ -148,7 +148,7 @@
   - Button on farm detail: "Add Farm Expense"
   - Category dropdown (FARM type), amount, notes, date, receipt
 
-- [ ] 5.3 Admin expense categories
+- [x] 5.3 Admin expense categories
   - Admin CRUD page for categories
   - Seed: Diesel, Toll Fee, Truck Repair, Loading Labor, Unloading Labor, Meals, Fertilizer, Pesticide, Irrigation, Farm Labor, Land Rental, Equipment Rental, Miscellaneous
 
