@@ -104,6 +104,16 @@ model Pricing {
   @@unique([variantId, sugarTypeId])
 }
 
+model ExpenseCategory {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  type        String   // DELIVERY, FARM
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt @default(now())
+}
+
 model Farm {
   id          String   @id @default(cuid())
   farmName    String

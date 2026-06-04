@@ -747,6 +747,49 @@ apiRouter.delete('/pricings/:id', authMiddleware, roleGuard(['ADMIN']), async (r
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 });
 
+// --- EXPENSE CATEGORY ROUTES ---
+apiRouter.get('/expense-categories', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const categories = await prisma.expenseCategory.findMany({ orderBy: { name: 'asc' } });
+    res.json({ categories });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+});
+
+apiRouter.post('/expense-categories', authMiddleware, roleGuard(['ADMIN']), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { name, type, description } = req.body;
+    if (!name || !type) { res.status(400).json({ message: 'Name and type are required' }); return; }
+    if (!['DELIVERY', 'FARM'].includes(type)) { res.status(400).json({ message: 'Type must be DELIVERY or FARM' }); return; }
+    const category = await prisma.expenseCategory.create({ data: { name, type, description } });
+    res.status(201).json(category);
+  } catch (e: any) {
+    if (e.code === 'P2002') { res.status(409).json({ message: 'Category name already exists' }); return; }
+    res.status(500).json({ message: e.message });
+  }
+});
+
+apiRouter.patch('/expense-categories/:id', authMiddleware, roleGuard(['ADMIN']), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { name, type, description, isActive } = req.body;
+    if (type && !['DELIVERY', 'FARM'].includes(type)) { res.status(400).json({ message: 'Type must be DELIVERY or FARM' }); return; }
+    const category = await prisma.expenseCategory.update({
+      where: { id: req.params.id },
+      data: { ...(name && { name }), ...(type && { type }), ...(description !== undefined && { description }), ...(isActive !== undefined && { isActive }) }
+    });
+    res.json(category);
+  } catch (e: any) {
+    if (e.code === 'P2002') { res.status(409).json({ message: 'Category name already exists' }); return; }
+    res.status(500).json({ message: e.message });
+  }
+});
+
+apiRouter.delete('/expense-categories/:id', authMiddleware, roleGuard(['ADMIN']), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    await prisma.expenseCategory.delete({ where: { id: req.params.id } });
+    res.json({ message: 'Category deleted' });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+});
+
 // --- TICKETS ROUTES ---
 // Operator creates ticket
 apiRouter.post('/tickets', authMiddleware, roleGuard(['FARMER']), async (req: AuthRequest, res: Response): Promise<void> => {

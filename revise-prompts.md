@@ -28,7 +28,7 @@
 - [x] 1.6 Add SugarType model
   - id, name (unique), description?, isActive Boolean @default(true)
 
-- [ ] 1.7 Add Pricing model
+- [x] 1.7 Add Pricing model
   - id, variantId, sugarTypeId, pricePerKg Float, effectiveDate DateTime, isActive Boolean @default(true)
   - One price per variant+type combo
 
