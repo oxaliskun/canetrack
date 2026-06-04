@@ -219,6 +219,7 @@ model WeightTicket {
   variantId        String?
   truckId          String?
   disputeNotes     String?
+  disputePhotoUrl  String?
   disputeFinal     Boolean   @default(false)
   adjustedWeight   Float?
   adjustedPrice    Float?

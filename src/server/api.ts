@@ -1216,10 +1216,16 @@ apiRouter.patch('/tickets/:id', authMiddleware, async (req: AuthRequest, res: Re
       const farms = await prisma.farm.findMany({ where: { ownerId: req.user!.userId }, select: { id: true } });
       const farmIds = farms.map(f => f.id);
       if (!farmIds.includes(ticket.farmId)) { res.status(403).json({ message: 'Access denied' }); return; }
-      if (ticket.status !== 'PENDING') { res.status(400).json({ message: 'Can only edit PENDING tickets' }); return; }
+      if (ticket.status !== 'PENDING') {
+        if (req.body.status === 'DISPUTED' && ticket.status !== 'RECONCILED' && ticket.status !== 'DISPUTED' && ticket.status !== 'PAID') {
+          // Allow flagging dispute on non-final tickets
+        } else {
+          res.status(400).json({ message: 'Can only edit PENDING tickets' }); return;
+        }
+      }
     }
 
-    const { truckPlate, grossWeight, tareWeight, notes, brix, pol, sampleCollected, sugarTypeId, variantId, truckId, status, adjustedWeight, adjustedPrice, disputeNotes, disputeFinal } = req.body;
+    const { truckPlate, grossWeight, tareWeight, notes, brix, pol, sampleCollected, sugarTypeId, variantId, truckId, status, adjustedWeight, adjustedPrice, disputeNotes, disputePhotoUrl, disputeFinal } = req.body;
     const updateData: any = {};
     if (truckPlate) updateData.truckPlate = truckPlate;
     if (grossWeight != null) updateData.grossWeight = Number(grossWeight);
@@ -1244,6 +1250,7 @@ apiRouter.patch('/tickets/:id', authMiddleware, async (req: AuthRequest, res: Re
     if (adjustedWeight !== undefined) updateData.adjustedWeight = adjustedWeight != null ? Number(adjustedWeight) : null;
     if (adjustedPrice !== undefined) updateData.adjustedPrice = adjustedPrice != null ? Number(adjustedPrice) : null;
     if (disputeNotes !== undefined) updateData.disputeNotes = disputeNotes;
+    if (disputePhotoUrl !== undefined) updateData.disputePhotoUrl = disputePhotoUrl;
     if (disputeFinal !== undefined) updateData.disputeFinal = disputeFinal === true;
 
     if (req.user!.role === 'ADMIN' && status === 'VERIFIED') {

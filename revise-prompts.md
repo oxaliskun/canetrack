@@ -186,7 +186,7 @@
 
 ## Phase 7: Disputes
 
-- [ ] 7.1 Farmer dispute button
+- [x] 7.1 Farmer dispute button
   - On quedan detail: "Flag Dispute" button (red)
   - Modal: reason textarea (required, min 10 chars), optional photo
   - Status → DISPUTED, notification to admin

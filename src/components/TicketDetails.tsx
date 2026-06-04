@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, Printer, Clock, User, Truck, Scale, AlertTriangle, CheckCircle, FileText, Calendar, MapPin, Phone, Mail, Eye, Plus, Minus, Building2, Wallet, Camera, Trash2 } from 'lucide-react';
 import api from '../api/axiosInstance';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../hooks/useAuth';
 import { toast } from 'sonner';
 import { StatusBadge } from './StatusBadge';
 import { formatWeight, formatDate } from '../lib/utils';
@@ -67,8 +68,13 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
   const [expPhotoPreview, setExpPhotoPreview] = useState<string | null>(null);
   const [showExpForm, setShowExpForm] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [showDisputeModal, setShowDisputeModal] = useState(false);
+  const [disputeReason, setDisputeReason] = useState('');
+  const [disputePhoto, setDisputePhoto] = useState<File | null>(null);
+  const [disputePhotoPreview, setDisputePhotoPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const { isDark } = useTheme();
+  const { user } = useAuth();
   const totalExp = expenses.reduce((sum: number, e: any) => sum + Number(e.amount), 0);
   const isLocked = ticket && (ticket.status === 'RECONCILED' || ticket.status === 'DISPUTED');
   const qualityFactor = ticket?.brix != null && ticket?.pol != null ? (Number(ticket.brix) + Number(ticket.pol)) / 200 : null;
@@ -119,6 +125,28 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
       setExpenses(prev => prev.filter(e => e.id !== id));
       toast.success('Expense deleted');
     } catch (e: any) { toast.error(e.response?.data?.message || 'Delete failed'); }
+  };
+
+  const handleFlagDispute = async () => {
+    if (!disputeReason.trim() || disputeReason.trim().length < 10) { toast.error('Please provide a reason (min 10 characters)'); return; }
+    try {
+      let photoUrl = '';
+      if (disputePhoto) {
+        const fd = new FormData();
+        fd.append('file', disputePhoto);
+        const { data } = await api.post('/upload', fd);
+        photoUrl = data.url;
+      }
+      await api.patch(`/tickets/${ticketId}`, { status: 'DISPUTED', disputeNotes: disputeReason.trim(), disputePhotoUrl: photoUrl || undefined });
+      toast.success('Dispute flagged successfully');
+      setShowDisputeModal(false);
+      setDisputeReason('');
+      setDisputePhoto(null);
+      setDisputePhotoPreview(null);
+      const res = await api.get(`/tickets/${ticketId}`);
+      setTicket(res.data.ticket);
+      setTimeline(res.data.timeline || []);
+    } catch (e: any) { toast.error(e.response?.data?.message || 'Failed to flag dispute'); }
   };
 
   const handlePrint = () => {
@@ -334,6 +362,12 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
+                      {user?.role === 'FARMER' && ticket?.status !== 'RECONCILED' && ticket?.status !== 'DISPUTED' && ticket?.status !== 'PAID' && (
+                        <button onClick={() => setShowDisputeModal(true)}
+                          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider border transition-all shadow-sm ${isDark ? 'bg-red-950/30 border-red-800 text-red-400 hover:bg-red-900/50 hover:text-red-300' : 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100'}`}>
+                          <AlertTriangle className="w-4 h-4" /> Flag Dispute
+                        </button>
+                      )}
                       <button
                         onClick={handlePrint}
                         className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider border transition-all shadow-sm ${isDark ? 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
@@ -626,7 +660,60 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+      </AnimatePresence>
+      {/* Dispute Modal */}
+      <AnimatePresence>
+        {showDisputeModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[60] flex items-center justify-center p-4" onClick={() => setShowDisputeModal(false)}>
+            <div className={`absolute inset-0 backdrop-blur-sm ${isDark ? 'bg-black/60' : 'bg-slate-900/50'}`} />
+            <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className={`relative w-full max-w-lg rounded-2xl border shadow-2xl overflow-hidden ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700 shadow-black/40' : 'bg-white border-slate-200 shadow-slate-200/40'}`}
+              onClick={e => e.stopPropagation()}>
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-500 via-red-400 to-red-500" />
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-red-100"><AlertTriangle className="w-5 h-5 text-red-600" /></div>
+                    <div>
+                      <h2 className={`text-lg font-extrabold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Flag Dispute</h2>
+                      <p className={`text-xs font-medium mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Report an issue with this quedan</p>
+                    </div>
+                  </div>
+                  <button onClick={() => { setShowDisputeModal(false); setDisputeReason(''); setDisputePhoto(null); setDisputePhotoPreview(null); }} className={`p-1.5 rounded-lg transition-colors ${isDark ? 'text-slate-500 hover:text-white hover:bg-slate-700' : 'text-slate-400 hover:text-slate-900 hover:bg-slate-100'}`}><X className="w-5 h-5" /></button>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Reason *</label>
+                    <textarea rows={4} value={disputeReason} onChange={e => setDisputeReason(e.target.value)} placeholder="Describe the issue (min 10 characters)..."
+                      className={`w-full px-4 py-3 border rounded-xl outline-none text-sm font-medium resize-none focus:ring-4 focus:ring-red-500/10 focus:border-red-500 transition-all min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400'}`} />
+                    <p className={`text-xs mt-1 ml-1 font-medium ${disputeReason.trim().length < 10 ? 'text-red-500' : isDark ? 'text-slate-500' : 'text-slate-400'}`}>{disputeReason.length}/10 min characters</p>
+                  </div>
+                  <div>
+                    <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Supporting Photo (optional)</label>
+                    <input type="file" accept="image/*" onChange={e => {
+                      const file = e.target.files?.[0] || null;
+                      if (file) {
+                        if (!file.type.startsWith('image/')) { toast.error('Only image files allowed'); return; }
+                        if (file.size > 5 * 1024 * 1024) { toast.error('File must be under 5MB'); return; }
+                      }
+                      setDisputePhoto(file);
+                      setDisputePhotoPreview(file ? URL.createObjectURL(file) : null);
+                    }} className={`w-full text-sm file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:cursor-pointer min-h-[44px] ${isDark ? 'text-slate-300 file:bg-red-600 file:text-white' : 'text-slate-600 file:bg-red-500 file:text-white'}`} />
+                    {disputePhotoPreview && <img src={disputePhotoPreview} alt="Dispute photo preview" className="h-20 mt-2 rounded-xl object-cover border border-red-500/30" />}
+                  </div>
+                  <div className="flex gap-3 pt-2">
+                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleFlagDispute}
+                      className="flex-1 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-bold py-3 rounded-xl text-sm shadow-lg shadow-red-600/25 min-h-[44px] flex items-center justify-center gap-2">
+                      <AlertTriangle className="w-4 h-4" /> Flag Dispute
+                    </motion.button>
+                    <button onClick={() => { setShowDisputeModal(false); setDisputeReason(''); setDisputePhoto(null); setDisputePhotoPreview(null); }} className={`px-6 py-3 rounded-xl font-bold text-sm min-h-[44px] ${isDark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}`}>Cancel</button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* Receipt lightbox */}
       <AnimatePresence>
         {lightboxUrl && (
