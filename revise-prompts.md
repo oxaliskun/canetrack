@@ -18,7 +18,7 @@
   - id, userId, documentType (ID/LAND_TITLE/TAX_DECLARATION/LEASE/CERTIFICATE), imageUrl, status (PENDING/APPROVED/REJECTED), rejectionReason?, createdAt
   - Linked to User
 
-- [ ] 1.4 Add Truck model
+- [x] 1.4 Add Truck model
   - id, plateNumber (unique), make, model, capacity (Float), color?, ownerId (userId, farmer), isArchived Boolean @default(false)
   - Linked to User
 

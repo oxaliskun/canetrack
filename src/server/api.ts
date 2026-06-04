@@ -617,6 +617,47 @@ apiRouter.get('/admin/trucks', authMiddleware, roleGuard(['ADMIN']), async (req:
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 });
 
+// --- SUGARCANE VARIANT ROUTES ---
+apiRouter.get('/variants', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const variants = await prisma.sugarcaneVariant.findMany({ orderBy: { name: 'asc' } });
+    res.json({ variants });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+});
+
+apiRouter.post('/variants', authMiddleware, roleGuard(['ADMIN']), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { name, characteristics } = req.body;
+    if (!name) { res.status(400).json({ message: 'Name is required' }); return; }
+    const variant = await prisma.sugarcaneVariant.create({ data: { name, characteristics } });
+    res.status(201).json(variant);
+  } catch (e: any) {
+    if (e.code === 'P2002') { res.status(409).json({ message: 'Variant name already exists' }); return; }
+    res.status(500).json({ message: e.message });
+  }
+});
+
+apiRouter.patch('/variants/:id', authMiddleware, roleGuard(['ADMIN']), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { name, characteristics, isActive } = req.body;
+    const variant = await prisma.sugarcaneVariant.update({
+      where: { id: req.params.id },
+      data: { ...(name && { name }), ...(characteristics !== undefined && { characteristics }), ...(isActive !== undefined && { isActive }) }
+    });
+    res.json(variant);
+  } catch (e: any) {
+    if (e.code === 'P2002') { res.status(409).json({ message: 'Variant name already exists' }); return; }
+    res.status(500).json({ message: e.message });
+  }
+});
+
+apiRouter.delete('/variants/:id', authMiddleware, roleGuard(['ADMIN']), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    await prisma.sugarcaneVariant.delete({ where: { id: req.params.id } });
+    res.json({ message: 'Variant deleted' });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+});
+
 // --- TICKETS ROUTES ---
 // Operator creates ticket
 apiRouter.post('/tickets', authMiddleware, roleGuard(['FARMER']), async (req: AuthRequest, res: Response): Promise<void> => {

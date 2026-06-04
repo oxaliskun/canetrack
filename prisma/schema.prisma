@@ -66,6 +66,15 @@ model Truck {
   owner User @relation(fields: [ownerId], references: [id])
 }
 
+model SugarcaneVariant {
+  id               String   @id @default(cuid())
+  name             String   @unique
+  characteristics  String?
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt @default(now())
+}
+
 model Farm {
   id          String   @id @default(cuid())
   farmName    String
