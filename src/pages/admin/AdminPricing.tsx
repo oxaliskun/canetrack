@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { motion } from 'motion/react';
-import { DollarSign, X, Save, Database } from 'lucide-react';
+import { DollarSign, X, Save } from 'lucide-react';
 import api from '../../api/axiosInstance';
 import { useTheme } from '../../context/ThemeContext';
 import { toast } from 'sonner';

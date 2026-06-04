@@ -180,7 +180,7 @@
   - Grid: rows=variants, cols=types, cell=price per kg
   - Click cell to edit price
 
-- [ ] 6.4 Quality factor on quedan
+- [x] 6.4 Quality factor on quedan
   - Factor = (Brix + Pol) / 200 (0.0-1.0)
   - Display on quedan: base price, factor, effective price
 

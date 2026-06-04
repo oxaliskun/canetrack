@@ -71,6 +71,7 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
   const { isDark } = useTheme();
   const totalExp = expenses.reduce((sum: number, e: any) => sum + Number(e.amount), 0);
   const isLocked = ticket && (ticket.status === 'RECONCILED' || ticket.status === 'DISPUTED');
+  const qualityFactor = ticket?.brix != null && ticket?.pol != null ? (Number(ticket.brix) + Number(ticket.pol)) / 200 : null;
 
   useEffect(() => {
     Promise.all([
@@ -368,6 +369,12 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
                         icon={ticket.reconciliation && Math.abs(ticket.reconciliation.difference) > 50 ? AlertTriangle : CheckCircle}
                       />
                       <DetailRow label="Price per Kg" value={`₱${ticket.pricePerKg?.toFixed(2) || '2.50'}`} icon={FileText} />
+                      {qualityFactor !== null && (
+                        <DetailRow label="Quality Factor" value={qualityFactor.toFixed(4)} icon={FileText} />
+                      )}
+                      {qualityFactor !== null && (
+                        <DetailRow label="Effective Price" value={`₱${((ticket.pricePerKg || 2.50) * qualityFactor).toFixed(2)}`} icon={FileText} />
+                      )}
                       <DetailRow label="Total Value" value={`₱${ticket.totalValue?.toFixed(2) || '0.00'}`} icon={FileText} />
                       <DetailRow
                         label="Status"
