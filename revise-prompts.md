@@ -156,7 +156,7 @@
   - Upload per expense, max 5MB, image only
   - Preview/click to enlarge
 
-- [ ] 5.5 Show totals
+- [x] 5.5 Show totals
   - Per quedan: total expenses displayed
   - Per farm: seasonal total
   - Profit/Loss = Payment - Expenses
