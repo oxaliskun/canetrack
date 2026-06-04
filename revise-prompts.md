@@ -216,7 +216,7 @@
   - Form: method, reference, gross (auto-filled), deductions, net (auto), notes, proof
   - Creates Payment record
 
-- [ ] 8.2 Payment proof upload
+- [x] 8.2 Payment proof upload
   - Upload screenshot/OR image
 
 - [ ] 8.3 Farmer payment history
