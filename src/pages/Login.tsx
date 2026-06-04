@@ -18,6 +18,9 @@ export function Login() {
   const [address, setAddress] = useState('');
   const [farmName, setFarmName] = useState('');
   const [farmLocation, setFarmLocation] = useState('');
+  const [idFile, setIdFile] = useState<File | null>(null);
+  const [idPreview, setIdPreview] = useState<string>('');
+  const [idImageUrl, setIdImageUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -95,10 +98,17 @@ export function Login() {
           setLoading(false);
           return;
         }
-        const { data } = await api.post('/auth/register', { name, email, password, contactNumber, address, farmName, farmLocation });
+        let uploadUrl = '';
+        if (idFile) {
+          const formData = new FormData();
+          formData.append('file', idFile);
+          const uploadRes = await api.post('/upload', formData);
+          uploadUrl = uploadRes.data.url;
+        }
+        const { data } = await api.post('/auth/register', { name, email, password, contactNumber, address, farmName, farmLocation, idImageUrl: uploadUrl || undefined });
         setVerificationEmail(data.email);
         setSuccess('Verification code sent to your email!');
-        setPassword(''); setConfirmPassword(''); setContactNumber(''); setAddress(''); setFarmName(''); setFarmLocation('');
+        setPassword(''); setConfirmPassword(''); setContactNumber(''); setAddress(''); setFarmName(''); setFarmLocation(''); setIdFile(null); setIdPreview(''); setIdImageUrl('');
       } else {
         const { data } = await api.post('/auth/login', { email, password });
         setAttempts(0); localStorage.setItem('login_attempts', '0');
@@ -135,16 +145,7 @@ export function Login() {
     setVerifying(true); setError('');
     try {
       await api.post('/auth/verify-email', { email: verificationEmail, code: verificationCode });
-      const verifiedEmail = verificationEmail;
-      setVerificationEmail('');
-      setVerificationCode('');
-      setEmail(verifiedEmail);
-      setSuccess('Email verified! Enter your password to sign in.');
-      setIsRegistering(false);
-      setPassword('');
-      setConfirmPassword('');
-      setAttempts(0); localStorage.setItem('login_attempts', '0');
-      setLockoutUntil(null); localStorage.removeItem('lockout_until');
+      navigate('/pending-verification');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Verification failed');
     } finally {
@@ -461,6 +462,33 @@ export function Login() {
                         <div className="relative">
                           <input type="tel" required={isRegistering} className={`w-full pl-11 sm:pl-12 pr-4 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium min-h-[44px] ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={contactNumber} onChange={e => setContactNumber(e.target.value)} placeholder="09123456789" />
                           <Phone className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-500" />
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <AnimatePresence>
+                  {isRegistering && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                      <div className="pb-3 sm:pb-4">
+                        <label className={`block text-[11px] sm:text-xs font-bold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Valid ID (for verification)</label>
+                        <div className="relative">
+                          <input type="file" accept="image/*" className={`w-full py-2.5 px-4 border rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-emerald-500 file:text-white hover:file:bg-emerald-400 min-h-[44px] ${isDark ? 'bg-slate-800/50 border-slate-700 text-white' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`}
+                            onChange={e => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                setIdFile(file);
+                                setIdPreview(URL.createObjectURL(file));
+                                setIdImageUrl('');
+                              }
+                            }} />
+                          {idPreview && (
+                            <div className="mt-2 flex items-center gap-2">
+                              <img src={idPreview} alt="ID preview" className="h-10 w-16 object-cover rounded-lg border border-slate-700" />
+                              <button type="button" onClick={() => { setIdFile(null); setIdPreview(''); setIdImageUrl(''); }} className="text-xs text-red-400 hover:text-red-300 font-bold">Remove</button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </motion.div>

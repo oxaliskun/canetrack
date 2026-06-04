@@ -49,7 +49,7 @@
   - Quedan number format: QDN-2026-00001
   - Status: PENDING/VERIFIED/RECONCILED/DISPUTED/PAID
 
-- [ ] 1.13 Add DeliveryReceipt model
+- [x] 1.13 Add DeliveryReceipt model
   - id, quedanId, imageUrl, createdAt
 
 ## Phase 2: Registration & Verification

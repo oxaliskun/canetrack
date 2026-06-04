@@ -12,7 +12,7 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY || '');
 
 const EMAIL_FROM = process.env.EMAIL_USER || 'noreply@canetrack.app';
 
-const pendingRegistrations = new Map<string, { name: string; email: string; passwordHash: string; contactNumber: string | null; address: string | null; farmName: string | null; farmLocation: string | null; code: string; expiresAt: number }>();
+const pendingRegistrations = new Map<string, { name: string; email: string; passwordHash: string; contactNumber: string | null; address: string | null; farmName: string | null; farmLocation: string | null; idImageUrl?: string; code: string; expiresAt: number }>();
 const pendingResets = new Map<string, { email: string; code: string; expiresAt: number }>();
 
 const cleanupPending = setInterval(() => {
@@ -98,7 +98,7 @@ const writeAuditLog = async (userId: string, action: string, targetId?: string, 
 // --- AUTH ROUTES ---
 apiRouter.post('/auth/register', async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, email, password, contactNumber, address, farmName, farmLocation } = req.body;
+    const { name, email, password, contactNumber, address, farmName, farmLocation, idImageUrl } = req.body;
 
     if (!name || !email || !password || !contactNumber) {
       res.status(400).json({ message: 'Name, email, contact number, and password are required' });
@@ -124,7 +124,7 @@ apiRouter.post('/auth/register', async (req: Request, res: Response): Promise<vo
     const code = String(randomInt(100000, 999999));
     pendingRegistrations.set(email, {
       name, email, passwordHash, contactNumber: contactNumber || null, address: address || null,
-      farmName: farmName || null, farmLocation: farmLocation || null, code,
+      farmName: farmName || null, farmLocation: farmLocation || null, idImageUrl, code,
       expiresAt: Date.now() + 600000
     });
 
@@ -197,8 +197,14 @@ apiRouter.post('/auth/verify-email', async (req: Request, res: Response): Promis
       }
     });
 
+    if (pending.idImageUrl) {
+      await prisma.verificationDocument.create({
+        data: { userId: user.id, documentType: 'ID', imageUrl: pending.idImageUrl, status: 'PENDING' }
+      });
+    }
+
     pendingRegistrations.delete(email);
-    res.json({ message: 'Email verified successfully! You can now sign in.' });
+    res.json({ message: 'Email verified successfully! Please wait for admin verification.', verificationStatus: 'PENDING' });
   } catch (e: any) {
     res.status(500).json({ message: e.message });
   }
