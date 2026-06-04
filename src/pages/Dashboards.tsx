@@ -276,8 +276,9 @@ function TruckIcon(props: any) {
 }
 
 export function OperatorDashboard() {
-  const [form, setForm] = useState({ truckPlate: '', farmId: '', grossWeight: '', tareWeight: '' });
+  const [form, setForm] = useState({ truckPlate: '', truckId: '', farmId: '', grossWeight: '', tareWeight: '' });
   const [farms, setFarms] = useState([]);
+  const [trucks, setTrucks] = useState([]);
   const [activeTickets, setActiveTickets] = useState([]);
   const [historyTickets, setHistoryTickets] = useState([]);
   const [view, setView] = useState('ENCODE'); // 'ENCODE' | 'HISTORY'
@@ -298,6 +299,7 @@ export function OperatorDashboard() {
     if(!user) return;
     Promise.all([
       api.get('/farms').then(res => setFarms(res.data.farms)),
+      api.get('/trucks').then(res => setTrucks(res.data.trucks)),
       fetchTickets()
     ]).then(() => setLoading(false));
   }, [user]);
@@ -314,7 +316,7 @@ export function OperatorDashboard() {
       await api.post('/tickets', form);
       toast.success('Ticket encoded successfully.');
       fetchTickets();
-      setForm({ truckPlate: '', farmId: '', grossWeight: '', tareWeight: '' });
+      setForm({ truckPlate: '', truckId: '', farmId: '', grossWeight: '', tareWeight: '' });
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to encode ticket.');
     }
@@ -358,7 +360,10 @@ export function OperatorDashboard() {
             <div className="space-y-4 sm:space-y-5">
               <div>
                 <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Truck Plate</label>
-                <input required value={form.truckPlate} onChange={e=>setForm({...form, truckPlate: e.target.value})} className={`w-full px-4 sm:px-5 py-3 sm:py-4 border rounded-xl sm:rounded-2xl focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none font-mono text-sm sm:text-base font-bold shadow-sm uppercase min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`} placeholder="XYZ-1234" />
+                <select required value={form.truckId} onChange={e => { const t = trucks.find((t: any) => t.id === e.target.value); setForm({...form, truckId: e.target.value, truckPlate: t ? t.plateNumber : ''}) } } className={`w-full px-4 sm:px-5 py-3 sm:py-4 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none text-sm sm:text-base font-semibold shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}>
+                  <option value="">Select a Truck...</option>
+                  {trucks.filter((t: any) => !t.isArchived).map((t: any) => <option key={t.id} value={t.id}>{t.plateNumber} — {t.make} {t.model}</option>)}
+                </select>
               </div>
               <div>
                 <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Farm Origin</label>

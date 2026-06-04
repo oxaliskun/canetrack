@@ -81,24 +81,24 @@
   - Reject button → textarea for reason → sets REJECTED
   - Notify farmer of status change
 
-- [ ] 2.5 Resubmit if rejected
+- [x] 2.5 Resubmit if rejected
   - /verification-rejected page: show reason, upload new button
   - Replaces old docs, resets status to PENDING
 
 ## Phase 3: Truck Management
 
-- [ ] 3.1 Farmer truck page
+- [x] 3.1 Farmer truck page
   - Route: /dashboard/farmer/trucks
   - Table: plate #, make/model, capacity, color, status
   - Add/edit/archive trucks
   - Validation: plate format, capacity > 0
 
-- [ ] 3.2 Admin truck page
+- [x] 3.2 Admin truck page
   - Route: /dashboard/admin/trucks
   - Same table + farmer dropdown filter
   - Admin can add truck for any farmer
 
-- [ ] 3.3 Truck dropdown on quedan creation
+- [x] 3.3 Truck dropdown on quedan creation
   - Plate dropdown instead of text input
   - Filtered by farmer's active trucks
 
