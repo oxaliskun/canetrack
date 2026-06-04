@@ -1102,7 +1102,7 @@ apiRouter.get('/tickets', authMiddleware, async (req: AuthRequest, res: Response
       where,
       include: { 
         farm: true, 
-        farmer: { select: { name: true } }, 
+        farmer: { select: { name: true, assignedMill: true } }, 
         reconciliation: true,
         sugarType: true,
         variant: true,
@@ -1124,7 +1124,7 @@ apiRouter.get('/tickets/:id', authMiddleware, async (req: AuthRequest, res: Resp
       where: { id },
       include: {
         farm: { include: { owner: { select: { name: true, email: true, contactNumber: true, address: true } } } },
-        farmer: { select: { name: true, email: true, contactNumber: true } },
+        farmer: { select: { name: true, email: true, contactNumber: true, assignedMill: true } },
         reconciliation: { include: { admin: { select: { name: true, email: true, contactNumber: true } } } },
         sugarType: true,
         variant: true,
@@ -1401,7 +1401,7 @@ apiRouter.get('/farms', authMiddleware, async (req: AuthRequest, res: Response) 
    try {
      const farms = await prisma.farm.findMany({
        where: { isArchived: false },
-       include: { owner: { select: { name: true } } }
+       include: { owner: { select: { name: true, assignedMill: true } } }
      });
      res.json({ farms });
    } catch(e: any) { res.status(500).json({ message: e.message }); }

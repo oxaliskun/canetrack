@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Printer, Clock, User, Truck, Scale, AlertTriangle, CheckCircle, FileText, Calendar, MapPin, Phone, Mail, Eye, Plus, Minus } from 'lucide-react';
+import { X, Printer, Clock, User, Truck, Scale, AlertTriangle, CheckCircle, FileText, Calendar, MapPin, Phone, Mail, Eye, Plus, Minus, Building2 } from 'lucide-react';
 import api from '../api/axiosInstance';
 import { useTheme } from '../context/ThemeContext';
 import { StatusBadge } from './StatusBadge';
@@ -356,6 +356,12 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
                           <div className="flex items-center gap-1.5 mt-1 text-xs">
                             <MapPin className={`w-3 h-3 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} />
                             <span className={`truncate ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{ticket.farm.owner.address}</span>
+                          </div>
+                        )}
+                        {ticket.farm?.owner?.assignedMill && (
+                          <div className="flex items-center gap-1.5 mt-1 text-xs">
+                            <Building2 className={`w-3 h-3 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} />
+                            <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>Mill: <strong>{ticket.farm.owner.assignedMill}</strong></span>
                           </div>
                         )}
                         <p className={`text-[10px] mt-3 font-semibold ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>

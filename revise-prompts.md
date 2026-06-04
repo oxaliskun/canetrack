@@ -128,7 +128,7 @@
   - Up to 3 photos, preview before upload
   - Uploaded on form submit
 
-- [ ] 4.7 Show assigned mill on quedan
+- [x] 4.7 Show assigned mill on quedan
   - Read-only field: "Mill/Central" showing farmer's assigned mill
   - Farmer cannot edit
   - Displayed on quedan form, detail, and list
