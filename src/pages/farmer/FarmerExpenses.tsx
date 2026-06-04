@@ -22,8 +22,8 @@ export function FarmerExpenses() {
         api.get('/expense-categories'),
       ]);
       setDeliveryExpenses(delRes.data.expenses || []);
-      setFarmExpenses(farmRes.data.expenses || []);
-      setCategories(catRes.data || []);
+      setFarmExpenses(farmRes.data.farmExpenses || []);
+      setCategories(catRes.data.categories || []);
     } catch { toast.error('Failed to load expenses'); }
     finally { setLoading(false); }
   };

@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Home, FileText, LogOut, Users, FilePlus, Leaf, Settings, BarChart, User, Shield, Truck, CheckCircle, Sprout, Bell, Moon, Sun, History, X, ShieldCheck, Tags, Package, DollarSign, AlertTriangle, PieChart, PlusCircle, ClipboardList } from 'lucide-react';
+import { Home, FileText, LogOut, Users, FilePlus, Leaf, Settings, BarChart, User, Shield, Truck, CheckCircle, Sprout, Bell, Moon, Sun, History, X, ShieldCheck, Tags, Package, DollarSign, AlertTriangle, PieChart } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
 import { NotificationDropdown } from './NotificationDropdown';
@@ -29,7 +29,7 @@ export function Sidebar({ role, userName, onClose }: SidebarProps) {
           { name: 'Trucks', path: '/dashboard/admin/trucks', icon: Truck },
           { name: 'Quedans', path: '/dashboard/admin/tickets', icon: FileText },
           { name: 'Disputes', path: '/dashboard/admin/disputes', icon: AlertTriangle },
-          { name: 'Payments', path: '/dashboard/admin/tickets', icon: DollarSign },
+          { name: 'Payments', path: '/dashboard/farmer/payments', icon: DollarSign },
           { name: 'Variants', path: '/dashboard/admin/variants', icon: Sprout },
           { name: 'Sugar Types', path: '/dashboard/admin/sugar-types', icon: Package },
           { name: 'Pricing', path: '/dashboard/admin/pricing', icon: DollarSign },
@@ -41,8 +41,6 @@ export function Sidebar({ role, userName, onClose }: SidebarProps) {
            { name: 'Dashboard', path: '/dashboard/farmer', icon: Home },
            { name: 'Farms', path: '/dashboard/farmer/farms', icon: Sprout },
            { name: 'Trucks', path: '/dashboard/farmer/trucks', icon: Truck },
-           { name: 'Create Quedan', path: '/dashboard/farmer', icon: PlusCircle },
-           { name: 'Deliveries', path: '/dashboard/farmer', icon: ClipboardList },
            { name: 'Expenses', path: '/dashboard/farmer/expenses', icon: FileText },
            { name: 'Payments', path: '/dashboard/farmer/payments', icon: DollarSign },
            { name: 'Reports', path: '/dashboard/farmer/reports', icon: PieChart },

@@ -50,7 +50,7 @@ export function FarmerReports() {
       ]);
       setTickets(ticketsRes.data.tickets || []);
       setExpenses(expRes.data.expenses || []);
-      setCategories(catRes.data || []);
+      setCategories(catRes.data.categories || []);
       setFarms(farmsRes.data || []);
     } catch { toast.error('Failed to load report data'); }
     finally { setLoading(false); }
