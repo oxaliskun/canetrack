@@ -311,6 +311,24 @@ apiRouter.post('/auth/reset-password', async (req: Request, res: Response): Prom
   }
 });
 
+apiRouter.post('/auth/resubmit-verification', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { idImageUrl } = req.body;
+    if (!idImageUrl) { res.status(400).json({ message: 'ID image is required' }); return; }
+    const user = await prisma.user.findUnique({ where: { id: req.user!.userId } });
+    if (!user || user.role !== 'FARMER') { res.status(404).json({ message: 'Farmer not found' }); return; }
+    if (user.verificationStatus !== 'REJECTED') { res.status(400).json({ message: 'Account is not in rejected state' }); return; }
+    await prisma.user.update({
+      where: { id: req.user!.userId },
+      data: { verificationStatus: 'PENDING', rejectionReason: null }
+    });
+    await prisma.verificationDocument.create({
+      data: { userId: req.user!.userId, documentType: 'ID', imageUrl: idImageUrl, status: 'PENDING' }
+    });
+    res.json({ message: 'Verification resubmitted successfully', verificationStatus: 'PENDING' });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+});
+
 apiRouter.post('/auth/verify-farmer', authMiddleware, roleGuard(['ADMIN']), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { userId, action, assignedMill, rejectionReason } = req.body;

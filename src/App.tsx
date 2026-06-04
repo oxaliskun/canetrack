@@ -6,6 +6,7 @@ import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { Login } from './pages/Login';
 import { PendingVerification } from './pages/PendingVerification';
+import { VerificationRejected } from './pages/VerificationRejected';
 import { Sidebar } from './components/Sidebar';
 import { FarmerDashboard, AdminDashboard } from './pages/Dashboards';
 import { AdminUsers } from './pages/admin/AdminUsers';
@@ -38,7 +39,7 @@ function PrivateRoute({ allowedRoles, children }: { allowedRoles: string[], chil
   if (!user) return <Navigate to="/login" replace />;
   if (!allowedRoles.includes(user.role)) return <Navigate to="/unauthorized" replace />;
   if (user.role === 'FARMER' && user.verificationStatus === 'PENDING') return <Navigate to="/pending-verification" replace />;
-  if (user.role === 'FARMER' && user.verificationStatus === 'REJECTED') return <Navigate to="/pending-verification" replace />;
+  if (user.role === 'FARMER' && user.verificationStatus === 'REJECTED') return <Navigate to="/verification-rejected" replace />;
 
   return (
     <div className={`flex h-dvh ${isDark ? 'bg-slate-950 text-slate-200' : 'bg-slate-50 text-slate-800'} font-sans selection:bg-emerald-500/30 relative overflow-hidden`}>
@@ -115,6 +116,7 @@ export default function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/pending-verification" element={<PendingVerification />} />
+            <Route path="/verification-rejected" element={<VerificationRejected />} />
             
             <Route path="/dashboard/farmer" element={
               <PrivateRoute allowedRoles={['FARMER']}>

@@ -124,7 +124,7 @@ export function Login() {
         return;
       }
       if (err.response?.data?.verificationStatus === 'REJECTED') {
-        navigate('/pending-verification', { state: { rejected: true, reason: err.response.data.rejectionReason } });
+        navigate('/verification-rejected', { state: { reason: err.response.data.rejectionReason } });
         return;
       }
       const newAttempts = attempts + 1;

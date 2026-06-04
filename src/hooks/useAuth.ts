@@ -9,6 +9,9 @@ interface User {
   contactNumber?: string;
   address?: string;
   profilePicture?: string;
+  verificationStatus?: string;
+  rejectionReason?: string;
+  assignedMill?: string;
   farms?: { id: string; farmName: string; location: string; barangay?: string; hectares?: number }[];
 }
 

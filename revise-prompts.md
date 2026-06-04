@@ -61,7 +61,7 @@
   - Creates VerificationDocument with status=PENDING
   - After submit → redirect to PendingVerification page
 
-- [ ] 2.2 Add farm document upload
+- [x] 2.2 Add farm document upload
   - Farm creation form: file upload for land title/tax declaration
   - Multiple files allowed
   - Creates VerificationDocuments linked to farm
