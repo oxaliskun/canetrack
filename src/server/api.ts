@@ -501,7 +501,7 @@ apiRouter.post('/users', authMiddleware, roleGuard(['ADMIN']), async (req: AuthR
 });
 
 // --- FILE UPLOAD ---
-apiRouter.post('/upload', authMiddleware, (req: AuthRequest, res: Response): void => {
+apiRouter.post('/upload', (req: Request, res: Response): void => {
   upload.single('file')(req, res, (err) => {
     if (err instanceof multer.MulterError) {
       res.status(400).json({ message: 'File too large. Max 5MB.' });
