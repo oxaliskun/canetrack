@@ -51,7 +51,7 @@ export function FarmerReports() {
       setTickets(ticketsRes.data.tickets || []);
       setExpenses(expRes.data.expenses || []);
       setCategories(catRes.data.categories || []);
-      setFarms(farmsRes.data || []);
+      setFarms(farmsRes.data.farms || []);
     } catch { toast.error('Failed to load report data'); }
     finally { setLoading(false); }
   };
@@ -66,7 +66,7 @@ export function FarmerReports() {
 
   const farmMap = useMemo(() => {
     const m: Record<string, string> = {};
-    farms.forEach((f: any) => { m[f.id] = f.name; });
+    farms.forEach((f: any) => { m[f.id] = f.farmName; });
     return m;
   }, [farms]);
 
@@ -146,7 +146,7 @@ export function FarmerReports() {
     const map: Record<string, any> = {};
     tickets.forEach((t: any) => {
       const plate = t.truck?.plateNumber || 'Unknown';
-      if (!map[plate]) map[plate] = { plate, trips: 0, kg: 0, farm: t.truck?.farm?.name || '' };
+      if (!map[plate]) map[plate] = { plate, trips: 0, kg: 0, farm: t.truck?.farm?.farmName || '' };
       map[plate].trips += 1;
       map[plate].kg += Number(t.millWeight || 0);
     });
@@ -428,7 +428,7 @@ export function FarmerReports() {
                 <div key={f.id} className={`p-5 rounded-2xl border shadow-sm ${isDark ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-slate-200'}`}>
                   <div className="flex items-center gap-2 mb-3">
                     <MapPin className="w-4 h-4 text-emerald-500" />
-                    <p className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{f.name}</p>
+                    <p className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{f.farmName}</p>
                   </div>
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
