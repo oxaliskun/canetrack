@@ -41,7 +41,7 @@
 - [x] 1.10 Add FarmExpense model (per farm, seasonal)
   - id, farmId, categoryId, amount Float, receiptUrl?, notes?, date DateTime, createdAt
 
-- [ ] 1.11 Add Payment model
+- [x] 1.11 Add Payment model
   - id, quedanId (unique), method (BANK_TRANSFER/GCASH/CASH/CHECK), referenceNumber?, grossAmount Float, deductions Float @default(0), netAmount Float, status (PENDING/PARTIAL/PAID), datePaid DateTime?, proofUrl?, notes?, createdAt
 
 - [ ] 1.12 Expand WeightTicket to Quedan

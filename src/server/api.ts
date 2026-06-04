@@ -951,7 +951,7 @@ apiRouter.delete('/payments/:id', authMiddleware, roleGuard(['ADMIN']), async (r
 // Operator creates ticket
 apiRouter.post('/tickets', authMiddleware, roleGuard(['FARMER']), async (req: AuthRequest, res: Response): Promise<void> => {
    try {
-     const { truckPlate, farmId, grossWeight, tareWeight, notes } = req.body;
+     const { truckPlate, farmId, grossWeight, tareWeight, notes, brix, pol, sampleCollected, sugarTypeId, variantId, truckId } = req.body;
      const millWeight = Number(grossWeight) - Number(tareWeight);
      
      if (millWeight <= 0) {
@@ -960,11 +960,22 @@ apiRouter.post('/tickets', authMiddleware, roleGuard(['FARMER']), async (req: Au
      }
 
      const settings = await prisma.systemSettings.findFirst();
-     const pricePerKg = settings ? settings.basePricePerKg : 2.50; // Dynamic base price
+     const pricePerKg = settings ? settings.basePricePerKg : 2.50;
+     
+     // Generate QDN format quedan number
+     const year = new Date().getFullYear();
+     const count = await prisma.weightTicket.count();
+     const ticketNo = `QDN-${year}-${String(count + 1).padStart(5, '0')}`;
+     
+     // Auto-compute purity
+     let purity: number | undefined;
+     if (brix != null && pol != null) {
+       purity = Number(brix) > 0 ? (Number(pol) / Number(brix)) * 100 : 0;
+     }
      
      const ticket = await prisma.weightTicket.create({
        data: {
-         ticketNo: `TKT-${Math.floor(Math.random() * 1000000)}`,
+         ticketNo,
          truckPlate,
          farmId,
          grossWeight: Number(grossWeight),
@@ -974,11 +985,16 @@ apiRouter.post('/tickets', authMiddleware, roleGuard(['FARMER']), async (req: Au
          totalValue: millWeight * pricePerKg,
          status: 'PENDING',
          notes,
-          farmerId: req.user!.userId
+         farmerId: req.user!.userId,
+         brix: brix != null ? Number(brix) : undefined,
+         pol: pol != null ? Number(pol) : undefined,
+         purity: purity != null ? Math.round(purity * 100) / 100 : undefined,
+         sampleCollected: sampleCollected === true,
+         sugarTypeId: sugarTypeId || undefined,
+         variantId: variantId || undefined,
+         truckId: truckId || undefined
        },
-       include: {
-         farm: true
-       }
+       include: { farm: true }
      });
 
      await prisma.notification.create({
@@ -1013,7 +1029,10 @@ apiRouter.get('/tickets', authMiddleware, async (req: AuthRequest, res: Response
       include: { 
         farm: true, 
         farmer: { select: { name: true } }, 
-        reconciliation: true 
+        reconciliation: true,
+        sugarType: true,
+        variant: true,
+        truck: true
       },
       orderBy: { createdAt: 'desc' }
     });
@@ -1031,7 +1050,10 @@ apiRouter.get('/tickets/:id', authMiddleware, async (req: AuthRequest, res: Resp
       include: {
         farm: { include: { owner: { select: { name: true, email: true, contactNumber: true, address: true } } } },
         farmer: { select: { name: true, email: true, contactNumber: true } },
-        reconciliation: { include: { admin: { select: { name: true, email: true, contactNumber: true } } } }
+        reconciliation: { include: { admin: { select: { name: true, email: true, contactNumber: true } } } },
+        sugarType: true,
+        variant: true,
+        truck: true
       }
     });
     if (!ticket) {
@@ -1090,6 +1112,60 @@ apiRouter.get('/tickets/:id', authMiddleware, async (req: AuthRequest, res: Resp
   } catch (e: any) {
     res.status(500).json({ message: e.message });
   }
+});
+
+// Update ticket (admin can update any, farmer can update own PENDING)
+apiRouter.patch('/tickets/:id', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const ticket = await prisma.weightTicket.findUnique({ where: { id: req.params.id } });
+    if (!ticket) { res.status(404).json({ message: 'Ticket not found' }); return; }
+
+    if (req.user!.role === 'FARMER') {
+      const farms = await prisma.farm.findMany({ where: { ownerId: req.user!.userId }, select: { id: true } });
+      const farmIds = farms.map(f => f.id);
+      if (!farmIds.includes(ticket.farmId)) { res.status(403).json({ message: 'Access denied' }); return; }
+      if (ticket.status !== 'PENDING') { res.status(400).json({ message: 'Can only edit PENDING tickets' }); return; }
+    }
+
+    const { truckPlate, grossWeight, tareWeight, notes, brix, pol, sampleCollected, sugarTypeId, variantId, truckId, status, adjustedWeight, adjustedPrice, disputeNotes, disputeFinal } = req.body;
+    const updateData: any = {};
+    if (truckPlate) updateData.truckPlate = truckPlate;
+    if (grossWeight != null) updateData.grossWeight = Number(grossWeight);
+    if (tareWeight != null) updateData.tareWeight = Number(tareWeight);
+    if (grossWeight != null && tareWeight != null) {
+      updateData.millWeight = Number(grossWeight) - Number(tareWeight);
+      updateData.totalValue = updateData.millWeight * (ticket.pricePerKg);
+    }
+    if (notes !== undefined) updateData.notes = notes;
+    if (brix !== undefined) updateData.brix = brix != null ? Number(brix) : null;
+    if (pol !== undefined) updateData.pol = pol != null ? Number(pol) : null;
+    if (brix !== undefined || pol !== undefined) {
+      const bVal = brix !== undefined ? (brix != null ? Number(brix) : null) : ticket.brix;
+      const pVal = pol !== undefined ? (pol != null ? Number(pol) : null) : ticket.pol;
+      updateData.purity = (bVal && pVal && bVal > 0) ? Math.round((pVal / bVal) * 10000) / 100 : null;
+    }
+    if (sampleCollected !== undefined) updateData.sampleCollected = sampleCollected === true;
+    if (sugarTypeId !== undefined) updateData.sugarTypeId = sugarTypeId || null;
+    if (variantId !== undefined) updateData.variantId = variantId || null;
+    if (truckId !== undefined) updateData.truckId = truckId || null;
+    if (status && ['PENDING', 'VERIFIED', 'RECONCILED', 'DISPUTED', 'PAID'].includes(status)) updateData.status = status;
+    if (adjustedWeight !== undefined) updateData.adjustedWeight = adjustedWeight != null ? Number(adjustedWeight) : null;
+    if (adjustedPrice !== undefined) updateData.adjustedPrice = adjustedPrice != null ? Number(adjustedPrice) : null;
+    if (disputeNotes !== undefined) updateData.disputeNotes = disputeNotes;
+    if (disputeFinal !== undefined) updateData.disputeFinal = disputeFinal === true;
+
+    if (req.user!.role === 'ADMIN' && status === 'VERIFIED') {
+      updateData.verifiedAt = new Date();
+      updateData.verifiedBy = req.user!.userId;
+    }
+
+    const updated = await prisma.weightTicket.update({
+      where: { id: req.params.id }, data: updateData,
+      include: { farm: true, sugarType: true, variant: true, truck: true }
+    });
+    await writeAuditLog(req.user!.userId, 'UPDATE_TICKET', updated.id, 'WeightTicket');
+    res.json(updated);
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
 });
 
 // --- RECONCILIATION ROUTES ---
