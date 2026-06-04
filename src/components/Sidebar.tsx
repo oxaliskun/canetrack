@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Home, FileText, LogOut, Users, FilePlus, Leaf, Settings, BarChart, User, Shield, Truck, CheckCircle, Sprout, Bell, Moon, Sun, History, X, ShieldCheck, Tags, Package } from 'lucide-react';
+import { Home, FileText, LogOut, Users, FilePlus, Leaf, Settings, BarChart, User, Shield, Truck, CheckCircle, Sprout, Bell, Moon, Sun, History, X, ShieldCheck, Tags, Package, DollarSign } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
 import { NotificationDropdown } from './NotificationDropdown';
@@ -32,6 +32,7 @@ export function Sidebar({ role, userName, onClose }: SidebarProps) {
           { name: 'Expense Categories', path: '/dashboard/admin/expense-categories', icon: Tags },
           { name: 'Variants', path: '/dashboard/admin/variants', icon: Sprout },
           { name: 'Sugar Types', path: '/dashboard/admin/sugar-types', icon: Package },
+          { name: 'Pricing', path: '/dashboard/admin/pricing', icon: DollarSign },
         ];
       case 'FARMER':
         return [

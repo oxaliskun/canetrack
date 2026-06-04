@@ -176,7 +176,7 @@
   - CRUD: name, description, active status
   - Seed: Raw Sugar, Brown Sugar, Refined Sugar, Muscovado, Molasses
 
-- [ ] 6.3 Admin pricing
+- [x] 6.3 Admin pricing
   - Grid: rows=variants, cols=types, cell=price per kg
   - Click cell to edit price
 

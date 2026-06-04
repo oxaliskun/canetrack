@@ -18,6 +18,7 @@ import { AdminTrucks } from './pages/admin/AdminTrucks';
 import { AdminExpenseCategories } from './pages/admin/AdminExpenseCategories';
 import { AdminVariants } from './pages/admin/AdminVariants';
 import { AdminSugarTypes } from './pages/admin/AdminSugarTypes';
+import { AdminPricing } from './pages/admin/AdminPricing';
 import { FarmerFarms } from './pages/farmer/FarmerFarms';
 import { FarmerTrucks } from './pages/farmer/FarmerTrucks';
 import { Profile } from './pages/shared/Profile';
@@ -171,6 +172,7 @@ export default function App() {
               <Route path="expense-categories" element={<AdminExpenseCategories />} />
               <Route path="variants" element={<AdminVariants />} />
               <Route path="sugar-types" element={<AdminSugarTypes />} />
+              <Route path="pricing" element={<AdminPricing />} />
             </Route>
 
             {/* Fallback 404 Route */}
