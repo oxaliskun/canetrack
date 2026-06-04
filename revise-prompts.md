@@ -230,7 +230,7 @@
 
 ## Phase 9: Dashboard & Reports
 
-- [ ] 9.1 Farmer summary cards
+- [x] 9.1 Farmer summary cards
   - Total KG (month), Total Earnings (month), Total Expenses, Net Profit
 
 - [ ] 9.2 Farmer reports

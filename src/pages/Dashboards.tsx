@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axiosInstance';
 import { formatWeight, formatDate, formatCurrency, resolveProfilePic } from '../lib/utils';
-import { FileText, CheckCircle, AlertTriangle, Clock, Activity, DollarSign, Database, Plus, Users, UserPlus, TrendingUp, Printer, Bell, Download, Sprout, Shield, BarChart3, Truck, Scale, Leaf, Phone, MapPin, Eye, FlaskConical, ChevronDown, Camera, Building2 } from 'lucide-react';
+import { FileText, CheckCircle, AlertTriangle, Clock, Activity, DollarSign, Database, Plus, Users, UserPlus, TrendingUp, Printer, Bell, Download, Sprout, Shield, BarChart3, Truck, Scale, Leaf, Phone, MapPin, Eye, FlaskConical, ChevronDown, Camera, Building2, Wallet, Weight } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
@@ -107,6 +107,7 @@ export function FarmerDashboard() {
   const [summary, setSummary] = useState<any>({});
   const [notifications, setNotifications] = useState([]);
   const [chartData, setChartData] = useState([]);
+  const [monthlyStats, setMonthlyStats] = useState({ kg: 0, earnings: 0, expenses: 0, profit: 0 });
   const [loading, setLoading] = useState(true);
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const { isDark } = useTheme();
@@ -115,10 +116,24 @@ export function FarmerDashboard() {
     Promise.all([
       api.get('/tickets'),
       api.get('/summary'),
-      api.get('/notifications')
-    ]).then(([ticketsRes, summaryRes, notifRes]) => {
+      api.get('/notifications'),
+      api.get('/expenses')
+    ]).then(([ticketsRes, summaryRes, notifRes, expRes]) => {
       const ts = ticketsRes.data.tickets;
       setTickets(ts);
+
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const monthTickets = ts.filter((t: any) => new Date(t.createdAt) >= monthStart);
+      const monthlyKg = monthTickets.reduce((s: number, t: any) => s + Number(t.millWeight || 0), 0);
+      const monthlyEarnings = monthTickets
+        .filter((t: any) => t.payment)
+        .reduce((s: number, t: any) => s + Number(t.payment.netAmount || 0), 0);
+      const monthlyExpenses = expRes.data.expenses
+        .filter((e: any) => new Date(e.createdAt) >= monthStart)
+        .reduce((s: number, e: any) => s + Number(e.amount), 0);
+
+      setMonthlyStats({ kg: monthlyKg, earnings: monthlyEarnings, expenses: monthlyExpenses, profit: monthlyEarnings - monthlyExpenses });
 
       const grouped = ts.reduce((acc: any, tick: any) => {
         const date = new Date(tick.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -163,6 +178,19 @@ export function FarmerDashboard() {
          <StatCard label="Total Earnings" value={formatCurrency(summary.totalValue || 0)} subtitle="Accumulated payouts" icon={DollarSign} colorClass={{bg: 'bg-emerald-100', text: 'text-emerald-700'}} delay={0.1} />
          <StatCard label="Total Delivered" value={formatWeight(summary.totalWeight || 0)} subtitle="Lifetime harvest weight" icon={TruckIcon} colorClass={{bg: 'bg-blue-100', text: 'text-blue-700'}} delay={0.2} />
          <StatCard label="Pending Approval" value={summary.pending || 0} subtitle="Awaiting reconciliation" icon={Clock} colorClass={{bg: 'bg-orange-100', text: 'text-orange-700'}} delay={0.3} />
+      </div>
+
+      {/* Monthly summary */}
+      <div className="mb-2">
+        <h3 className={`text-sm font-bold tracking-wide uppercase ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+          This Month
+        </h3>
+      </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
+        <StatCard label="Total KG" value={formatWeight(monthlyStats.kg)} subtitle="Delivered this month" icon={Weight} colorClass={{bg: 'bg-violet-100', text: 'text-violet-700'}} delay={0.1} />
+        <StatCard label="Earnings" value={formatCurrency(monthlyStats.earnings)} subtitle="Paid this month" icon={Wallet} colorClass={{bg: 'bg-emerald-100', text: 'text-emerald-700'}} delay={0.15} />
+        <StatCard label="Expenses" value={formatCurrency(monthlyStats.expenses)} subtitle="This month" icon={Sprout} colorClass={{bg: 'bg-red-100', text: 'text-red-700'}} delay={0.2} />
+        <StatCard label="Net Profit" value={formatCurrency(monthlyStats.profit)} subtitle={monthlyStats.profit >= 0 ? 'Positive' : 'Negative'} icon={TrendingUp} colorClass={{bg: monthlyStats.profit >= 0 ? 'bg-emerald-100' : 'bg-red-100', text: monthlyStats.profit >= 0 ? 'text-emerald-700' : 'text-red-700'}} delay={0.25} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 items-start mb-6 sm:mb-8">
