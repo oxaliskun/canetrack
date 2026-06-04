@@ -1032,7 +1032,8 @@ apiRouter.get('/tickets', authMiddleware, async (req: AuthRequest, res: Response
         reconciliation: true,
         sugarType: true,
         variant: true,
-        truck: true
+        truck: true,
+        deliveryReceipts: true
       },
       orderBy: { createdAt: 'desc' }
     });
@@ -1051,6 +1052,10 @@ apiRouter.get('/tickets/:id', authMiddleware, async (req: AuthRequest, res: Resp
         farm: { include: { owner: { select: { name: true, email: true, contactNumber: true, address: true } } } },
         farmer: { select: { name: true, email: true, contactNumber: true } },
         reconciliation: { include: { admin: { select: { name: true, email: true, contactNumber: true } } } },
+        sugarType: true,
+        variant: true,
+        truck: true,
+        deliveryReceipts: true,
         sugarType: true,
         variant: true,
         truck: true
@@ -1289,6 +1294,30 @@ apiRouter.patch('/reconciliation/:id/resolve', authMiddleware, roleGuard(['ADMIN
 
     await writeAuditLog(req.user!.userId, 'RESOLVE_DISPUTE', record.id, 'ReconciliationRecord');
     res.json({ message: 'Dispute resolved', record });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+});
+
+// --- DELIVERY RECEIPT ROUTES ---
+apiRouter.post('/delivery-receipts', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { quedanId, imageUrl } = req.body;
+    if (!quedanId || !imageUrl) { res.status(400).json({ message: 'quedanId and imageUrl are required' }); return; }
+    const receipt = await prisma.deliveryReceipt.create({ data: { quedanId, imageUrl } });
+    res.status(201).json(receipt);
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+});
+
+apiRouter.get('/delivery-receipts/:quedanId', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const receipts = await prisma.deliveryReceipt.findMany({ where: { quedanId: req.params.quedanId }, orderBy: { createdAt: 'desc' } });
+    res.json({ receipts });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+});
+
+apiRouter.delete('/delivery-receipts/:id', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    await prisma.deliveryReceipt.delete({ where: { id: req.params.id } });
+    res.json({ message: 'Receipt deleted' });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 });
 

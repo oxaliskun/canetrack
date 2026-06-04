@@ -182,6 +182,15 @@ model Farm {
   farmExpenses FarmExpense[]
 }
 
+model DeliveryReceipt {
+  id        String   @id @default(cuid())
+  quedanId  String
+  imageUrl  String
+  createdAt DateTime @default(now())
+
+  ticket WeightTicket @relation(fields: [quedanId], references: [id])
+}
+
 model WeightTicket {
   id               String    @id @default(cuid())
   ticketNo         String    @unique @default(cuid())
@@ -218,6 +227,7 @@ model WeightTicket {
   sugarType      SugarType?           @relation(fields: [sugarTypeId], references: [id])
   variant        SugarcaneVariant?    @relation(fields: [variantId], references: [id])
   truck          Truck?               @relation(fields: [truckId], references: [id])
+  deliveryReceipts DeliveryReceipt[]
 }
 
 model ReconciliationRecord {

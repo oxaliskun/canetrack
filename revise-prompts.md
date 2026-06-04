@@ -44,7 +44,7 @@
 - [x] 1.11 Add Payment model
   - id, quedanId (unique), method (BANK_TRANSFER/GCASH/CASH/CHECK), referenceNumber?, grossAmount Float, deductions Float @default(0), netAmount Float, status (PENDING/PARTIAL/PAID), datePaid DateTime?, proofUrl?, notes?, createdAt
 
-- [ ] 1.12 Expand WeightTicket to Quedan
+- [x] 1.12 Expand WeightTicket to Quedan
   - Add: brix Float?, pol Float?, purity Float? (auto), sampleCollected Boolean, sugarTypeId?, variantId?, truckId?, disputeNotes?, disputeFinal Boolean @default(false), adjustedWeight Float?, adjustedPrice Float?, verifiedAt DateTime?, verifiedBy String?
   - Quedan number format: QDN-2026-00001
   - Status: PENDING/VERIFIED/RECONCILED/DISPUTED/PAID
