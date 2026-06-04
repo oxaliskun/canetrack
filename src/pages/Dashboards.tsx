@@ -627,21 +627,23 @@ export function AdminDashboard() {
   const { isDark } = useTheme();
 
   const fetchData = async () => {
-    const [sumRes, pendingRes, disputedRes, usersRes, ticketsRes] = await Promise.all([
-      api.get('/summary'),
-      api.get('/tickets?status=PENDING'),
-      api.get('/tickets?status=DISPUTED'),
-      api.get('/users'),
-      api.get('/tickets')
-    ]);
-    setStats(sumRes.data);
-    setPendingTickets(pendingRes.data.tickets);
-    setDisputedTickets(disputedRes.data.tickets);
-    setFarmerCount(usersRes.data.filter((u: any) => u.role === 'FARMER').length);
-    const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    setMonthlyCount(ticketsRes.data.tickets.filter((t: any) => new Date(t.createdAt) >= monthStart).length);
-    setLoading(false);
+    try {
+      const [sumRes, pendingRes, disputedRes, usersRes, ticketsRes] = await Promise.all([
+        api.get('/summary'),
+        api.get('/tickets?status=PENDING'),
+        api.get('/tickets?status=DISPUTED'),
+        api.get('/users'),
+        api.get('/tickets')
+      ]);
+      setStats(sumRes.data);
+      setPendingTickets(pendingRes.data.tickets);
+      setDisputedTickets(disputedRes.data.tickets);
+      setFarmerCount(usersRes.data.users.filter((u: any) => u.role === 'FARMER').length);
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      setMonthlyCount(ticketsRes.data.tickets.filter((t: any) => new Date(t.createdAt) >= monthStart).length);
+    } catch { toast.error('Failed to load admin dashboard'); }
+    finally { setLoading(false); }
   };
 
   useEffect(() => { fetchData(); }, []);

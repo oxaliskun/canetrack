@@ -521,6 +521,14 @@ apiRouter.post('/upload', (req: Request, res: Response): void => {
   });
 });
 
+// --- USERS ---
+apiRouter.get('/users', authMiddleware, roleGuard(['ADMIN']), async (req: AuthRequest, res: Response) => {
+  try {
+    const users = await prisma.user.findMany({ orderBy: { createdAt: 'desc' } });
+    res.json({ users });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+});
+
 // --- DOCUMENTS ROUTES ---
 apiRouter.post('/documents', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
