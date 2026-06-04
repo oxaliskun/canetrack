@@ -366,7 +366,7 @@ export function OperatorDashboard() {
                 <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Truck Plate</label>
                 <select required value={form.truckId} onChange={e => { const t = trucks.find((t: any) => t.id === e.target.value); setForm({...form, truckId: e.target.value, truckPlate: t ? t.plateNumber : ''}) } } className={`w-full px-4 sm:px-5 py-3 sm:py-4 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none text-sm sm:text-base font-semibold shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}>
                   <option value="">Select a Truck...</option>
-                  {trucks.filter((t: any) => !t.isArchived).map((t: any) => <option key={t.id} value={t.id}>{t.plateNumber} — {t.make} {t.model}</option>)}
+                  {trucks.filter((t: any) => !t.isArchived).map((t: any) => <option key={t.id} value={t.id}>{t.plateNumber} - {t.make} {t.model} ({(t.capacity / 1000).toFixed(1)}t)</option>)}
                 </select>
               </div>
               <div>

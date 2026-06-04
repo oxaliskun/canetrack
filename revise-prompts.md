@@ -117,7 +117,7 @@
   - Variant dropdown (active variants only, required)
   - Sugar type dropdown (active types only, required)
 
-- [ ] 4.4 Add truck dropdown
+- [x] 4.4 Add truck dropdown
   - Truck dropdown (farmer's active trucks only, required)
   - Shows: "ABC-1234 - Isuzu Elf (5 tons)"
 
