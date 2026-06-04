@@ -109,6 +109,14 @@ export function Login() {
         navigate(roleMap[data.user.role]);
       }
     } catch (err: any) {
+      if (err.response?.data?.verificationStatus === 'PENDING') {
+        navigate('/pending-verification');
+        return;
+      }
+      if (err.response?.data?.verificationStatus === 'REJECTED') {
+        navigate('/pending-verification', { state: { rejected: true, reason: err.response.data.rejectionReason } });
+        return;
+      }
       const newAttempts = attempts + 1;
       setAttempts(newAttempts); localStorage.setItem('login_attempts', String(newAttempts));
       if (newAttempts >= 3) {

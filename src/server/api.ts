@@ -182,7 +182,8 @@ apiRouter.post('/auth/verify-email', async (req: Request, res: Response): Promis
       data: {
         name: pending.name, email: pending.email, passwordHash: pending.passwordHash,
         role: 'FARMER', contactNumber: pending.contactNumber, address: pending.address,
-        emailVerified: true, verificationCode: null
+        emailVerified: true, verificationCode: null,
+        verificationStatus: 'PENDING'
       },
       select: { id: true, name: true, email: true, role: true, contactNumber: true, address: true, profilePicture: true }
     });
@@ -304,6 +305,46 @@ apiRouter.post('/auth/reset-password', async (req: Request, res: Response): Prom
   }
 });
 
+apiRouter.post('/auth/verify-farmer', authMiddleware, roleGuard(['ADMIN']), async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { userId, action, assignedMill, rejectionReason } = req.body;
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user || user.role !== 'FARMER') {
+      res.status(404).json({ message: 'Farmer not found' });
+      return;
+    }
+    if (action === 'approve') {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { verificationStatus: 'VERIFIED', verifiedAt: new Date(), verifiedBy: req.user!.userId, assignedMill: assignedMill || null, rejectionReason: null }
+      });
+      sgMail.send({
+        from: EMAIL_FROM, to: user.email,
+        subject: 'Your CaneTrack account has been approved',
+        html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;"><h1 style="color:#059669;">CaneTrack</h1><p>Hi <strong>${user.name}</strong>,</p><p>Your account has been approved${assignedMill ? ` and assigned to <strong>${assignedMill}</strong>` : ''}.</p><p>You can now sign in and start tracking your deliveries.</p></div>`
+      }).catch(e => console.error('Approval email failed:', e.response?.body || e.message));
+      await writeAuditLog(req.user!.userId, 'VERIFY_FARMER', userId, 'User');
+      res.json({ message: 'Farmer approved successfully' });
+    } else if (action === 'reject') {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { verificationStatus: 'REJECTED', rejectionReason: rejectionReason || 'Documents did not meet requirements' }
+      });
+      sgMail.send({
+        from: EMAIL_FROM, to: user.email,
+        subject: 'Your CaneTrack verification was not approved',
+        html: `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;"><h1 style="color:#059669;">CaneTrack</h1><p>Hi <strong>${user.name}</strong>,</p><p>Your account verification was not approved.</p><p><strong>Reason:</strong> ${rejectionReason || 'Documents did not meet requirements'}</p><p>You can upload new documents and resubmit.</p></div>`
+      }).catch(e => console.error('Rejection email failed:', e.response?.body || e.message));
+      await writeAuditLog(req.user!.userId, 'REJECT_FARMER', userId, 'User');
+      res.json({ message: 'Farmer rejected' });
+    } else {
+      res.status(400).json({ message: 'Action must be "approve" or "reject"' });
+    }
+  } catch (e: any) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
 apiRouter.post('/auth/login', async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
@@ -316,9 +357,17 @@ apiRouter.post('/auth/login', async (req: Request, res: Response): Promise<void>
        res.status(403).json({ message: 'Account deactivated' });
        return;
     }
+    if (user.verificationStatus === 'PENDING') {
+      res.status(403).json({ message: 'Your account is pending verification. Please wait for admin approval.', verificationStatus: 'PENDING' });
+      return;
+    }
+    if (user.verificationStatus === 'REJECTED') {
+      res.status(403).json({ message: user.rejectionReason || 'Your account was rejected.', verificationStatus: 'REJECTED', rejectionReason: user.rejectionReason });
+      return;
+    }
     const token = jwt.sign({ userId: user.id, role: user.role, name: user.name, email: user.email }, JWT_SECRET, { expiresIn: '8h' });
     await writeAuditLog(user.id, 'LOGIN', user.id, 'User');
-    res.json({ token, user: { id: user.id, userId: user.id, name: user.name, email: user.email, role: user.role, contactNumber: user.contactNumber, address: user.address, profilePicture: user.profilePicture } });
+    res.json({ token, user: { id: user.id, userId: user.id, name: user.name, email: user.email, role: user.role, contactNumber: user.contactNumber, address: user.address, profilePicture: user.profilePicture, verificationStatus: user.verificationStatus, assignedMill: user.assignedMill } });
   } catch (e: any) {
     res.status(500).json({ message: e.message });
   }
@@ -804,7 +853,7 @@ apiRouter.patch('/farms/:id/archive', authMiddleware, roleGuard(['FARMER']), asy
 apiRouter.get('/users', authMiddleware, roleGuard(['ADMIN']), async (req: AuthRequest, res: Response) => {
    try {
       const users = await prisma.user.findMany({
-        select: { id: true, name: true, email: true, role: true, isActive: true, contactNumber: true, address: true, createdAt: true, updatedAt: true },
+         select: { id: true, name: true, email: true, role: true, isActive: true, contactNumber: true, address: true, verificationStatus: true, assignedMill: true, rejectionReason: true, createdAt: true, updatedAt: true },
         orderBy: { createdAt: 'desc' }
       });
      res.json({ users });

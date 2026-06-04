@@ -2,7 +2,7 @@
 
 ## Phase 1: Schema & Roles
 
-- [ ] 1.1 Remove OPERATOR and RECEIVER roles, keep only FARMER and ADMIN
+- [x] 1.1 Remove OPERATOR and RECEIVER roles, keep only FARMER and ADMIN
   - schema.prisma: remove operatorId from WeightTicket, receiverId from ReconciliationRecord
   - Remove all roleGuard(['OPERATOR']) and roleGuard(['RECEIVER']) from api.ts
   - Farmer creates tickets now, admin reconciles
