@@ -144,7 +144,7 @@
   - Add expense: category dropdown (DELIVERY type), amount, notes, receipt photo
   - List of expenses with total
 
-- [ ] 5.2 Farm seasonal expense form
+- [x] 5.2 Farm seasonal expense form
   - Button on farm detail: "Add Farm Expense"
   - Category dropdown (FARM type), amount, notes, date, receipt
 

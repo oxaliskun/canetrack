@@ -4,7 +4,7 @@ import api from '../../api/axiosInstance';
 import { useTheme } from '../../context/ThemeContext';
 import { toast } from 'sonner';
 import { formatDate } from '../../lib/utils';
-import { Sprout, MapPin, Ruler, Archive, Edit3, Plus, X, Leaf, Search, Save } from 'lucide-react';
+import { Sprout, MapPin, Ruler, Archive, Edit3, Plus, X, Leaf, Search, Save, Wallet, Camera } from 'lucide-react';
 
 interface Farm {
   id: string;
@@ -41,6 +41,10 @@ export function FarmerFarms() {
   const [search, setSearch] = useState('');
   const [docFiles, setDocFiles] = useState<File[]>([]);
   const [docPreviews, setDocPreviews] = useState<string[]>([]);
+  const [expCategories, setExpCategories] = useState<any[]>([]);
+  const [expForm, setExpForm] = useState({ farmId: '', categoryId: '', amount: '', notes: '', date: new Date().toISOString().split('T')[0] });
+  const [expPhoto, setExpPhoto] = useState<File | null>(null);
+  const [expandingFarm, setExpandingFarm] = useState<string | null>(null);
   const { isDark } = useTheme();
 
   const fetchFarms = () => {
@@ -53,7 +57,10 @@ export function FarmerFarms() {
     });
   };
 
-  useEffect(() => { fetchFarms(); }, []);
+  useEffect(() => {
+    fetchFarms();
+    api.get('/expense-categories').then(res => setExpCategories(res.data.categories.filter((c: any) => c.type === 'FARM' && c.isActive)));
+  }, []);
 
   const openAdd = () => {
     setEditFarm(null);
@@ -119,6 +126,25 @@ export function FarmerFarms() {
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Operation failed');
     }
+  };
+
+  const handleAddFarmExpense = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!expForm.categoryId || !expForm.amount) return;
+    try {
+      let receiptUrl = '';
+      if (expPhoto) {
+        const fd = new FormData();
+        fd.append('file', expPhoto);
+        const { data } = await api.post('/upload', fd);
+        receiptUrl = data.url;
+      }
+      await api.post('/farm-expenses', { farmId: expForm.farmId, categoryId: expForm.categoryId, amount: Number(expForm.amount), notes: expForm.notes, date: expForm.date, receiptUrl });
+      toast.success('Farm expense added');
+      setExpandingFarm(null);
+      setExpForm({ farmId: '', categoryId: '', amount: '', notes: '', date: new Date().toISOString().split('T')[0] });
+      setExpPhoto(null);
+    } catch (e: any) { toast.error(e.response?.data?.message || 'Failed to add expense'); }
   };
 
   const activeFarms = farms.filter(f => !f.isArchived);
@@ -271,6 +297,13 @@ export function FarmerFarms() {
                       </motion.button>
                       <motion.button
                         whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                        onClick={() => setExpandingFarm(expandingFarm === farm.id ? null : farm.id)}
+                        className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-extrabold uppercase tracking-widest transition-all border min-h-[36px] ${isDark ? 'text-emerald-400 border-emerald-800 hover:bg-emerald-950/50' : 'text-emerald-600 border-emerald-200 hover:bg-emerald-50'}`}
+                      >
+                        <Wallet className="w-3.5 h-3.5" /> Expense
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                         onClick={() => handleArchive(farm)}
                         className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[10px] sm:text-xs font-extrabold uppercase tracking-widest transition-all border min-h-[36px] ${farm.isArchived
                           ? (isDark ? 'text-emerald-400 border-emerald-800 hover:bg-emerald-950/50' : 'text-emerald-600 border-emerald-200 hover:bg-emerald-50')
@@ -279,6 +312,25 @@ export function FarmerFarms() {
                         <Archive className="w-3.5 h-3.5" /> {farm.isArchived ? 'Restore' : 'Archive'}
                       </motion.button>
                     </div>
+                    {expandingFarm === farm.id && (
+                      <form onSubmit={handleAddFarmExpense} className={`mt-3 p-3 sm:p-4 rounded-xl border space-y-3 ${isDark ? 'border-slate-700 bg-slate-800/50' : 'border-slate-200 bg-slate-50'}`}>
+                        <input type="hidden" name="farmId" value={farm.id} />
+                        <select required value={expForm.farmId === farm.id ? expForm.categoryId : ''} onChange={e => setExpForm({...expForm, farmId: farm.id, categoryId: e.target.value})} className={`w-full px-3 py-2 border rounded-xl outline-none text-sm font-medium min-h-[40px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'}`}>
+                          <option value="">Select category...</option>
+                          {expCategories.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        </select>
+                        <div className="grid grid-cols-2 gap-2">
+                          <input required type="number" step="0.01" min="0" value={expForm.farmId === farm.id ? expForm.amount : ''} onChange={e => setExpForm({...expForm, farmId: farm.id, amount: e.target.value})} placeholder="Amount" className={`w-full px-3 py-2 border rounded-xl outline-none text-sm font-mono font-bold min-h-[40px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-400'}`} />
+                          <input type="date" value={expForm.farmId === farm.id ? expForm.date : new Date().toISOString().split('T')[0]} onChange={e => setExpForm({...expForm, farmId: farm.id, date: e.target.value})} className={`w-full px-3 py-2 border rounded-xl outline-none text-sm font-medium min-h-[40px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'}`} />
+                        </div>
+                        <input value={expForm.farmId === farm.id ? expForm.notes : ''} onChange={e => setExpForm({...expForm, farmId: farm.id, notes: e.target.value})} placeholder="Notes (optional)" className={`w-full px-3 py-2 border rounded-xl outline-none text-sm font-medium min-h-[40px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-400'}`} />
+                        <input type="file" accept="image/*" onChange={e => { setExpPhoto(e.target.files?.[0] || null); setExpForm(prev => ({...prev, farmId: farm.id})); }} className={`w-full text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:cursor-pointer min-h-[40px] ${isDark ? 'text-slate-300 file:bg-emerald-600 file:text-white' : 'text-slate-600 file:bg-emerald-500 file:text-white'}`} />
+                        <div className="flex gap-2">
+                          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit" className="flex-1 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold py-2 rounded-xl text-xs shadow-lg shadow-emerald-600/25 min-h-[40px]"><Plus className="w-3.5 h-3.5 inline mr-1" /> Add Expense</motion.button>
+                          <button type="button" onClick={() => { setExpandingFarm(null); setExpPhoto(null); }} className={`px-4 py-2 rounded-xl font-bold text-xs min-h-[40px] ${isDark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}`}>Cancel</button>
+                        </div>
+                      </form>
+                    )}
                   </div>
                 </div>
               </motion.div>
