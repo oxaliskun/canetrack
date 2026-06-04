@@ -113,7 +113,7 @@
   - Brix (0-100), Pol (0-100), Purity auto-computed (Pol/Brix*100) read-only
   - Sample Collected checkbox
 
-- [ ] 4.3 Add variant + sugar type dropdowns
+- [x] 4.3 Add variant + sugar type dropdowns
   - Variant dropdown (active variants only, required)
   - Sugar type dropdown (active types only, required)
 

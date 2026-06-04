@@ -276,9 +276,11 @@ function TruckIcon(props: any) {
 }
 
 export function OperatorDashboard() {
-  const [form, setForm] = useState({ truckPlate: '', truckId: '', farmId: '', grossWeight: '', tareWeight: '', brix: '', pol: '', sampleCollected: false });
+  const [form, setForm] = useState({ truckPlate: '', truckId: '', farmId: '', grossWeight: '', tareWeight: '', brix: '', pol: '', sampleCollected: false, variantId: '', sugarTypeId: '' });
   const [farms, setFarms] = useState([]);
   const [trucks, setTrucks] = useState([]);
+  const [variants, setVariants] = useState([]);
+  const [sugarTypes, setSugarTypes] = useState([]);
   const [activeTickets, setActiveTickets] = useState([]);
   const [historyTickets, setHistoryTickets] = useState([]);
   const [view, setView] = useState('ENCODE'); // 'ENCODE' | 'HISTORY'
@@ -300,6 +302,8 @@ export function OperatorDashboard() {
     Promise.all([
       api.get('/farms').then(res => setFarms(res.data.farms)),
       api.get('/trucks').then(res => setTrucks(res.data.trucks)),
+      api.get('/variants').then(res => setVariants(res.data.variants)),
+      api.get('/sugar-types').then(res => setSugarTypes(res.data.sugarTypes)),
       fetchTickets()
     ]).then(() => setLoading(false));
   }, [user]);
@@ -316,7 +320,7 @@ export function OperatorDashboard() {
       await api.post('/tickets', form);
       toast.success('Quedan encoded successfully.');
       fetchTickets();
-      setForm({ truckPlate: '', truckId: '', farmId: '', grossWeight: '', tareWeight: '', brix: '', pol: '', sampleCollected: false });
+      setForm({ truckPlate: '', truckId: '', farmId: '', grossWeight: '', tareWeight: '', brix: '', pol: '', sampleCollected: false, variantId: '', sugarTypeId: '' });
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to encode ticket.');
     }
@@ -410,6 +414,20 @@ export function OperatorDashboard() {
                     <div className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl font-mono text-sm font-black shadow-sm min-h-[44px] flex items-center ${isDark ? 'bg-slate-800/50 border-slate-700 text-emerald-400' : 'bg-slate-50 border-slate-200 text-emerald-600'}`}>
                       {form.brix && Number(form.brix) > 0 ? ((Number(form.pol) || 0) / Number(form.brix) * 100).toFixed(2) + '%' : '—'}
                     </div>
+                  </div>
+                  <div>
+                    <label className={`block text-[10px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Variety *</label>
+                    <select required value={form.variantId} onChange={e => setForm({...form, variantId: e.target.value})} className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none text-sm font-bold shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}>
+                      <option value="">Select variety...</option>
+                      {variants.filter((v: any) => v.isActive).map((v: any) => <option key={v.id} value={v.id}>{v.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={`block text-[10px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Sugar Type *</label>
+                    <select required value={form.sugarTypeId} onChange={e => setForm({...form, sugarTypeId: e.target.value})} className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none text-sm font-bold shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}>
+                      <option value="">Select sugar type...</option>
+                      {sugarTypes.filter((s: any) => s.isActive).map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    </select>
                   </div>
                   <label className="flex items-center gap-3 cursor-pointer pt-1">
                     <input type="checkbox" checked={form.sampleCollected} onChange={e => setForm({...form, sampleCollected: e.target.checked})} className="w-5 h-5 rounded-lg border-2 accent-emerald-500 cursor-pointer" />
