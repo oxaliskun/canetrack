@@ -118,7 +118,7 @@ export function Login() {
       </div>
 
       {/* Left Visual Panel */}
-      <div className="hidden lg:flex w-1/2 relative flex-col justify-between overflow-hidden m-4 rounded-[2rem] shadow-2xl">
+      <div className="hidden lg:flex w-1/2 relative flex-col justify-between overflow-hidden m-4 rounded-[2rem] shadow-2xl h-[calc(100vh-32px)] sticky top-4">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1592982537447-6f29e160a3bb?auto=format&fit=crop&q=80&w=1200')] bg-cover bg-center transition-transform duration-[20s] hover:scale-110"></div>
         <div className={`absolute inset-0 mix-blend-multiply ${isDark ? 'bg-gradient-to-t from-black/95 via-emerald-950/70 to-black/50' : 'bg-gradient-to-t from-emerald-950/90 via-emerald-900/60 to-black/30'}`}></div>
         
@@ -170,7 +170,7 @@ export function Login() {
       </div>
 
       {/* Right Form Panel */}
-      <div className="w-full lg:w-1/2 flex justify-center py-8 sm:py-12 px-4 sm:px-8 lg:px-12 relative xl:px-24">
+      <div className="w-full lg:w-1/2 flex justify-center items-start overflow-y-auto py-8 sm:py-12 px-4 sm:px-8 lg:px-12 relative xl:px-24 h-screen">
         <div className="absolute top-3 right-3 sm:top-8 sm:right-12 flex items-center gap-2 sm:gap-3">
           <button
             onClick={toggleTheme}
@@ -183,7 +183,7 @@ export function Login() {
           </button>
         </div>
 
-        <div className="max-w-[420px] w-full flex flex-col justify-center mt-12 sm:mt-12 lg:mt-0">
+        <div className="max-w-[420px] w-full flex flex-col">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="space-y-5 sm:space-y-6 lg:space-y-8">
             <div className="text-center lg:text-left">
               <div className="flex justify-center lg:hidden mb-4 sm:mb-6">
