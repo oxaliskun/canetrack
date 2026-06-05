@@ -141,27 +141,27 @@ export function Bagon() {
             <p className={`font-extrabold text-[10px] sm:text-[11px] uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Total Bagons</p>
             <div className={`p-2 sm:p-2.5 rounded-xl bg-emerald-100 text-emerald-700`}><Truck className="w-3.5 h-3.5 sm:w-4 sm:h-4" /></div>
           </div>
-          <p className={`text-2xl sm:text-3xl font-black tracking-tight relative z-10 ${isDark ? 'text-white' : 'text-slate-900'}`}>{bagons.length}</p>
-          <p className={`text-xs sm:text-sm mt-1 ml-0.5 font-medium ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{activeBagons.length} active</p>
-        </motion.div>
+           <p className={`text-2xl sm:text-3xl font-black tracking-tight relative z-10 truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>{bagons.length}</p>
+           <p className={`text-xs sm:text-sm mt-1 ml-0.5 font-medium ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{activeBagons.length} active</p>
+         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className={`p-4 sm:p-6 rounded-2xl sm:rounded-3xl border relative overflow-hidden ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
-          <div className={`absolute -right-6 -top-6 w-24 h-24 blur-2xl opacity-20 rounded-full bg-blue-500`} />
-          <div className="flex items-center justify-between mb-2 sm:mb-3 relative z-10">
-            <p className={`font-extrabold text-[10px] sm:text-[11px] uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>14ft Bagons</p>
-            <div className={`p-2 sm:p-2.5 rounded-xl bg-blue-100 text-blue-700`}><Truck className="w-3.5 h-3.5 sm:w-4 sm:h-4" /></div>
-          </div>
-          <p className={`text-2xl sm:text-3xl font-black tracking-tight relative z-10 ${isDark ? 'text-white' : 'text-slate-900'}`}>{activeBagons.filter(t => t.type === '14ft').length}</p>
-          <p className={`text-xs sm:text-sm mt-1 ml-0.5 font-medium ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>18ft: {activeBagons.filter(t => t.type === '18ft').length} &middot; 20ft: {activeBagons.filter(t => t.type === '20ft').length}</p>
-        </motion.div>
+         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className={`p-4 sm:p-6 rounded-2xl sm:rounded-3xl border relative overflow-hidden ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+           <div className={`absolute -right-6 -top-6 w-24 h-24 blur-2xl opacity-20 rounded-full bg-blue-500`} />
+           <div className="flex items-center justify-between mb-2 sm:mb-3 relative z-10">
+             <p className={`font-extrabold text-[10px] sm:text-[11px] uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>14ft Bagons</p>
+             <div className={`p-2 sm:p-2.5 rounded-xl bg-blue-100 text-blue-700`}><Truck className="w-3.5 h-3.5 sm:w-4 sm:h-4" /></div>
+           </div>
+           <p className={`text-2xl sm:text-3xl font-black tracking-tight relative z-10 truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>{activeBagons.filter(t => t.type === '14ft').length}</p>
+           <p className={`text-xs sm:text-sm mt-1 ml-0.5 font-medium ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>18ft: {activeBagons.filter(t => t.type === '18ft').length} &middot; 20ft: {activeBagons.filter(t => t.type === '20ft').length}</p>
+         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className={`p-4 sm:p-6 rounded-2xl sm:rounded-3xl border relative overflow-hidden ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
-          <div className={`absolute -right-6 -top-6 w-24 h-24 blur-2xl opacity-20 rounded-full bg-purple-500`} />
-          <div className="flex items-center justify-between mb-2 sm:mb-3 relative z-10">
-            <p className={`font-extrabold text-[10px] sm:text-[11px] uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Tare Weight</p>
-            <div className={`p-2 sm:p-2.5 rounded-xl bg-purple-100 text-purple-700`}><Scale className="w-3.5 h-3.5 sm:w-4 sm:h-4" /></div>
-          </div>
-          <p className={`text-2xl sm:text-3xl font-black tracking-tight relative z-10 ${isDark ? 'text-white' : 'text-slate-900'}`}>{activeBagons.length ? (activeBagons.reduce((s, t) => s + (t.tareWeight || 0), 0) / activeBagons.length / 1000).toFixed(2) : 0}</p>
+         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className={`p-4 sm:p-6 rounded-2xl sm:rounded-3xl border relative overflow-hidden ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+           <div className={`absolute -right-6 -top-6 w-24 h-24 blur-2xl opacity-20 rounded-full bg-purple-500`} />
+           <div className="flex items-center justify-between mb-2 sm:mb-3 relative z-10">
+             <p className={`font-extrabold text-[10px] sm:text-[11px] uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Tare Weight</p>
+             <div className={`p-2 sm:p-2.5 rounded-xl bg-purple-100 text-purple-700`}><Scale className="w-3.5 h-3.5 sm:w-4 sm:h-4" /></div>
+           </div>
+           <p className={`text-2xl sm:text-3xl font-black tracking-tight relative z-10 truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>{activeBagons.length ? (activeBagons.reduce((s, t) => s + (t.tareWeight || 0), 0) / activeBagons.length / 1000).toFixed(2) : 0}</p>
           <p className={`text-xs sm:text-sm mt-1 ml-0.5 font-medium ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>t avg tare</p>
         </motion.div>
       </div>

@@ -312,7 +312,7 @@ export function FarmerFarms() {
                     {farmExpenses[farm.id] > 0 && (
                       <div className="flex items-center gap-2.5">
                         <Wallet className={`w-4 h-4 shrink-0 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} />
-                        <span className={`text-sm font-medium ${isDark ? 'text-amber-400' : 'text-amber-700'}`}>₱{farmExpenses[farm.id].toFixed(2)} seasonal expenses</span>
+                        <span className={`text-sm font-medium truncate ${isDark ? 'text-amber-400' : 'text-amber-700'}`}>₱{farmExpenses[farm.id].toFixed(2)} seasonal expenses</span>
                       </div>
                     )}
                     {farm.description && (
