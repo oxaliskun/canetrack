@@ -15,7 +15,7 @@ export function FarmerPayments() {
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<any>(null);
-  const [payForm, setPayForm] = useState({ quedanId: '', method: 'CASH', referenceNumber: '', grossAmount: '', deductions: '0', notes: '' });
+  const [payForm, setPayForm] = useState({ quedanId: '', method: 'CASH', referenceNumber: '', pricePerKg: '', grossAmount: '', deductions: '0', notes: '' });
   const [payProof, setPayProof] = useState<File | null>(null);
   const [payProofPreview, setPayProofPreview] = useState<string | null>(null);
   const { isDark } = useTheme();
@@ -44,7 +44,7 @@ export function FarmerPayments() {
   const unpaidTickets = allTickets.filter((t: any) => !t.payment);
 
   const resetForm = () => {
-    setPayForm({ quedanId: '', method: 'CASH', referenceNumber: '', grossAmount: '', deductions: '0', notes: '' });
+    setPayForm({ quedanId: '', method: 'CASH', referenceNumber: '', pricePerKg: '', grossAmount: '', deductions: '0', notes: '' });
     setPayProof(null);
     setPayProofPreview(null);
     setEditingPayment(null);
@@ -57,11 +57,14 @@ export function FarmerPayments() {
 
   const openEditModal = (ticket: any) => {
     const p = ticket.payment;
+    const netWt = Number(ticket.netWeight) || 0;
+    const price = netWt > 0 ? (Number(p.grossAmount) / netWt).toFixed(2) : '';
     setEditingPayment(p);
     setPayForm({
       quedanId: ticket.id,
       method: p.method || 'CASH',
       referenceNumber: p.referenceNumber || '',
+      pricePerKg: price,
       grossAmount: p.grossAmount?.toString() || '',
       deductions: p.deductions?.toString() || '0',
       notes: p.notes || '',
@@ -291,7 +294,7 @@ export function FarmerPayments() {
                         {allTickets.find((t: any) => t.id === payForm.quedanId)?.ticketNo || payForm.quedanId}
                       </div>
                     ) : (
-                      <select required value={payForm.quedanId} onChange={e => setPayForm({...payForm, quedanId: e.target.value})}
+                      <select required value={payForm.quedanId} onChange={e => { const id = e.target.value; const ticket = allTickets.find((t: any) => t.id === id); const netWt = Number(ticket?.netWeight) || 0; const ppk = parseFloat(payForm.pricePerKg) || 0; setPayForm({...payForm, quedanId: id, grossAmount: ppk > 0 && netWt > 0 ? (netWt * ppk).toFixed(2) : '' }); }}
                         className={`w-full px-4 sm:px-5 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none text-sm font-semibold shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}>
                         <option value="">Select quedan...</option>
                         {unpaidTickets.map((t: any) => <option key={t.id} value={t.id}>{t.ticketNo} — {t.farm?.farmName || 'Unknown'}</option>)}
@@ -315,6 +318,11 @@ export function FarmerPayments() {
                         className={`w-full px-4 sm:px-5 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none font-medium text-sm shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400'}`}
                         placeholder="OR # or ref" />
                     </div>
+                  </div>
+                  <div>
+                    <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Price per kg (₱)</label>
+                    <input type="number" step="0.01" min="0" value={payForm.pricePerKg} onChange={e => { const ppk = e.target.value; const ticket = allTickets.find((t: any) => t.id === payForm.quedanId); const netWt = Number(ticket?.netWeight) || 0; const ppkNum = parseFloat(ppk) || 0; setPayForm({...payForm, pricePerKg: ppk, grossAmount: ppkNum > 0 && netWt > 0 ? (netWt * ppkNum).toFixed(2) : payForm.grossAmount }); }}
+                      className={`w-full px-4 sm:px-5 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none font-mono text-sm font-bold shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`} placeholder="e.g. 2.50" />
                   </div>
                   <div className="grid grid-cols-2 gap-3 sm:gap-4">
                     <div>

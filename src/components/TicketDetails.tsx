@@ -63,7 +63,7 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
   const [showExpForm, setShowExpForm] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [payForm, setPayForm] = useState({ method: 'BANK_TRANSFER', referenceNumber: '', grossAmount: '', deductions: '0', notes: '' });
+  const [payForm, setPayForm] = useState({ method: 'BANK_TRANSFER', referenceNumber: '', pricePerKg: '', grossAmount: '', deductions: '0', notes: '' });
   const [payProof, setPayProof] = useState<File | null>(null);
   const [loading, setLoading] = useState(true);
   const { isDark } = useTheme();
@@ -141,7 +141,7 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
       await api.patch(`/tickets/${ticketId}`, { status: 'PAID' });
       toast.success('Payment processed successfully');
       setShowPaymentModal(false);
-      setPayForm({ method: 'BANK_TRANSFER', referenceNumber: '', grossAmount: '', deductions: '0', notes: '' });
+      setPayForm({ method: 'BANK_TRANSFER', referenceNumber: '', pricePerKg: '', grossAmount: '', deductions: '0', notes: '' });
       setPayProof(null);
       const res = await api.get(`/tickets/${ticketId}`);
       setTicket(res.data.ticket);
@@ -311,7 +311,7 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
                     </div>
                     <div className="flex items-center gap-2">
                       {ticket?.status !== 'PAID' && (
-                        <button onClick={() => { setPayForm({ method: 'BANK_TRANSFER', referenceNumber: '', grossAmount: '', deductions: '0', notes: '' }); setShowPaymentModal(true); }}
+                        <button onClick={() => { setPayForm({ method: 'BANK_TRANSFER', referenceNumber: '', pricePerKg: '', grossAmount: '', deductions: '0', notes: '' }); setShowPaymentModal(true); }}
                           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider border transition-all shadow-sm ${isDark ? 'bg-blue-950/30 border-blue-800 text-blue-400 hover:bg-blue-900/50 hover:text-blue-300' : 'bg-blue-50 border-blue-200 text-blue-600 hover:bg-blue-100'}`}>
                           <DollarSign className="w-4 h-4" /> Record Payment
                         </button>
@@ -594,6 +594,11 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
                   </select>
                 </div>
                 <input value={payForm.referenceNumber} onChange={e => setPayForm({...payForm, referenceNumber: e.target.value})} placeholder="Reference Number" className={`w-full px-4 py-3 border rounded-xl outline-none text-sm font-medium min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-400'}`} />
+                <div>
+                  <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-1.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Price per kg (₱)</label>
+                  <input type="number" step="0.01" min="0" value={payForm.pricePerKg} onChange={e => { const ppk = e.target.value; const netWt = Number(ticket?.netWeight) || 0; const ppkNum = parseFloat(ppk) || 0; setPayForm({...payForm, pricePerKg: ppk, grossAmount: ppkNum > 0 && netWt > 0 ? (netWt * ppkNum).toFixed(2) : payForm.grossAmount }); }}
+                    className={`w-full px-4 py-3 border rounded-xl outline-none text-sm font-mono font-bold min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'}`} placeholder="e.g. 2.50" />
+                </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-1.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Gross Amount *</label>
