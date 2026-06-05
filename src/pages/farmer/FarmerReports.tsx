@@ -219,25 +219,25 @@ export function FarmerReports() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className={`${isDark ? 'bg-slate-800 text-slate-400' : 'bg-slate-50 text-slate-500'} text-xs uppercase tracking-widest font-bold`}>
-                      <th className="px-5 py-4 text-left">Date</th>
-                      <th className="px-5 py-4 text-left">Quedan #</th>
-                      <th className="px-5 py-4 text-left">Farm</th>
-                      <th className="px-5 py-4 text-right">Net KG</th>
-                      <th className="px-5 py-4 text-center">Status</th>
-                      <th className="px-5 py-4 text-center"></th>
+                      <th className="px-4 sm:px-5 py-4 text-left">Date</th>
+                      <th className="px-4 sm:px-5 py-4 text-left">Quedan #</th>
+                      <th className="px-4 sm:px-5 py-4 text-left">Farm</th>
+                      <th className="px-4 sm:px-5 py-4 text-right">Net KG</th>
+                      <th className="px-4 sm:px-5 py-4 text-center">Status</th>
+                      <th className="px-4 sm:px-5 py-4 text-center"></th>
                     </tr>
                   </thead>
                   <tbody>
                     {deliveriesData.map((t: any) => (
                       <tr key={t.id} className={`border-t ${isDark ? 'border-slate-700 hover:bg-slate-700/30' : 'border-slate-100 hover:bg-slate-50'}`}>
-                        <td className="px-5 py-4 font-medium whitespace-nowrap">{formatDate(t.createdAt)}</td>
-                        <td className={`px-5 py-4 font-mono font-bold text-xs sm:text-sm truncate max-w-[120px] sm:max-w-none ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>{t.ticketNo}</td>
-                        <td className="px-5 py-4 truncate max-w-[120px] sm:max-w-none">{farmMap[t.farmId] || 'Unknown'}</td>
-                        <td className="px-5 py-4 text-right font-mono font-bold">{formatWeight(Number(t.netWeight) || 0)}</td>
-                        <td className="px-5 py-4 text-center">
+                        <td className="px-4 sm:px-5 py-4 font-medium whitespace-nowrap">{formatDate(t.createdAt)}</td>
+                        <td className={`px-4 sm:px-5 py-4 font-mono font-bold text-xs sm:text-sm truncate max-w-[120px] ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>{t.ticketNo}</td>
+                        <td className="px-4 sm:px-5 py-4 truncate max-w-[120px]">{farmMap[t.farmId] || 'Unknown'}</td>
+                        <td className="px-4 sm:px-5 py-4 text-right font-mono font-bold truncate max-w-[100px]">{formatWeight(Number(t.netWeight) || 0)}</td>
+                        <td className="px-4 sm:px-5 py-4 text-center">
                           <span className={`inline-flex px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${statusColors[t.status] || 'bg-slate-100 text-slate-700'}`}>{t.status}</span>
                         </td>
-                        <td className="px-5 py-4 text-center">
+                        <td className="px-4 sm:px-5 py-4 text-center">
                           <button onClick={() => setSelectedTicketId(t.id)} className={`p-2 rounded-xl transition-colors ${isDark ? 'hover:bg-slate-700 text-slate-400 hover:text-white' : 'hover:bg-slate-100 text-slate-500 hover:text-slate-900'}`}>
                             <Eye className="w-4 h-4" />
                           </button>
@@ -267,25 +267,25 @@ export function FarmerReports() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className={`${isDark ? 'bg-slate-800 text-slate-400' : 'bg-slate-50 text-slate-500'} text-xs uppercase tracking-widest font-bold`}>
-                        <th className="px-5 py-4 text-left">Month</th>
-                        <th className="px-5 py-4 text-right">Total KG</th>
-                        <th className="px-5 py-4 text-right">Avg Price/kg</th>
-                        <th className="px-5 py-4 text-right">Gross</th>
-                        <th className="px-5 py-4 text-right">Deductions</th>
-                        <th className="px-5 py-4 text-right">Net</th>
-                        <th className="px-5 py-4 text-right">Quedans</th>
+                        <th className="px-4 sm:px-5 py-4 text-left">Month</th>
+                        <th className="px-4 sm:px-5 py-4 text-right">Total KG</th>
+                        <th className="px-4 sm:px-5 py-4 text-right">Avg Price/kg</th>
+                        <th className="px-4 sm:px-5 py-4 text-right">Gross</th>
+                        <th className="px-4 sm:px-5 py-4 text-right">Deductions</th>
+                        <th className="px-4 sm:px-5 py-4 text-right">Net</th>
+                        <th className="px-4 sm:px-5 py-4 text-right">Quedans</th>
                       </tr>
                     </thead>
                     <tbody>
                       {monthlyEarnings.map((m: any) => (
                         <tr key={m.month} className={`border-t ${isDark ? 'border-slate-700 hover:bg-slate-700/30' : 'border-slate-100 hover:bg-slate-50'}`}>
-                          <td className="px-5 py-4 font-bold">{m.month}</td>
-                          <td className="px-5 py-4 text-right font-mono">{formatWeight(m.kg)}</td>
-                          <td className="px-5 py-4 text-right font-mono">{m.kg > 0 ? formatCurrency(m.gross / m.kg) : '-'}</td>
-                          <td className="px-5 py-4 text-right font-mono">{formatCurrency(m.gross)}</td>
-                          <td className="px-5 py-4 text-right font-mono text-red-500">{formatCurrency(m.deductions)}</td>
-                          <td className="px-5 py-4 text-right font-mono font-bold text-emerald-500">{formatCurrency(m.net)}</td>
-                          <td className="px-5 py-4 text-right">{m.count}</td>
+                          <td className="px-4 sm:px-5 py-4 font-bold">{m.month}</td>
+                          <td className="px-4 sm:px-5 py-4 text-right font-mono truncate max-w-[100px]">{formatWeight(m.kg)}</td>
+                          <td className="px-4 sm:px-5 py-4 text-right font-mono truncate max-w-[100px]">{m.kg > 0 ? formatCurrency(m.gross / m.kg) : '-'}</td>
+                          <td className="px-4 sm:px-5 py-4 text-right font-mono truncate max-w-[120px]">{formatCurrency(m.gross)}</td>
+                          <td className="px-4 sm:px-5 py-4 text-right font-mono text-red-500 truncate max-w-[120px]">{formatCurrency(m.deductions)}</td>
+                          <td className="px-4 sm:px-5 py-4 text-right font-mono font-bold text-emerald-500 truncate max-w-[120px]">{formatCurrency(m.net)}</td>
+                          <td className="px-4 sm:px-5 py-4 text-right">{m.count}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -379,15 +379,15 @@ export function FarmerReports() {
                     <>
                       <div className={`p-5 rounded-2xl border shadow-sm ${isDark ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-slate-200'}`}>
                         <p className={`text-xs font-bold uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Total Earnings</p>
-                        <p className="text-2xl font-black text-emerald-500 mt-1">{formatCurrency(totalEarnings)}</p>
+                        <p className="text-2xl font-black text-emerald-500 mt-1 truncate">{formatCurrency(totalEarnings)}</p>
                       </div>
                       <div className={`p-5 rounded-2xl border shadow-sm ${isDark ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-slate-200'}`}>
                         <p className={`text-xs font-bold uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Total Expenses</p>
-                        <p className="text-2xl font-black text-red-500 mt-1">{formatCurrency(totalExpenses)}</p>
+                        <p className="text-2xl font-black text-red-500 mt-1 truncate">{formatCurrency(totalExpenses)}</p>
                       </div>
                       <div className={`p-5 rounded-2xl border shadow-sm ${isDark ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-slate-200'}`}>
                         <p className={`text-xs font-bold uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Net Profit</p>
-                        <p className={`text-2xl font-black mt-1 ${netProfit >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>{netProfit >= 0 ? '+' : ''}{formatCurrency(netProfit)}</p>
+                        <p className={`text-2xl font-black mt-1 truncate ${netProfit >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>{netProfit >= 0 ? '+' : ''}{formatCurrency(netProfit)}</p>
                       </div>
                     </>
                   );
@@ -468,21 +468,21 @@ export function FarmerReports() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className={`${isDark ? 'bg-slate-800 text-slate-400' : 'bg-slate-50 text-slate-500'} text-xs uppercase tracking-widest font-bold`}>
-                      <th className="px-5 py-4 text-left">Plate Number</th>
-                      <th className="px-5 py-4 text-left">Farm</th>
-                      <th className="px-5 py-4 text-right">Trips</th>
-                      <th className="px-5 py-4 text-right">Total KG</th>
-                      <th className="px-5 py-4 text-right">Avg kg/trip</th>
+                      <th className="px-4 sm:px-5 py-4 text-left">Plate Number</th>
+                      <th className="px-4 sm:px-5 py-4 text-left">Farm</th>
+                      <th className="px-4 sm:px-5 py-4 text-right">Trips</th>
+                      <th className="px-4 sm:px-5 py-4 text-right">Total KG</th>
+                      <th className="px-4 sm:px-5 py-4 text-right">Avg kg/trip</th>
                     </tr>
                   </thead>
                   <tbody>
                     {bagonReport.map((t: any) => (
                       <tr key={t.plate} className={`border-t ${isDark ? 'border-slate-700 hover:bg-slate-700/30' : 'border-slate-100 hover:bg-slate-50'}`}>
-                        <td className="px-5 py-4 font-mono font-bold">{t.plate}</td>
-                        <td className={`px-5 py-4 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{t.farm}</td>
-                        <td className="px-5 py-4 text-right font-bold">{t.trips}</td>
-                        <td className="px-5 py-4 text-right font-mono font-bold">{formatWeight(t.kg)}</td>
-                        <td className="px-5 py-4 text-right font-mono">{t.trips > 0 ? formatWeight(t.kg / t.trips) : '-'}</td>
+                        <td className="px-4 sm:px-5 py-4 font-mono font-bold truncate max-w-[120px]">{t.plate}</td>
+                        <td className={`px-4 sm:px-5 py-4 truncate max-w-[120px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{t.farm}</td>
+                        <td className="px-4 sm:px-5 py-4 text-right font-bold">{t.trips}</td>
+                        <td className="px-4 sm:px-5 py-4 text-right font-mono font-bold truncate max-w-[100px]">{formatWeight(t.kg)}</td>
+                        <td className="px-4 sm:px-5 py-4 text-right font-mono truncate max-w-[100px]">{t.trips > 0 ? formatWeight(t.kg / t.trips) : '-'}</td>
                       </tr>
                     ))}
                   </tbody>

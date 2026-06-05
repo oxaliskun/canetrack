@@ -176,7 +176,7 @@ export function FarmerPayments() {
             <p className={`font-extrabold text-[10px] sm:text-[11px] uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Total Gross</p>
             <div className={`p-2 sm:p-2.5 rounded-xl bg-emerald-100 text-emerald-700`}><TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" /></div>
           </div>
-          <p className={`text-2xl sm:text-3xl font-black tracking-tight relative z-10 ${isDark ? 'text-white' : 'text-slate-900'}`}>{formatCurrency(totalGross)}</p>
+          <p className={`text-2xl sm:text-3xl font-black tracking-tight relative z-10 truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>{formatCurrency(totalGross)}</p>
           <p className={`text-xs sm:text-sm mt-1 ml-0.5 font-medium ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{filtered.length} payments</p>
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className={`p-4 sm:p-6 rounded-2xl sm:rounded-3xl border relative overflow-hidden ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
@@ -185,7 +185,7 @@ export function FarmerPayments() {
             <p className={`font-extrabold text-[10px] sm:text-[11px] uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Total Deductions</p>
             <div className={`p-2 sm:p-2.5 rounded-xl bg-red-100 text-red-700`}><Wallet className="w-3.5 h-3.5 sm:w-4 sm:h-4" /></div>
           </div>
-          <p className={`text-2xl sm:text-3xl font-black tracking-tight relative z-10 ${isDark ? 'text-white' : 'text-slate-900'}`}>{formatCurrency(totalDeductions)}</p>
+          <p className={`text-2xl sm:text-3xl font-black tracking-tight relative z-10 truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>{formatCurrency(totalDeductions)}</p>
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className={`p-4 sm:p-6 rounded-2xl sm:rounded-3xl border relative overflow-hidden ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
           <div className={`absolute -right-6 -top-6 w-24 h-24 blur-2xl opacity-20 rounded-full bg-blue-500`} />
@@ -193,7 +193,7 @@ export function FarmerPayments() {
             <p className={`font-extrabold text-[10px] sm:text-[11px] uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Net Earnings</p>
             <div className={`p-2 sm:p-2.5 rounded-xl bg-blue-100 text-blue-700`}><DollarSign className="w-3.5 h-3.5 sm:w-4 sm:h-4" /></div>
           </div>
-          <p className={`text-2xl sm:text-3xl font-black tracking-tight relative z-10 text-emerald-500`}>{formatCurrency(totalNet)}</p>
+          <p className={`text-2xl sm:text-3xl font-black tracking-tight relative z-10 text-emerald-500 truncate`}>{formatCurrency(totalNet)}</p>
         </motion.div>
       </div>
 
@@ -232,7 +232,7 @@ export function FarmerPayments() {
               {filtered.map((t: any) => (
                 <tr key={t.id} className={`transition-colors ${isDark ? 'hover:bg-slate-800/50' : 'hover:bg-slate-50'}`}>
                   <td className="px-4 sm:px-6 py-4 sm:py-5">
-                    <span className={`font-mono font-bold text-sm ${isDark ? 'text-white' : 'text-slate-900'}`}>{t.ticketNo}</span>
+                    <span className={`font-mono font-bold text-sm truncate max-w-[130px] inline-block align-middle ${isDark ? 'text-white' : 'text-slate-900'}`}>{t.ticketNo}</span>
                   </td>
                   <td data-label="Farm" className={`px-4 sm:px-6 py-4 sm:py-5 truncate max-w-[120px] sm:max-w-none ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{t.farm?.farmName || '-'}</td>
                   <td data-label="Date" className={`px-4 sm:px-6 py-4 sm:py-5 text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{formatDate(t.payment.createdAt)}</td>

@@ -29,7 +29,7 @@ export function StatCard({ label, value, icon: Icon, colorClass, delay = 0, subt
         </div>
       </div>
       <div className="relative z-10">
-        <p className={`text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>{value}</p>
+        <p className={`text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>{value}</p>
         {subtitle && <p className={`text-xs sm:text-sm mt-1 sm:mt-2 font-medium flex items-center gap-1 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}><TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-500" /> {subtitle}</p>}
       </div>
     </motion.div>
@@ -271,7 +271,7 @@ export function Dashboard() {
             <tbody className={`divide-y font-medium ${isDark ? 'divide-slate-700 text-slate-300' : 'divide-slate-100 text-slate-700'}`}>
               {tickets.map((t: any) => (
                   <tr key={t.id} className={`transition-colors group cursor-default ${isDark ? 'hover:bg-emerald-950/30 hover:text-emerald-400' : 'hover:bg-emerald-50 hover:text-emerald-900'}`}>
-                    <td className={`px-4 sm:px-6 py-4 sm:py-5 font-mono text-xs sm:text-sm font-bold group-hover:text-emerald-500 ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`} data-label="Quedan">{t.ticketNo}</td>
+                    <td className={`px-4 sm:px-6 py-4 sm:py-5 font-mono text-xs sm:text-sm font-bold group-hover:text-emerald-500 truncate max-w-[130px] ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`} data-label="Quedan">{t.ticketNo}</td>
                     <td className="px-4 sm:px-6 py-4 sm:py-5" data-label="Created">{formatDate(t.createdAt)}</td>
                     <td className={`px-4 sm:px-6 py-4 sm:py-5 text-xs sm:text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`} data-label="Updated">{formatDate(t.updatedAt)}</td>
                     <td className={`px-4 sm:px-6 py-4 sm:py-5 text-xs sm:text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`} data-label="Mill">{t.farmer?.assignedMill || '—'}</td>

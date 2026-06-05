@@ -101,7 +101,7 @@ export function FarmerExpenses() {
             <p className={`font-extrabold text-[10px] sm:text-[11px] uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Total Expenses</p>
             <div className={`p-2 sm:p-2.5 rounded-xl bg-red-100 text-red-700`}><TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" /></div>
           </div>
-          <p className={`text-2xl sm:text-3xl font-black tracking-tight relative z-10 ${isDark ? 'text-white' : 'text-slate-900'}`}>{formatCurrency(totalExpenses)}</p>
+          <p className={`text-2xl sm:text-3xl font-black tracking-tight relative z-10 truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>{formatCurrency(totalExpenses)}</p>
           <p className={`text-xs sm:text-sm mt-1 ml-0.5 font-medium ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{filtered.length} expenses</p>
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className={`p-4 sm:p-6 rounded-2xl sm:rounded-3xl border relative overflow-hidden ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
@@ -110,7 +110,7 @@ export function FarmerExpenses() {
             <p className={`font-extrabold text-[10px] sm:text-[11px] uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Delivery Expenses</p>
             <div className={`p-2 sm:p-2.5 rounded-xl bg-blue-100 text-blue-700`}><FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4" /></div>
           </div>
-          <p className={`text-2xl sm:text-3xl font-black tracking-tight relative z-10 ${isDark ? 'text-white' : 'text-slate-900'}`}>{formatCurrency(deliveryTotal)}</p>
+          <p className={`text-2xl sm:text-3xl font-black tracking-tight relative z-10 truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>{formatCurrency(deliveryTotal)}</p>
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className={`p-4 sm:p-6 rounded-2xl sm:rounded-3xl border relative overflow-hidden ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
           <div className={`absolute -right-6 -top-6 w-24 h-24 blur-2xl opacity-20 rounded-full bg-emerald-500`} />
@@ -118,7 +118,7 @@ export function FarmerExpenses() {
             <p className={`font-extrabold text-[10px] sm:text-[11px] uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Farm Expenses</p>
             <div className={`p-2 sm:p-2.5 rounded-xl bg-emerald-100 text-emerald-700`}><Sprout className="w-3.5 h-3.5 sm:w-4 sm:h-4" /></div>
           </div>
-          <p className={`text-2xl sm:text-3xl font-black tracking-tight relative z-10 ${isDark ? 'text-white' : 'text-slate-900'}`}>{formatCurrency(farmTotal)}</p>
+          <p className={`text-2xl sm:text-3xl font-black tracking-tight relative z-10 truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>{formatCurrency(farmTotal)}</p>
         </motion.div>
       </div>
 
@@ -138,7 +138,7 @@ export function FarmerExpenses() {
           <p className="text-base mt-2 font-medium">Expenses will appear here once recorded.</p>
         </motion.div>
       ) : (
-        <div className={`rounded-2xl border overflow-hidden ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
+        <div className={`rounded-2xl border overflow-x-auto ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead className={`border-b uppercase text-[10px] font-extrabold tracking-widest ${isDark ? 'bg-slate-800/80 border-slate-700 text-slate-400' : 'bg-slate-50/80 border-slate-100 text-slate-500'}`}>
               <tr>
@@ -162,7 +162,7 @@ export function FarmerExpenses() {
                     </span>
                   </td>
                   <td className={`px-4 sm:px-6 py-4 sm:py-5 truncate max-w-[100px] sm:max-w-[160px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{catMap[e.categoryId] || 'Unknown'}</td>
-                  <td className="px-4 sm:px-6 py-4 sm:py-5 text-right font-mono font-bold">{formatCurrency(e.amount)}</td>
+                  <td className="px-4 sm:px-6 py-4 sm:py-5 text-right font-mono font-bold truncate max-w-[120px]">{formatCurrency(e.amount)}</td>
                   <td className={`px-4 sm:px-6 py-4 sm:py-5 max-w-[200px] truncate ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{e.notes || '-'}</td>
                   <td className="px-4 sm:px-6 py-4 sm:py-5 text-center">
                     {e.receipt ? (

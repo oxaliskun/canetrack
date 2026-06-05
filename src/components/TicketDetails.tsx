@@ -301,7 +301,7 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
                       </div>
                       <div>
                         <div className="flex items-center gap-3 flex-wrap">
-                          <h2 className={`font-black text-2xl sm:text-3xl tracking-tight font-mono ${isDark ? 'text-white' : 'text-slate-900'}`}>{ticket.ticketNo}</h2>
+                          <h2 className={`font-black text-2xl sm:text-3xl tracking-tight font-mono truncate max-w-[250px] ${isDark ? 'text-white' : 'text-slate-900'}`}>{ticket.ticketNo}</h2>
                           <StatusBadge status={ticket.status} />
                         </div>
                         <p className={`text-sm mt-1 font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
@@ -501,16 +501,16 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
                       <SectionTitle title="Payment" icon={DollarSign} />
                       <div className={`rounded-2xl border overflow-hidden ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
                         <div className={`px-5 py-4 space-y-2 ${isDark ? 'bg-slate-800/50' : 'bg-slate-50'}`}>
-                          <div className="flex justify-between text-sm"><span className={`font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Method</span><span className="font-bold">{ticket.payment.method}</span></div>
-                          {ticket.payment.referenceNumber && <div className="flex justify-between text-sm"><span className={`font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Reference</span><span className="font-mono font-bold">{ticket.payment.referenceNumber}</span></div>}
-                          <div className="flex justify-between text-sm"><span className={`font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Gross</span><span className="font-mono font-bold">₱{Number(ticket.payment.grossAmount).toFixed(2)}</span></div>
-                          <div className="flex justify-between text-sm"><span className={`font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Deductions</span><span className="font-mono font-bold text-red-500">-₱{Number(ticket.payment.deductions).toFixed(2)}</span></div>
-                          <div className="flex justify-between text-sm font-bold border-t pt-2 mt-2"><span>Net Paid</span><span className="font-mono text-emerald-500">₱{Number(ticket.payment.netAmount).toFixed(2)}</span></div>
-                          {totalExp > 0 && <div className="flex justify-between text-sm"><span className={`font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Total Expenses</span><span className="font-mono font-bold text-red-500">-₱{totalExp.toFixed(2)}</span></div>}
+                          <div className="flex justify-between text-sm gap-4"><span className={`font-medium shrink-0 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Method</span><span className="font-bold text-right">{ticket.payment.method}</span></div>
+                          {ticket.payment.referenceNumber && <div className="flex justify-between text-sm gap-4"><span className={`font-medium shrink-0 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Reference</span><span className="font-mono font-bold text-right truncate">{ticket.payment.referenceNumber}</span></div>}
+                          <div className="flex justify-between text-sm gap-4"><span className={`font-medium shrink-0 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Gross</span><span className="font-mono font-bold text-right truncate">₱{Number(ticket.payment.grossAmount).toFixed(2)}</span></div>
+                          <div className="flex justify-between text-sm gap-4"><span className={`font-medium shrink-0 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Deductions</span><span className="font-mono font-bold text-red-500 text-right truncate">-₱{Number(ticket.payment.deductions).toFixed(2)}</span></div>
+                          <div className="flex justify-between text-sm font-bold border-t pt-2 mt-2 gap-4"><span className="shrink-0">Net Paid</span><span className="font-mono text-emerald-500 text-right truncate">₱{Number(ticket.payment.netAmount).toFixed(2)}</span></div>
+                          {totalExp > 0 && <div className="flex justify-between text-sm gap-4"><span className={`font-medium shrink-0 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Total Expenses</span><span className="font-mono font-bold text-red-500 text-right truncate">-₱{totalExp.toFixed(2)}</span></div>}
                           {profitLoss !== null && (
-                            <div className={`flex justify-between text-sm font-bold border-t pt-2 mt-2 ${profitLoss >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-                              <span>Profit / Loss</span>
-                              <span className="font-mono">{profitLoss >= 0 ? '+' : ''}₱{profitLoss.toFixed(2)}</span>
+                            <div className={`flex justify-between text-sm font-bold border-t pt-2 mt-2 gap-4 ${profitLoss >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                              <span className="shrink-0">Profit / Loss</span>
+                              <span className="font-mono text-right truncate">{profitLoss >= 0 ? '+' : ''}₱{profitLoss.toFixed(2)}</span>
                             </div>
                           )}
                           {ticket.payment.notes && <div className={`text-xs mt-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{ticket.payment.notes}</div>}
