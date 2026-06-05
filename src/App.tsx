@@ -13,6 +13,7 @@ import { Bagon } from './pages/farmer/Bagon';
 import { FarmerPayments } from './pages/farmer/FarmerPayments';
 import { FarmerReports } from './pages/farmer/FarmerReports';
 import { FarmerExpenses } from './pages/farmer/FarmerExpenses';
+import { QuedanManagement } from './pages/farmer/QuedanManagement';
 import { Profile } from './pages/shared/Profile';
 
 import { SplashScreen } from './components/SplashScreen';
@@ -117,6 +118,7 @@ export default function App() {
             <Route path="/dashboard/payments" element={<PrivateRoute><FarmerPayments /></PrivateRoute>} />
             <Route path="/dashboard/reports" element={<PrivateRoute><FarmerReports /></PrivateRoute>} />
             <Route path="/dashboard/expenses" element={<PrivateRoute><FarmerExpenses /></PrivateRoute>} />
+            <Route path="/dashboard/quedans" element={<PrivateRoute><QuedanManagement /></PrivateRoute>} />
             <Route path="/dashboard/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
 
             {/* Fallback 404 Route */}

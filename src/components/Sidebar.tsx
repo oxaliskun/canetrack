@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Home, FileText, LogOut, Leaf, User, Sprout, Truck, DollarSign, PieChart, X } from 'lucide-react';
+import { Home, FileText, LogOut, Leaf, User, Sprout, Truck, DollarSign, PieChart, FileSpreadsheet, X } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
 import api from '../api/axiosInstance';
@@ -20,6 +20,7 @@ export function Sidebar({ userName, onClose }: SidebarProps) {
     { name: 'Dashboard', path: '/dashboard', icon: Home },
     { name: 'Farms', path: '/dashboard/farms', icon: Sprout },
     { name: 'Bagon', path: '/dashboard/bagon', icon: Truck },
+    { name: 'Quedans', path: '/dashboard/quedans', icon: FileSpreadsheet },
     { name: 'Expenses', path: '/dashboard/expenses', icon: FileText },
     { name: 'Payments', path: '/dashboard/payments', icon: DollarSign },
     { name: 'Reports', path: '/dashboard/reports', icon: PieChart },
