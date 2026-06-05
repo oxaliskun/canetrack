@@ -18,7 +18,7 @@ export function Profile() {
   const [profilePicture, setProfilePicture] = useState('');
   const [farmName, setFarmName] = useState('');
   const [farmLocation, setFarmLocation] = useState('');
-  const [passwords, setPasswords] = useState({ new: '', confirm: '' });
+  const [passwords, setPasswords] = useState({ old: '', new: '', confirm: '' });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -103,6 +103,10 @@ export function Profile() {
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!passwords.old) {
+      toast.error('Current password is required');
+      return;
+    }
     if (passwords.new !== passwords.confirm) {
       toast.error('New passwords do not match');
       return;
@@ -112,9 +116,9 @@ export function Profile() {
       return;
     }
     try {
-      await api.patch(`/users/${authUser!.userId}/password`, { password: passwords.new });
+      await api.patch(`/users/${authUser!.userId}/password`, { oldPassword: passwords.old, password: passwords.new });
       toast.success('Password updated successfully');
-      setPasswords({ new: '', confirm: '' });
+      setPasswords({ old: '', new: '', confirm: '' });
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to update password');
     }
@@ -241,6 +245,10 @@ export function Profile() {
               <h3 className={`text-base sm:text-lg font-bold mb-4 sm:mb-6 flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-900'}`}><Lock className={`w-5 h-5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} /> Security Settings</h3>
 
               <form onSubmit={handleUpdatePassword} className="space-y-4 sm:space-y-6">
+                <div>
+                  <label className={labelClass}>Current Password</label>
+                  <input type="password" required value={passwords.old} onChange={e => setPasswords({ ...passwords, old: e.target.value })} className={inputClass} placeholder="Enter current password" />
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   <div>
                     <label className={labelClass}>New Password</label>

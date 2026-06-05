@@ -890,7 +890,16 @@ apiRouter.patch('/users/:id/password', authMiddleware, async (req: AuthRequest, 
        res.status(403).json({ message: 'Access denied' });
        return;
      }
-     const { password } = req.body;
+     const { oldPassword, password } = req.body;
+     if (!oldPassword || !password) {
+       res.status(400).json({ message: 'Current password and new password are required' });
+       return;
+     }
+     const user = await prisma.user.findUnique({ where: { id } });
+     if (!user || !await bcrypt.compare(oldPassword, user.passwordHash)) {
+       res.status(401).json({ message: 'Current password is incorrect' });
+       return;
+     }
      const passwordHash = await bcrypt.hash(password, 10);
       await prisma.user.update({ where: { id }, data: { passwordHash } });
       res.json({ message: 'Password updated successfully' });
