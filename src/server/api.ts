@@ -164,15 +164,6 @@ apiRouter.post('/auth/verify-email', async (req: Request, res: Response): Promis
       },
       select: { id: true, name: true, email: true, contactNumber: true, address: true, profilePicture: true }
     });
-    await prisma.farm.create({
-      data: {
-        farmName: `${pending.name}'s Farm`,
-        location: 'Local Region',
-        barangay: 'Unspecified',
-        hectares: 5,
-        ownerId: user.id
-      }
-    });
 
     pendingRegistrations.delete(email);
     res.json({ message: 'Email verified successfully! You can now sign in.' });
