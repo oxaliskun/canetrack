@@ -9,6 +9,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
 import { StatusBadge } from '../components/StatusBadge';
 import { TicketDetails } from '../components/TicketDetails';
+import { QuedanForm } from '../components/QuedanForm';
 import { toast } from 'sonner';
 
 export function StatCard({ label, value, icon: Icon, colorClass, delay = 0, subtitle }: any) {
@@ -110,9 +111,10 @@ export function FarmerDashboard() {
   const [monthlyStats, setMonthlyStats] = useState({ kg: 0, earnings: 0, expenses: 0, profit: 0 });
   const [loading, setLoading] = useState(true);
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const { isDark } = useTheme();
 
-  useEffect(() => {
+  const fetchData = () => {
     Promise.all([
       api.get('/tickets'),
       api.get('/summary'),
@@ -148,7 +150,9 @@ export function FarmerDashboard() {
       setNotifications(notifRes.data.notifications || []);
       setLoading(false);
     });
-  }, []);
+  };
+
+  useEffect(() => { fetchData(); }, []);
 
   if (loading) return (
      <div className="h-[60vh] flex items-center justify-center">
@@ -172,6 +176,16 @@ export function FarmerDashboard() {
         <div className="hidden sm:block w-full sm:w-56 lg:w-64 shrink-0">
           <ProfileCard />
         </div>
+        <button onClick={() => setShowCreateForm(!showCreateForm)}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm ${
+            showCreateForm
+              ? isDark ? 'bg-red-900/30 text-red-400 border border-red-800' : 'bg-red-50 text-red-600 border border-red-200'
+              : 'bg-emerald-500 text-white hover:bg-emerald-400'
+          }`}
+        >
+          <Plus className="w-4 h-4" />
+          {showCreateForm ? 'Cancel' : 'New Quedan'}
+        </button>
       </motion.div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
@@ -192,6 +206,15 @@ export function FarmerDashboard() {
         <StatCard label="Expenses" value={formatCurrency(monthlyStats.expenses)} subtitle="This month" icon={Sprout} colorClass={{bg: 'bg-red-100', text: 'text-red-700'}} delay={0.2} />
         <StatCard label="Net Profit" value={formatCurrency(monthlyStats.profit)} subtitle={monthlyStats.profit >= 0 ? 'Positive' : 'Negative'} icon={TrendingUp} colorClass={{bg: monthlyStats.profit >= 0 ? 'bg-emerald-100' : 'bg-red-100', text: monthlyStats.profit >= 0 ? 'text-emerald-700' : 'text-red-700'}} delay={0.25} />
       </div>
+
+      {showCreateForm && (
+        <div className={`rounded-2xl border shadow-sm p-4 sm:p-6 ${isDark ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-slate-200'}`}>
+          <h3 className={`font-extrabold text-base mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+            <Plus className="w-5 h-5 text-emerald-500" /> New Quedan
+          </h3>
+          <QuedanForm onSuccess={() => { setShowCreateForm(false); fetchData(); }} />
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 items-start mb-6 sm:mb-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className={`lg:col-span-2 rounded-xl sm:rounded-[2rem] border shadow-sm p-4 sm:p-5 lg:p-6 h-[300px] sm:h-[350px] lg:h-[400px] flex flex-col relative overflow-hidden ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
