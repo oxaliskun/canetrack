@@ -291,6 +291,8 @@ export function Login() {
                       className={`w-full text-center text-2xl font-black tracking-[0.5em] px-4 py-4 border rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all min-h-[56px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'}`}
                       placeholder="000000" maxLength={6} inputMode="numeric" autoFocus />
                   </div>
+                  {error && <p className="mt-4 text-sm font-bold text-red-500">{error}</p>}
+                  {success && <p className="mt-4 text-sm font-bold text-emerald-500">{success}</p>}
                   <div className="flex items-center justify-center gap-2 mt-4">
                     <button type="button" onClick={handleResendCode} disabled={resending} className={`text-xs font-bold transition-colors ${isDark ? 'text-slate-400 hover:text-emerald-400' : 'text-slate-500 hover:text-emerald-600'}`}>
                       {resending ? 'Sending...' : 'Resend code'}
