@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import api from '../api/axiosInstance';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
-import { ArrowLeft, Leaf, Loader2, Mail, Lock, User, CheckCircle2, Shield, Truck, BarChart3, Moon, Sun, Phone, MapPin, Eye, EyeOff, KeyRound, X } from 'lucide-react';
+import { ArrowLeft, Leaf, Loader2, Mail, Lock, User, CheckCircle2, Shield, Truck, BarChart3, Phone, MapPin, Eye, EyeOff, KeyRound, X } from 'lucide-react';
 
 export function Login() {
   const [isRegistering, setIsRegistering] = useState(false);
@@ -42,7 +42,7 @@ export function Login() {
   const [forgotNewPassword, setForgotNewPassword] = useState('');
   const [showForgotNewPassword, setShowForgotNewPassword] = useState(false);
 
-  const { isDark, toggleTheme } = useTheme();
+  const { isDark } = useTheme();
   
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -255,12 +255,6 @@ export function Login() {
       {/* Right Form Panel */}
       <div className="w-full lg:w-1/2 flex justify-center items-start overflow-y-auto py-8 sm:py-12 px-4 sm:px-8 lg:px-12 relative xl:px-24 h-screen">
         <div className="absolute top-3 right-3 sm:top-8 sm:right-12 flex items-center gap-2 sm:gap-3">
-          <button
-            onClick={toggleTheme}
-            className={`flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl border transition-all shadow-lg ${isDark ? 'bg-slate-800 border-slate-700 text-amber-400 hover:bg-slate-700 shadow-black/30' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 shadow-slate-200/50'}`}
-          >
-            {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          </button>
           <button onClick={() => navigate('/')} className={`flex items-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-lg min-h-[36px] ${isDark ? 'bg-slate-800 border border-slate-700 text-slate-300 hover:bg-slate-700 shadow-black/30' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 shadow-slate-200/50'}`}>
             <ArrowLeft className="w-3.5 h-3.5" /> Back
           </button>
