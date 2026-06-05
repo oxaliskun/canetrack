@@ -28,46 +28,9 @@ async function main() {
     });
   }
 
-  // Create sample farms for the farmer
+  // Seed Bagons for the farmer
   const farmer = await prisma.user.findUnique({ where: { email: 'farmer@canetrack.com' } });
   if (farmer) {
-    const existingFarms = await prisma.farm.count({ where: { ownerId: farmer.id } });
-    if (existingFarms === 0) {
-      await prisma.farm.createMany({
-        data: [
-          {
-            farmName: "Green Valley Plantation",
-            location: "Barangay San Juan",
-            barangay: "San Juan",
-            hectares: 25.5,
-            cropType: "Sugarcane",
-            description: "Main sugarcane plantation with irrigation system.",
-            ownerId: farmer.id,
-          },
-          {
-            farmName: "Sunrise Hills Farm",
-            location: "Barangay Mabini",
-            barangay: "Mabini",
-            hectares: 12.0,
-            cropType: "Sugarcane",
-            description: "Newly planted organic sugarcane field.",
-            ownerId: farmer.id,
-          },
-          {
-            farmName: "Riverside Plot",
-            location: "Barangay Saging",
-            barangay: "Saging",
-            hectares: 8.75,
-            cropType: "Sugarcane",
-            description: "Small riverside plot with rich alluvial soil.",
-            ownerId: farmer.id,
-          },
-        ],
-      });
-      console.log('Seeded 3 farms for sample farmer.');
-    }
-
-    // Seed Bagons for the farmer
     const existingBagons = await prisma.bagon.count({ where: { ownerId: farmer.id } });
     if (existingBagons === 0) {
       await prisma.bagon.createMany({
