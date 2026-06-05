@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import api from '../api/axiosInstance';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
-import { ArrowLeft, Leaf, Loader2, Mail, Lock, User, CheckCircle2, Shield, Truck, BarChart3, Moon, Sun, Phone, MapPin, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Leaf, Loader2, Mail, Lock, User, CheckCircle2, Shield, Truck, BarChart3, Moon, Sun, Phone, MapPin, Eye, EyeOff, KeyRound, X } from 'lucide-react';
 
 export function Login() {
   const [isRegistering, setIsRegistering] = useState(false);
@@ -28,6 +28,20 @@ export function Login() {
     return null;
   });
   const [countdown, setCountdown] = useState(0);
+
+  // Verification OTP
+  const [showVerification, setShowVerification] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [regEmail, setRegEmail] = useState('');
+  const [resending, setResending] = useState(false);
+
+  // Forgot Password
+  const [forgotStep, setForgotStep] = useState(0); // 0=hidden, 1=email, 2=code, 3=new password
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotCode, setForgotCode] = useState('');
+  const [forgotNewPassword, setForgotNewPassword] = useState('');
+  const [showForgotNewPassword, setShowForgotNewPassword] = useState(false);
+
   const { isDark, toggleTheme } = useTheme();
   
   const navigate = useNavigate();
@@ -82,9 +96,12 @@ export function Login() {
           setLoading(false);
           return;
         }
-        await api.post('/auth/register', { name, email, password, contactNumber, address });
-        setSuccess('Account created successfully! You may now sign in.');
-        setPassword(''); setConfirmPassword(''); setContactNumber(''); setAddress('');
+        const res = await api.post('/auth/register', { name, email, password, contactNumber, address });
+        if (res.data.needsVerification) {
+          setRegEmail(res.data.email);
+          setShowVerification(true);
+          setSuccess('Verification code sent to your email. Please check your inbox.');
+        }
       } else {
         const { data } = await api.post('/auth/login', { email, password });
         setAttempts(0); localStorage.setItem('login_attempts', '0');
@@ -92,6 +109,11 @@ export function Login() {
         navigate('/dashboard');
       }
     } catch (err: any) {
+      if (err.response?.status === 403 && err.response?.data?.message?.includes('verify your email')) {
+        setError(err.response.data.message);
+        setLoading(false);
+        return;
+      }
       const newAttempts = attempts + 1;
       setAttempts(newAttempts); localStorage.setItem('login_attempts', String(newAttempts));
       if (newAttempts >= 3) {
@@ -100,6 +122,67 @@ export function Login() {
       } else {
         setError(err.response?.data?.message || (err.code === 'ERR_NETWORK' ? 'Network error — check if the server is running' : 'Authentication failed. Please try again.'));
       }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    if (!verificationCode) { setError('Please enter the verification code'); return; }
+    setLoading(true); setError(''); setSuccess('');
+    try {
+      const res = await api.post('/auth/verify-email', { email: regEmail, code: verificationCode });
+      setSuccess(res.data.message);
+      setShowVerification(false);
+      setVerificationCode('');
+      setRegEmail('');
+      setName(''); setEmail(''); setPassword(''); setConfirmPassword('');
+      setContactNumber(''); setAddress('');
+      setIsRegistering(false);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Verification failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    setResending(true);
+    try {
+      await api.post('/auth/resend-code', { email: regEmail });
+      setSuccess('New code sent!');
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to resend code');
+    } finally {
+      setResending(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!forgotEmail) { setError('Enter your email'); return; }
+    setLoading(true); setError(''); setSuccess('');
+    try {
+      await api.post('/auth/forgot-password', { email: forgotEmail });
+      setSuccess('Reset code sent to your email.');
+      setForgotStep(2);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to send reset code');
+    } finally {
+      setLoading(false); setEmail(forgotEmail);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!forgotCode || !forgotNewPassword) { setError('Fill in all fields'); return; }
+    if (forgotNewPassword.length < 6) { setError('Password must be at least 6 characters'); return; }
+    setLoading(true); setError(''); setSuccess('');
+    try {
+      const res = await api.post('/auth/reset-password', { email: forgotEmail, code: forgotCode, newPassword: forgotNewPassword });
+      setSuccess(res.data.message);
+      setForgotStep(0);
+      setForgotEmail(''); setForgotCode(''); setForgotNewPassword('');
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to reset password');
     } finally {
       setLoading(false);
     }
@@ -199,6 +282,39 @@ export function Login() {
               </p>
             </div>
 
+            {showVerification ? (
+              <div className="space-y-4 sm:space-y-5">
+                <div className={`p-6 sm:p-8 rounded-2xl sm:rounded-[2rem] border text-center ${isDark ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
+                  <div className={`w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-4 ${isDark ? 'bg-emerald-900/50' : 'bg-emerald-100'}`}>
+                    <Mail className="w-8 h-8 text-emerald-500" />
+                  </div>
+                  <h3 className={`text-lg font-extrabold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>Verify your email</h3>
+                  <p className={`text-sm font-medium mb-6 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                    We sent a 6-digit code to <strong className={isDark ? 'text-emerald-400' : 'text-emerald-600'}>{regEmail}</strong>
+                  </p>
+                  <div className="max-w-[240px] mx-auto">
+                    <input value={verificationCode} onChange={e => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      className={`w-full text-center text-2xl font-black tracking-[0.5em] px-4 py-4 border rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all min-h-[56px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'}`}
+                      placeholder="000000" maxLength={6} inputMode="numeric" autoFocus />
+                  </div>
+                  <div className="flex items-center justify-center gap-2 mt-4">
+                    <button type="button" onClick={handleResendCode} disabled={resending} className={`text-xs font-bold transition-colors ${isDark ? 'text-slate-400 hover:text-emerald-400' : 'text-slate-500 hover:text-emerald-600'}`}>
+                      {resending ? 'Sending...' : 'Resend code'}
+                    </button>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <button onClick={() => { setShowVerification(false); setVerificationCode(''); setSuccess(''); setError(''); }}
+                    className={`flex-1 py-3.5 rounded-xl font-bold transition-all text-sm min-h-[44px] ${isDark ? 'bg-slate-800 hover:bg-slate-700 text-slate-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}>
+                    Back
+                  </button>
+                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleVerifyCode} disabled={loading || verificationCode.length < 6}
+                    className="flex-1 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-emerald-600/30 text-sm flex items-center justify-center gap-2 min-h-[44px] disabled:opacity-50">
+                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Verify Email'}
+                  </motion.button>
+                </div>
+              </div>
+            ) : (
             <form className="space-y-4 sm:space-y-5" onSubmit={handleSubmit}>
               <div className="space-y-3 sm:space-y-4">
                 <AnimatePresence>
@@ -280,6 +396,13 @@ export function Login() {
                     </motion.div>
                   )}
                 </AnimatePresence>
+                {!isRegistering && (
+                  <div className="text-right -mt-1 sm:-mt-2">
+                    <button type="button" onClick={() => { setForgotStep(1); setForgotEmail(email); setError(''); setSuccess(''); }} className="text-xs font-bold text-emerald-500 hover:text-emerald-400 transition-colors">
+                      Forgot password?
+                    </button>
+                  </div>
+                )}
 
                 <AnimatePresence mode="wait">
                   {error && <motion.div initial={{opacity:0, height:0}} animate={{opacity:1, height:'auto'}} exit={{opacity:0, height:0}} className="bg-red-950/30 text-red-400 p-4 rounded-xl sm:rounded-2xl text-sm font-bold border border-red-900/50 flex items-start gap-3">
@@ -310,6 +433,7 @@ export function Login() {
                 {isLocked ? `Locked ${countdown}s` : loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (isRegistering ? 'Create Client Account' : 'Sign In')}
               </motion.button>
             </form>
+            )}
 
             <div className="text-center mt-6 sm:mt-8">
                <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
@@ -328,6 +452,94 @@ export function Login() {
                 </p>
             </div>
           </motion.div>
+
+          {/* Forgot Password Overlay */}
+          <AnimatePresence>
+            {forgotStep > 0 && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setForgotStep(0)}>
+                <div className={`absolute inset-0 backdrop-blur-sm ${isDark ? 'bg-black/60' : 'bg-slate-900/50'}`} />
+                <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
+                  className={`relative w-full max-w-md rounded-2xl sm:rounded-[2rem] border shadow-2xl overflow-hidden ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700 shadow-black/40' : 'bg-white border-slate-200 shadow-slate-200/40'}`}
+                  onClick={e => e.stopPropagation()}>
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 via-emerald-400 to-emerald-500" />
+                  <div className="p-6 sm:p-8">
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-xl ${isDark ? 'bg-emerald-900/50' : 'bg-emerald-100'}`}>
+                          <KeyRound className="w-5 h-5 text-emerald-500" />
+                        </div>
+                        <h2 className={`text-lg font-extrabold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                          {forgotStep === 1 ? 'Reset Password' : forgotStep === 2 ? 'Enter Code' : 'New Password'}
+                        </h2>
+                      </div>
+                      <button onClick={() => setForgotStep(0)} className={`p-2 rounded-xl transition-colors ${isDark ? 'text-slate-500 hover:text-white hover:bg-slate-700' : 'text-slate-400 hover:text-slate-900 hover:bg-slate-100'}`}>
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    {forgotStep === 1 && (
+                      <div className="space-y-4">
+                        <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Enter your email to receive a reset code.</p>
+                        <div>
+                          <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Email</label>
+                          <input type="email" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)}
+                            className={`w-full px-4 py-3 border rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none font-medium text-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}
+                            placeholder="you@example.com" />
+                        </div>
+                        <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleForgotPassword} disabled={loading}
+                          className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-emerald-600/30 text-sm flex items-center justify-center gap-2 min-h-[44px] disabled:opacity-50">
+                          {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Send Reset Code'}
+                        </motion.button>
+                      </div>
+                    )}
+
+                    {forgotStep === 2 && (
+                      <div className="space-y-4">
+                        <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Enter the 6-digit code sent to your email.</p>
+                        <div>
+                          <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Code</label>
+                          <input value={forgotCode} onChange={e => setForgotCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                            className={`w-full text-center text-2xl font-black tracking-[0.5em] px-4 py-4 border rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all min-h-[56px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'}`}
+                            placeholder="000000" maxLength={6} inputMode="numeric" />
+                        </div>
+                        <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => { if (forgotCode.length === 6) setForgotStep(3); else setError('Enter the 6-digit code'); }}
+                          className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-emerald-600/30 text-sm flex items-center justify-center gap-2 min-h-[44px]">
+                          Continue
+                        </motion.button>
+                        <div className="text-center">
+                          <button type="button" onClick={() => { setForgotEmail(''); setForgotStep(1); }} className="text-xs font-bold text-emerald-500 hover:text-emerald-400">
+                            Wrong email? Try again
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {forgotStep === 3 && (
+                      <div className="space-y-4">
+                        <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Enter your new password.</p>
+                        <div>
+                          <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>New Password</label>
+                          <div className="relative">
+                            <input type={showForgotNewPassword ? 'text' : 'password'} value={forgotNewPassword} onChange={e => setForgotNewPassword(e.target.value)}
+                              className={`w-full pl-11 pr-12 py-3 border rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none font-medium tracking-widest text-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}
+                              placeholder="••••••••" />
+                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                            <button type="button" onClick={() => setShowForgotNewPassword(!showForgotNewPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
+                              {showForgotNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                          </div>
+                        </div>
+                        <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleResetPassword} disabled={loading}
+                          className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-emerald-600/30 text-sm flex items-center justify-center gap-2 min-h-[44px] disabled:opacity-50">
+                          {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Reset Password'}
+                        </motion.button>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>
