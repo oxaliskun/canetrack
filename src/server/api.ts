@@ -742,11 +742,14 @@ apiRouter.patch('/tickets/:id', authMiddleware, async (req: AuthRequest, res: Re
     const farms = await prisma.farm.findMany({ where: { ownerId: req.user!.userId }, select: { id: true } });
     const farmIds = farms.map(f => f.id);
     if (!farmIds.includes(ticket.farmId)) { res.status(403).json({ message: 'Access denied' }); return; }
-    if (ticket.status !== 'PENDING') {
+    const { bagonId, grossWeight, tareWeight, brix, pol, sampleCollected, notes } = req.body;
+    const { status } = req.body;
+    const hasOtherFields = bagonId !== undefined || grossWeight != null || tareWeight != null || brix !== undefined || pol !== undefined || sampleCollected !== undefined || notes !== undefined;
+
+    if (ticket.status !== 'PENDING' && hasOtherFields) {
       res.status(400).json({ message: 'Can only edit PENDING tickets' }); return;
     }
 
-    const { bagonId, grossWeight, tareWeight, brix, pol, sampleCollected, notes, status } = req.body;
     const updateData: any = {};
     if (bagonId) updateData.bagonId = bagonId;
     if (grossWeight != null) updateData.grossWeight = Number(grossWeight);

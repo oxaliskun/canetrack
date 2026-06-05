@@ -63,7 +63,7 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
   const [showExpForm, setShowExpForm] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [payForm, setPayForm] = useState({ method: 'BANK_TRANSFER', referenceNumber: '', grossAmount: '', deductions: '0', netAmount: '', notes: '' });
+  const [payForm, setPayForm] = useState({ method: 'BANK_TRANSFER', referenceNumber: '', grossAmount: '', deductions: '0', notes: '' });
   const [payProof, setPayProof] = useState<File | null>(null);
   const [loading, setLoading] = useState(true);
   const { isDark } = useTheme();
@@ -141,7 +141,7 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
       await api.patch(`/tickets/${ticketId}`, { status: 'PAID' });
       toast.success('Payment processed successfully');
       setShowPaymentModal(false);
-      setPayForm({ method: 'BANK_TRANSFER', referenceNumber: '', grossAmount: '', deductions: '0', netAmount: '', notes: '' });
+      setPayForm({ method: 'BANK_TRANSFER', referenceNumber: '', grossAmount: '', deductions: '0', notes: '' });
       setPayProof(null);
       const res = await api.get(`/tickets/${ticketId}`);
       setTicket(res.data.ticket);

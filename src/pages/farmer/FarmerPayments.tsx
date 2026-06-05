@@ -131,9 +131,10 @@ export function FarmerPayments() {
   };
 
   const handleDeletePayment = async (ticket: any) => {
-    if (!confirm('Delete this payment record? This action cannot be undone.')) return;
+    if (!confirm('Delete this payment record? The ticket will be reset to PENDING.')) return;
     try {
       await api.delete(`/payments/${ticket.payment.id}`);
+      await api.patch(`/tickets/${ticket.id}`, { status: 'PENDING' });
       toast.success('Payment deleted');
       fetchData();
     } catch (err: any) {
