@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import api from '../api/axiosInstance';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
-import { ArrowLeft, Leaf, Loader2, Mail, Lock, User, CheckCircle2, Shield, Sprout, Truck, BarChart3, Moon, Sun, Phone, MapPin, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Leaf, Loader2, Mail, Lock, User, CheckCircle2, Shield, Truck, BarChart3, Moon, Sun, Phone, MapPin, Eye, EyeOff } from 'lucide-react';
 
 export function Login() {
   const [isRegistering, setIsRegistering] = useState(false);
@@ -16,8 +16,6 @@ export function Login() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [contactNumber, setContactNumber] = useState('');
   const [address, setAddress] = useState('');
-  const [farmName, setFarmName] = useState('');
-  const [farmLocation, setFarmLocation] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -84,9 +82,9 @@ export function Login() {
           setLoading(false);
           return;
         }
-        await api.post('/auth/register', { name, email, password, contactNumber, address, farmName, farmLocation });
+        await api.post('/auth/register', { name, email, password, contactNumber, address });
         setSuccess('Account created successfully! You may now sign in.');
-        setPassword(''); setConfirmPassword(''); setContactNumber(''); setAddress(''); setFarmName(''); setFarmLocation('');
+        setPassword(''); setConfirmPassword(''); setContactNumber(''); setAddress('');
       } else {
         const { data } = await api.post('/auth/login', { email, password });
         setAttempts(0); localStorage.setItem('login_attempts', '0');
@@ -245,33 +243,7 @@ export function Login() {
                   )}
                 </AnimatePresence>
 
-                <AnimatePresence>
-                  {isRegistering && (
-                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-                      <div className="pb-3 sm:pb-4">
-                        <label className={`block text-[11px] sm:text-xs font-bold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Farm Name</label>
-                        <div className="relative">
-                          <input type="text" className={`w-full pl-11 sm:pl-12 pr-4 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium min-h-[44px] ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={farmName} onChange={e => setFarmName(e.target.value)} placeholder="My Sugarcane Farm" />
-                          <Sprout className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-500" />
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
 
-                <AnimatePresence>
-                  {isRegistering && (
-                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-                      <div className="pb-3 sm:pb-4">
-                        <label className={`block text-[11px] sm:text-xs font-bold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Farm Location</label>
-                        <div className="relative">
-                          <input type="text" className={`w-full pl-11 sm:pl-12 pr-4 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium min-h-[44px] ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={farmLocation} onChange={e => setFarmLocation(e.target.value)} placeholder="Barangay, Municipality, Province" />
-                          <MapPin className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-500" />
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
 
                 <div>
                   <label className={`block text-[11px] sm:text-xs font-bold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Email address</label>
