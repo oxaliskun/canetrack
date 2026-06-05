@@ -94,7 +94,10 @@ export function QuedanForm({ onSuccess }: { onSuccess?: () => void }) {
           </div>
           <div>
             <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Tare (kg)</label>
-            <input required type="number" value={form.tareWeight} onChange={e=>setForm({...form, tareWeight: e.target.value})} className={`w-full px-3 sm:px-4 py-3 sm:py-4 border rounded-xl sm:rounded-2xl focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none font-mono text-sm sm:text-base font-bold shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`} placeholder="0" />
+            <div className="relative">
+              <input readOnly type="number" value={form.tareWeight} className={`w-full px-3 sm:px-4 py-3 sm:py-4 border rounded-xl sm:rounded-2xl font-mono text-sm sm:text-base font-bold shadow-sm min-h-[44px] cursor-not-allowed opacity-80 ${isDark ? 'bg-slate-700 border-slate-600 text-slate-300' : 'bg-slate-100 border-slate-300 text-slate-600'}`} placeholder="0" />
+              {form.tareWeight && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">({(Number(form.tareWeight) / 1000).toFixed(2)}t)</span>}
+            </div>
           </div>
         </div>
         <div className={`border p-3 sm:p-4 rounded-xl sm:rounded-2xl flex justify-between items-center text-xs sm:text-sm ${isDark ? 'bg-gradient-to-r from-blue-950/50 to-emerald-950/50 border-slate-700' : 'bg-gradient-to-r from-blue-50 to-emerald-50 border-blue-100'}`}>
