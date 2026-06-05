@@ -130,7 +130,7 @@ export function FarmerExpenses() {
       </div>
 
       {filtered.length === 0 ? (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={`flex flex-col items-center justify-center py-32 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={`flex flex-col items-center justify-center py-16 sm:py-32 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
           <div className={`w-24 h-24 shadow-sm border rounded-full flex items-center justify-center mb-6 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
             <Sprout className="w-12 h-12 text-emerald-500" />
           </div>
@@ -161,7 +161,7 @@ export function FarmerExpenses() {
                       {e.type}
                     </span>
                   </td>
-                  <td className={`px-4 sm:px-6 py-4 sm:py-5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{catMap[e.categoryId] || 'Unknown'}</td>
+                  <td className={`px-4 sm:px-6 py-4 sm:py-5 truncate max-w-[100px] sm:max-w-[160px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{catMap[e.categoryId] || 'Unknown'}</td>
                   <td className="px-4 sm:px-6 py-4 sm:py-5 text-right font-mono font-bold">{formatCurrency(e.amount)}</td>
                   <td className={`px-4 sm:px-6 py-4 sm:py-5 max-w-[200px] truncate ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{e.notes || '-'}</td>
                   <td className="px-4 sm:px-6 py-4 sm:py-5 text-center">

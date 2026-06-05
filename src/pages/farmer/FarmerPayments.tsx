@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import { motion } from 'motion/react';
-import { DollarSign, Search, Eye, TrendingUp, Wallet, FileText } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { DollarSign, Search, Eye, TrendingUp, Wallet, FileText, Plus, X, Save } from 'lucide-react';
 import api from '../../api/axiosInstance';
 import { useTheme } from '../../context/ThemeContext';
 import { toast } from 'sonner';
@@ -9,16 +9,19 @@ import { formatDate, formatCurrency } from '../../lib/utils';
 
 export function FarmerPayments() {
   const [payments, setPayments] = useState<any[]>([]);
+  const [allTickets, setAllTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [payForm, setPayForm] = useState({ quedanId: '', method: 'CASH', referenceNumber: '', grossAmount: '', deductions: '0', netAmount: '', datePaid: '', notes: '' });
   const { isDark } = useTheme();
 
   const fetchData = async () => {
     try {
       const res = await api.get('/tickets');
-      const withPayment = res.data.tickets.filter((t: any) => t.payment);
-      setPayments(withPayment);
+      setPayments(res.data.tickets.filter((t: any) => t.payment));
+      setAllTickets(res.data.tickets);
     } catch { toast.error('Failed to load payments'); }
     finally { setLoading(false); }
   };
@@ -34,6 +37,30 @@ export function FarmerPayments() {
   const totalGross = filtered.reduce((s: number, t: any) => s + Number(t.payment.grossAmount), 0);
   const totalDeductions = filtered.reduce((s: number, t: any) => s + Number(t.payment.deductions), 0);
   const totalNet = filtered.reduce((s: number, t: any) => s + Number(t.payment.netAmount), 0);
+
+  const unpaidTickets = allTickets.filter((t: any) => !t.payment);
+
+  const handleRecordPayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await api.post('/payments', {
+        quedanId: payForm.quedanId,
+        method: payForm.method,
+        referenceNumber: payForm.referenceNumber || null,
+        grossAmount: Number(payForm.grossAmount),
+        deductions: Number(payForm.deductions || 0),
+        netAmount: Number(payForm.netAmount),
+        datePaid: payForm.datePaid || null,
+        notes: payForm.notes || null,
+      });
+      toast.success('Payment recorded successfully');
+      setModalOpen(false);
+      setPayForm({ quedanId: '', method: 'CASH', referenceNumber: '', grossAmount: '', deductions: '0', netAmount: '', datePaid: '', notes: '' });
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to record payment');
+    }
+  };
 
   if (loading) return (
     <div className="h-[60vh] flex items-center justify-center">
@@ -51,8 +78,12 @@ export function FarmerPayments() {
             <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" /> Payment Records
           </div>
           <h1 className={`text-2xl sm:text-4xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Payment History</h1>
-          <p className={`mt-1 font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>View all payments received for your quedans.</p>
+          <p className={`mt-1 font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Record and view payments received from the mill.</p>
         </div>
+        <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setModalOpen(true)}
+          className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white px-5 py-3 rounded-2xl font-bold shadow-lg shadow-blue-600/25 transition-all min-h-[44px]">
+          <Plus className="w-5 h-5" /> Record Payment
+        </motion.button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6">
@@ -91,15 +122,15 @@ export function FarmerPayments() {
       </div>
 
       {filtered.length === 0 ? (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={`flex flex-col items-center justify-center py-32 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={`flex flex-col items-center justify-center py-16 sm:py-32 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
           <div className={`w-24 h-24 shadow-sm border rounded-full flex items-center justify-center mb-6 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-100'}`}>
             <DollarSign className="w-12 h-12 text-blue-500" />
           </div>
           <p className={`text-2xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>No payments yet</p>
-          <p className="text-base mt-2 font-medium">Payments will appear here once admin processes them.</p>
+          <p className="text-base mt-2 font-medium">Record your first payment from the mill.</p>
         </motion.div>
       ) : (
-        <div className={`rounded-2xl border overflow-hidden ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
+        <div className={`rounded-2xl border overflow-x-auto ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead className={`border-b uppercase text-[10px] font-extrabold tracking-widest ${isDark ? 'bg-slate-800/80 border-slate-700 text-slate-400' : 'bg-slate-50/80 border-slate-100 text-slate-500'}`}>
               <tr>
@@ -120,7 +151,7 @@ export function FarmerPayments() {
                   <td className="px-4 sm:px-6 py-4 sm:py-5">
                     <span className={`font-mono font-bold text-sm ${isDark ? 'text-white' : 'text-slate-900'}`}>{t.ticketNo}</span>
                   </td>
-                  <td data-label="Farm" className={`px-4 sm:px-6 py-4 sm:py-5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{t.farm?.farmName || '-'}</td>
+                  <td data-label="Farm" className={`px-4 sm:px-6 py-4 sm:py-5 truncate max-w-[120px] sm:max-w-none ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{t.farm?.farmName || '-'}</td>
                   <td data-label="Date" className={`px-4 sm:px-6 py-4 sm:py-5 text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{formatDate(t.payment.createdAt)}</td>
                   <td data-label="Method" className="px-4 sm:px-6 py-4 sm:py-5">
                     <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${isDark ? 'bg-slate-700 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>{t.payment.method}</span>
@@ -144,6 +175,93 @@ export function FarmerPayments() {
       )}
 
       {selectedTicketId && <TicketDetails ticketId={selectedTicketId} onClose={() => { setSelectedTicketId(null); fetchData(); }} />}
+
+      <AnimatePresence>
+        {modalOpen && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => setModalOpen(false)}>
+            <div className={`absolute inset-0 backdrop-blur-sm ${isDark ? 'bg-black/60' : 'bg-slate-900/50'}`} />
+            <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className={`relative w-full max-w-lg rounded-2xl sm:rounded-[2rem] border shadow-2xl overflow-hidden ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700 shadow-black/40' : 'bg-white border-slate-200 shadow-slate-200/40'}`}
+              onClick={e => e.stopPropagation()}>
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-emerald-500" />
+              <div className="p-4 sm:p-6 lg:p-8">
+                <div className="flex items-center justify-between mb-6 sm:mb-8">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 sm:p-2.5 rounded-xl ${isDark ? 'bg-blue-900/50' : 'bg-blue-100'}`}>
+                      <DollarSign className="w-5 h-5 text-blue-500" />
+                    </div>
+                    <h2 className={`text-lg sm:text-xl font-extrabold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Record Payment</h2>
+                  </div>
+                  <button onClick={() => setModalOpen(false)} className={`p-2 rounded-xl transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center ${isDark ? 'text-slate-500 hover:text-white hover:bg-slate-700' : 'text-slate-400 hover:text-slate-900 hover:bg-slate-100'}`}>
+                    <X className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </button>
+                </div>
+
+                <form onSubmit={handleRecordPayment} className="space-y-4 sm:space-y-5">
+                  <div>
+                    <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Quedan *</label>
+                    <select required value={payForm.quedanId} onChange={e => setPayForm({...payForm, quedanId: e.target.value})}
+                      className={`w-full px-4 sm:px-5 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none text-sm font-semibold shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}>
+                      <option value="">Select quedan...</option>
+                      {unpaidTickets.map((t: any) => <option key={t.id} value={t.id}>{t.ticketNo} — {t.farm?.farmName || 'Unknown'}</option>)}
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                    <div>
+                      <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Method *</label>
+                      <select required value={payForm.method} onChange={e => setPayForm({...payForm, method: e.target.value})}
+                        className={`w-full px-4 sm:px-5 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none text-sm font-semibold shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}>
+                        <option value="CASH">Cash</option>
+                        <option value="BANK_TRANSFER">Bank Transfer</option>
+                        <option value="GCASH">GCash</option>
+                        <option value="CHECK">Check</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Reference</label>
+                      <input value={payForm.referenceNumber} onChange={e => setPayForm({...payForm, referenceNumber: e.target.value})}
+                        className={`w-full px-4 sm:px-5 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none font-medium text-sm shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400'}`}
+                        placeholder="OR # or ref" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3 sm:gap-4">
+                    <div>
+                      <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Gross *</label>
+                      <input required type="number" step="0.01" value={payForm.grossAmount} onChange={e => setPayForm({...payForm, grossAmount: e.target.value})}
+                        className={`w-full px-3 sm:px-4 py-3 sm:py-3.5 border rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none font-mono text-sm font-bold shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`} />
+                    </div>
+                    <div>
+                      <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Deductions</label>
+                      <input type="number" step="0.01" value={payForm.deductions} onChange={e => setPayForm({...payForm, deductions: e.target.value})}
+                        className={`w-full px-3 sm:px-4 py-3 sm:py-3.5 border rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none font-mono text-sm font-bold shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`} />
+                    </div>
+                    <div>
+                      <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Net *</label>
+                      <input required type="number" step="0.01" value={payForm.netAmount} onChange={e => setPayForm({...payForm, netAmount: e.target.value})}
+                        className={`w-full px-3 sm:px-4 py-3 sm:py-3.5 border rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none font-mono text-sm font-bold shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Date Paid</label>
+                    <input type="date" value={payForm.datePaid} onChange={e => setPayForm({...payForm, datePaid: e.target.value})}
+                      className={`w-full px-4 sm:px-5 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none font-medium text-sm shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`} />
+                  </div>
+                  <div>
+                    <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Notes</label>
+                    <textarea value={payForm.notes} onChange={e => setPayForm({...payForm, notes: e.target.value})} rows={2}
+                      className={`w-full px-4 sm:px-5 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none font-medium text-sm shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400'}`}
+                      placeholder="Optional notes..." />
+                  </div>
+                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit"
+                    className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold py-3.5 rounded-xl sm:rounded-2xl transition-all shadow-lg shadow-blue-600/30 text-sm flex items-center justify-center gap-2 min-h-[44px]">
+                    <Save className="w-4 h-4" /> Save Payment
+                  </motion.button>
+                </form>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

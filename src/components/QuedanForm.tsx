@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, ChangeEvent, FormEvent } from 'react';
 import { motion } from 'motion/react';
 import api from '../api/axiosInstance';
 import { useAuth } from '../hooks/useAuth';
@@ -7,11 +7,9 @@ import { toast } from 'sonner';
 import { Truck, Scale, Camera, X, Eye, FlaskConical, Building2 } from 'lucide-react';
 
 export function QuedanForm({ onSuccess }: { onSuccess?: () => void }) {
-  const [form, setForm] = useState({ truckPlate: '', truckId: '', farmId: '', grossWeight: '', tareWeight: '', brix: '', pol: '', sampleCollected: false, variantId: '', sugarTypeId: '' });
+  const [form, setForm] = useState({ bagonPlate: '', bagonId: '', farmId: '', grossWeight: '', tareWeight: '', brix: '', pol: '', sampleCollected: false });
   const [farms, setFarms] = useState([]);
-  const [trucks, setTrucks] = useState([]);
-  const [variants, setVariants] = useState([]);
-  const [sugarTypes, setSugarTypes] = useState([]);
+  const [bagons, setBagons] = useState([]);
   const [photos, setPhotos] = useState<File[]>([]);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -21,13 +19,11 @@ export function QuedanForm({ onSuccess }: { onSuccess?: () => void }) {
   useEffect(() => {
     if (!user) return;
     api.get('/farms').then(res => setFarms(res.data.farms));
-    api.get('/trucks').then(res => setTrucks(res.data.trucks));
-    api.get('/variants').then(res => setVariants(res.data.variants));
-    api.get('/sugar-types').then(res => setSugarTypes(res.data.sugarTypes));
+    api.get('/bagon').then(res => setBagons(res.data.bagons));
   }, [user]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []).slice(0, 3);
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const files = (Array.from(e.target.files || []) as File[]).slice(0, 3);
     setPhotos(files);
     setPhotoPreviews(files.map(f => URL.createObjectURL(f)));
   };
@@ -40,11 +36,11 @@ export function QuedanForm({ onSuccess }: { onSuccess?: () => void }) {
 
   useEffect(() => { return () => photoPreviews.forEach(URL.revokeObjectURL); }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setUploading(true);
     try {
-      const { data } = await api.post('/tickets', form);
+      const { data } = await api.post('/tickets', { bagonId: form.bagonId, farmId: form.farmId, grossWeight: form.grossWeight, tareWeight: form.tareWeight, brix: form.brix || undefined, pol: form.pol || undefined, sampleCollected: form.sampleCollected });
       const ticketId = data.id;
       for (const photo of photos) {
         const fd = new FormData();
@@ -53,7 +49,7 @@ export function QuedanForm({ onSuccess }: { onSuccess?: () => void }) {
         await api.post('/delivery-receipts', { quedanId: ticketId, imageUrl: uploadData.url });
       }
       toast.success('Quedan encoded successfully.');
-      setForm({ truckPlate: '', truckId: '', farmId: '', grossWeight: '', tareWeight: '', brix: '', pol: '', sampleCollected: false, variantId: '', sugarTypeId: '' });
+      setForm({ bagonPlate: '', bagonId: '', farmId: '', grossWeight: '', tareWeight: '', brix: '', pol: '', sampleCollected: false });
       setPhotos([]);
       setPhotoPreviews([]);
       onSuccess?.();
@@ -73,10 +69,10 @@ export function QuedanForm({ onSuccess }: { onSuccess?: () => void }) {
 
       <div className="space-y-4 sm:space-y-5">
         <div>
-          <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Truck Plate</label>
-          <select required value={form.truckId} onChange={e => { const t = trucks.find((t: any) => t.id === e.target.value); setForm({...form, truckId: e.target.value, truckPlate: t ? t.plateNumber : ''}) } } className={`w-full px-4 sm:px-5 py-3 sm:py-4 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none text-sm sm:text-base font-semibold shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}>
-            <option value="">Select a Truck...</option>
-            {trucks.filter((t: any) => !t.isArchived).map((t: any) => <option key={t.id} value={t.id}>{t.plateNumber} - {t.make} {t.model} ({(t.capacity / 1000).toFixed(1)}t)</option>)}
+          <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Bagon</label>
+          <select required value={form.bagonId} onChange={e => { const b = bagons.find((b: any) => b.id === e.target.value); setForm({...form, bagonId: e.target.value, bagonPlate: b ? b.plateNumber : '', tareWeight: b?.tareWeight ? b.tareWeight.toString() : ''}) } } className={`w-full px-4 sm:px-5 py-3 sm:py-4 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none text-sm sm:text-base font-semibold shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}>
+            <option value="">Select a Bagon...</option>
+            {bagons.filter((b: any) => !b.isArchived).map((b: any) => <option key={b.id} value={b.id}>{b.plateNumber} ({b.type})</option>)}
           </select>
         </div>
         <div>
@@ -102,7 +98,7 @@ export function QuedanForm({ onSuccess }: { onSuccess?: () => void }) {
           </div>
         </div>
         <div className={`border p-3 sm:p-4 rounded-xl sm:rounded-2xl flex justify-between items-center text-xs sm:text-sm ${isDark ? 'bg-gradient-to-r from-blue-950/50 to-emerald-950/50 border-slate-700' : 'bg-gradient-to-r from-blue-50 to-emerald-50 border-blue-100'}`}>
-          <span className={`font-bold ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Calculated Mill Weight:</span>
+          <span className={`font-bold ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Net Weight:</span>
           <span className="font-mono font-black text-base sm:text-lg lg:text-xl text-blue-500">
             {Math.max(0, (Number(form.grossWeight) || 0) - (Number(form.tareWeight) || 0))} kg
           </span>
@@ -126,24 +122,11 @@ export function QuedanForm({ onSuccess }: { onSuccess?: () => void }) {
             </div>
             <div>
               <label className={`block text-[10px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Purity (auto-computed)</label>
-              <div className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl font-mono text-sm font-black shadow-sm min-h-[44px] flex items-center ${isDark ? 'bg-slate-800/50 border-slate-700 text-emerald-400' : 'bg-slate-50 border-slate-200 text-emerald-600'}`}>
-                {form.brix && Number(form.brix) > 0 ? ((Number(form.pol) || 0) / Number(form.brix) * 100).toFixed(2) + '%' : '—'}
-              </div>
+               <div className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl font-mono text-sm font-black shadow-sm min-h-[44px] flex items-center truncate ${isDark ? 'bg-slate-800/50 border-slate-700 text-emerald-400' : 'bg-slate-50 border-slate-200 text-emerald-600'}`}>
+                 {form.brix && Number(form.brix) > 0 ? ((Number(form.pol) || 0) / Number(form.brix) * 100).toFixed(2) + '%' : '—'}
+               </div>
             </div>
-            <div>
-              <label className={`block text-[10px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Variety *</label>
-              <select required value={form.variantId} onChange={e => setForm({...form, variantId: e.target.value})} className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none text-sm font-bold shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}>
-                <option value="">Select variety...</option>
-                {variants.filter((v: any) => v.isActive).map((v: any) => <option key={v.id} value={v.id}>{v.name}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className={`block text-[10px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Sugar Type *</label>
-              <select required value={form.sugarTypeId} onChange={e => setForm({...form, sugarTypeId: e.target.value})} className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none text-sm font-bold shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}>
-                <option value="">Select sugar type...</option>
-                {sugarTypes.filter((s: any) => s.isActive).map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
-            </div>
+
             <label className="flex items-center gap-3 cursor-pointer pt-1">
               <input type="checkbox" checked={form.sampleCollected} onChange={e => setForm({...form, sampleCollected: e.target.checked})} className="w-5 h-5 rounded-lg border-2 accent-emerald-500 cursor-pointer" />
               <span className={`text-sm font-bold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>Sample Collected</span>
@@ -158,7 +141,7 @@ export function QuedanForm({ onSuccess }: { onSuccess?: () => void }) {
               {photoPreviews.map((preview, i) => (
                 <div key={i} className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden border shrink-0">
                   <img src={preview} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
-                  <button type="button" onClick={() => removePhoto(i)} className="absolute top-1 right-1 w-5 h-5 bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-bold">×</button>
+                  <button type="button" onClick={() => removePhoto(i)} className="absolute top-1 right-1 w-6 h-6 bg-red-600 text-white rounded-full flex items-center justify-center text-base font-bold">×</button>
                 </div>
               ))}
             </div>

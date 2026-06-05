@@ -1,38 +1,25 @@
-import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { AnimatePresence } from 'motion/react';
 import { useAuth } from './hooks/useAuth';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { Login } from './pages/Login';
-import { PendingVerification } from './pages/PendingVerification';
-import { VerificationRejected } from './pages/VerificationRejected';
 import { Sidebar } from './components/Sidebar';
-import { FarmerDashboard, AdminDashboard } from './pages/Dashboards';
-import { AdminUsers } from './pages/admin/AdminUsers';
-import { AdminTickets } from './pages/admin/AdminTickets';
-import { AdminReports } from './pages/admin/AdminReports';
-import { AdminAuditLogs } from './pages/admin/AdminAuditLogs';
-import { AdminVerifications } from './pages/admin/AdminVerifications';
-import { AdminTrucks } from './pages/admin/AdminTrucks';
-import { AdminExpenseCategories } from './pages/admin/AdminExpenseCategories';
-import { AdminVariants } from './pages/admin/AdminVariants';
-import { AdminSugarTypes } from './pages/admin/AdminSugarTypes';
-import { AdminPricing } from './pages/admin/AdminPricing';
-import { AdminDisputes } from './pages/admin/AdminDisputes';
+import { Dashboard } from './pages/Dashboards';
 import { FarmerFarms } from './pages/farmer/FarmerFarms';
-import { FarmerTrucks } from './pages/farmer/FarmerTrucks';
+import { Bagon } from './pages/farmer/Bagon';
 import { FarmerPayments } from './pages/farmer/FarmerPayments';
 import { FarmerReports } from './pages/farmer/FarmerReports';
 import { FarmerExpenses } from './pages/farmer/FarmerExpenses';
 import { Profile } from './pages/shared/Profile';
-import { Settings } from './pages/shared/Settings';
-import { AuditLogs } from './pages/shared/AuditLogs';
+
 import { SplashScreen } from './components/SplashScreen';
 import { LandingPage } from './pages/LandingPage';
 import { Toaster } from 'sonner';
 
-function PrivateRoute({ allowedRoles, children }: { allowedRoles: string[], children: React.ReactNode }) {
+function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const { isDark } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -48,9 +35,6 @@ function PrivateRoute({ allowedRoles, children }: { allowedRoles: string[], chil
     </div>
   );
   if (!user) return <Navigate to="/login" replace />;
-  if (!allowedRoles.includes(user.role)) return <Navigate to="/unauthorized" replace />;
-  if (user.role === 'FARMER' && user.verificationStatus === 'PENDING') return <Navigate to="/pending-verification" replace />;
-  if (user.role === 'FARMER' && user.verificationStatus === 'REJECTED') return <Navigate to="/verification-rejected" replace />;
 
   return (
     <div className={`flex h-dvh ${isDark ? 'bg-slate-950 text-slate-200' : 'bg-slate-50 text-slate-800'} font-sans selection:bg-emerald-500/30 relative overflow-hidden`}>
@@ -72,7 +56,7 @@ function PrivateRoute({ allowedRoles, children }: { allowedRoles: string[], chil
 
       {/* Sidebar */}
       <div className={`fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 w-72 sm:w-80 lg:w-[280px] ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <Sidebar role={user.role} userName={user.name} onClose={() => setSidebarOpen(false)} />
+        <Sidebar userName={user.name} onClose={() => setSidebarOpen(false)} />
       </div>
 
       <main className="flex-1 flex flex-col h-dvh overflow-hidden relative z-10 w-full min-w-0">
@@ -126,74 +110,14 @@ export default function App() {
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/pending-verification" element={<PendingVerification />} />
-            <Route path="/verification-rejected" element={<VerificationRejected />} />
             
-            <Route path="/dashboard/farmer" element={
-              <PrivateRoute allowedRoles={['FARMER']}>
-                <FarmerDashboard />
-              </PrivateRoute>
-            } />
-            <Route path="/dashboard/farmer/farms" element={
-              <PrivateRoute allowedRoles={['FARMER', 'ADMIN']}>
-                <FarmerFarms />
-              </PrivateRoute>
-            } />
-            <Route path="/dashboard/farmer/trucks" element={
-              <PrivateRoute allowedRoles={['FARMER']}>
-                <FarmerTrucks />
-              </PrivateRoute>
-            } />
-            <Route path="/dashboard/farmer/payments" element={
-              <PrivateRoute allowedRoles={['FARMER', 'ADMIN']}>
-                <FarmerPayments />
-              </PrivateRoute>
-            } />
-            <Route path="/dashboard/farmer/reports" element={
-              <PrivateRoute allowedRoles={['FARMER']}>
-                <FarmerReports />
-              </PrivateRoute>
-            } />
-            <Route path="/dashboard/farmer/expenses" element={
-              <PrivateRoute allowedRoles={['FARMER']}>
-                <FarmerExpenses />
-              </PrivateRoute>
-            } />
-            
-            <Route path="/dashboard/settings" element={
-              <PrivateRoute allowedRoles={['FARMER', 'ADMIN']}>
-                <Settings />
-              </PrivateRoute>
-            } />
-            <Route path="/dashboard/profile" element={
-              <PrivateRoute allowedRoles={['FARMER', 'ADMIN']}>
-                <Profile />
-              </PrivateRoute>
-            } />
-            <Route path="/dashboard/activity-logs" element={
-              <PrivateRoute allowedRoles={['FARMER', 'ADMIN']}>
-                <AuditLogs />
-              </PrivateRoute>
-            } />
-            
-            <Route path="/dashboard/admin" element={
-              <PrivateRoute allowedRoles={['ADMIN']}>
-                <Outlet />
-              </PrivateRoute>
-            }>
-              <Route index element={<AdminDashboard />} />
-              <Route path="users" element={<AdminUsers />} />
-              <Route path="tickets" element={<AdminTickets />} />
-              <Route path="reports" element={<AdminReports />} />
-              <Route path="audit-logs" element={<AdminAuditLogs />} />
-              <Route path="verifications" element={<AdminVerifications />} />
-              <Route path="trucks" element={<AdminTrucks />} />
-              <Route path="expense-categories" element={<AdminExpenseCategories />} />
-              <Route path="variants" element={<AdminVariants />} />
-              <Route path="sugar-types" element={<AdminSugarTypes />} />
-              <Route path="pricing" element={<AdminPricing />} />
-              <Route path="disputes" element={<AdminDisputes />} />
-            </Route>
+            <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+            <Route path="/dashboard/farms" element={<PrivateRoute><FarmerFarms /></PrivateRoute>} />
+            <Route path="/dashboard/bagon" element={<PrivateRoute><Bagon /></PrivateRoute>} />
+            <Route path="/dashboard/payments" element={<PrivateRoute><FarmerPayments /></PrivateRoute>} />
+            <Route path="/dashboard/reports" element={<PrivateRoute><FarmerReports /></PrivateRoute>} />
+            <Route path="/dashboard/expenses" element={<PrivateRoute><FarmerExpenses /></PrivateRoute>} />
+            <Route path="/dashboard/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
 
             {/* Fallback 404 Route */}
             <Route path="*" element={

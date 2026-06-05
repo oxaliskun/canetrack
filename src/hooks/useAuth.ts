@@ -5,12 +5,9 @@ interface User {
   userId: string;
   name: string;
   email: string;
-  role: string;
   contactNumber?: string;
   address?: string;
   profilePicture?: string;
-  verificationStatus?: string;
-  rejectionReason?: string;
   assignedMill?: string;
   farms?: { id: string; farmName: string; location: string; barangay?: string; hectares?: number }[];
 }

@@ -9,7 +9,7 @@ const words = [
   "Loading CaneTrack..."
 ];
 
-export function SplashScreen({ onComplete }: { onComplete: () => void }) {
+export function SplashScreen({ onComplete }: { onComplete: () => void; key?: string }) {
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
 
   useEffect(() => {

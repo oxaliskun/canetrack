@@ -9,40 +9,12 @@ async function main() {
 
   const users = [
     {
-      name: 'System Admin',
-      email: 'admin@canetrack.com',
-      passwordHash: hashedPassword,
-      role: 'ADMIN',
-      verificationStatus: 'VERIFIED',
-      contactNumber: '+63 912 345 6789',
-      address: 'Admin Office, Main Building, Central Compound',
-    },
-    {
-      name: 'Mill Operator',
-      email: 'operator@canetrack.com',
-      passwordHash: hashedPassword,
-      role: 'OPERATOR',
-      verificationStatus: 'VERIFIED',
-      contactNumber: '+63 923 456 7890',
-      address: 'Mill Plant, Industrial Zone',
-    },
-    {
-      name: 'Refinery Receiver',
-      email: 'receiver@canetrack.com',
-      passwordHash: hashedPassword,
-      role: 'RECEIVER',
-      verificationStatus: 'VERIFIED',
-      contactNumber: '+63 934 567 8901',
-      address: 'Refinery Complex, Port Area',
-    },
-    {
       name: 'Sample Farmer',
       email: 'farmer@canetrack.com',
       passwordHash: hashedPassword,
-      role: 'FARMER',
-      verificationStatus: 'VERIFIED',
       contactNumber: '+63 945 678 9012',
       address: '123 Barangay San Juan, Sugarcane Province',
+      assignedMill: 'Crystal Sugar Mill',
     },
   ];
 
@@ -51,11 +23,7 @@ async function main() {
   for (const user of users) {
     await prisma.user.upsert({
       where: { email: user.email },
-      update: {
-        passwordHash: hashedPassword,
-        verificationStatus: 'VERIFIED',
-        isActive: true,
-      },
+      update: { passwordHash: hashedPassword },
       create: user,
     });
   }
@@ -72,7 +40,7 @@ async function main() {
             location: "Barangay San Juan",
             barangay: "San Juan",
             hectares: 25.5,
-            cropType: "Sugarcane (Phil 2000)",
+            cropType: "Sugarcane",
             description: "Main sugarcane plantation with irrigation system.",
             ownerId: farmer.id,
           },
@@ -81,7 +49,7 @@ async function main() {
             location: "Barangay Mabini",
             barangay: "Mabini",
             hectares: 12.0,
-            cropType: "Sugarcane (VMC 86-550)",
+            cropType: "Sugarcane",
             description: "Newly planted organic sugarcane field.",
             ownerId: farmer.id,
           },
@@ -90,7 +58,7 @@ async function main() {
             location: "Barangay Saging",
             barangay: "Saging",
             hectares: 8.75,
-            cropType: "Sugarcane (Phil 7547)",
+            cropType: "Sugarcane",
             description: "Small riverside plot with rich alluvial soil.",
             ownerId: farmer.id,
           },
@@ -98,36 +66,33 @@ async function main() {
       });
       console.log('Seeded 3 farms for sample farmer.');
     }
-  }
 
-  // Initialize System Settings
-  await prisma.systemSettings.upsert({
-    where: { id: 'default-settings' },
-    update: {},
-    create: {
-      id: 'default-settings',
-      varianceThreshold: 50,
-      basePricePerKg: 3.50,
-    },
-  });
+    // Seed Bagons for the farmer
+    const existingBagons = await prisma.bagon.count({ where: { ownerId: farmer.id } });
+    if (existingBagons === 0) {
+      await prisma.bagon.createMany({
+        data: [
+          { plateNumber: 'ABC-1234', type: '18ft', tareWeight: 3200, ownerId: farmer.id },
+          { plateNumber: 'XYZ-5678', type: '20ft', tareWeight: 3800, ownerId: farmer.id },
+          { plateNumber: 'DEF-9012', type: '14ft', tareWeight: 2800, ownerId: farmer.id },
+        ],
+      });
+      console.log('Seeded 3 bagons for sample farmer.');
+    }
+  }
 
   // Seed Expense Categories
   const expenseCategories = [
-    // Delivery type
-    { name: 'Diesel', type: 'DELIVERY', description: 'Fuel cost for truck during delivery' },
-    { name: 'Toll Fee', type: 'DELIVERY', description: 'Toll road expenses during transport' },
-    { name: 'Truck Repair', type: 'DELIVERY', description: 'Maintenance and repair costs' },
-    { name: 'Loading Labor', type: 'DELIVERY', description: 'Labor cost for loading cane' },
-    { name: 'Unloading Labor', type: 'DELIVERY', description: 'Labor cost for unloading cane' },
-    { name: 'Meals', type: 'DELIVERY', description: 'Driver/crew meal expenses' },
-    // Farm type
-    { name: 'Fertilizer', type: 'FARM', description: 'Fertilizer cost for the season' },
-    { name: 'Pesticide', type: 'FARM', description: 'Pesticide and herbicide costs' },
-    { name: 'Irrigation', type: 'FARM', description: 'Irrigation system and water costs' },
-    { name: 'Farm Labor', type: 'FARM', description: 'General farm labor wages' },
-    { name: 'Land Rental', type: 'FARM', description: 'Land lease or rental fees' },
-    { name: 'Equipment Rental', type: 'FARM', description: 'Heavy equipment rental costs' },
-    { name: 'Miscellaneous', type: 'FARM', description: 'Other farm-related expenses' },
+    { name: 'Fertilizer', description: 'Fertilizer cost for the season' },
+    { name: 'Pesticide', description: 'Pesticide and herbicide costs' },
+    { name: 'Irrigation', description: 'Irrigation system and water costs' },
+    { name: 'Farm Labor', description: 'General farm labor wages' },
+    { name: 'Land Rental', description: 'Land lease or rental fees' },
+    { name: 'Equipment Rental', description: 'Heavy equipment rental costs' },
+    { name: 'Hauling', description: 'Transport and hauling costs' },
+    { name: 'Loading Labor', description: 'Labor cost for loading cane' },
+    { name: 'Meals', description: 'Driver/crew meal expenses' },
+    { name: 'Miscellaneous', description: 'Other farm-related expenses' },
   ];
 
   console.log('Seeding expense categories...');
@@ -136,42 +101,6 @@ async function main() {
       where: { name: cat.name },
       update: {},
       create: cat,
-    });
-  }
-
-  // Seed Sugarcane Variants
-  const sugarcaneVariants = [
-    { name: 'Phil 93-93', characteristics: 'High yielding, good ratooning ability, suited for mill sites' },
-    { name: 'Phil 99-1793', characteristics: 'High sugar content, resistant to smut disease' },
-    { name: 'VMC 86-550', characteristics: 'Early maturing, high tonnage, good for clay soil' },
-    { name: 'VMC 92-129', characteristics: 'Very high sugar recovery, moderately resistant to borer' },
-    { name: 'Phil 2000-2567', characteristics: 'Excellent ratooning, good drought tolerance, high biomass' },
-  ];
-
-  console.log('Seeding sugarcane variants...');
-  for (const v of sugarcaneVariants) {
-    await prisma.sugarcaneVariant.upsert({
-      where: { name: v.name },
-      update: {},
-      create: v,
-    });
-  }
-
-  // Seed Sugar Types
-  const sugarTypes = [
-    { name: 'Raw Sugar', description: 'Unrefined sugar directly from sugarcane processing' },
-    { name: 'Brown Sugar', description: 'Soft, moist sugar with molasses content' },
-    { name: 'Refined Sugar', description: 'Highly processed white sugar, 99.9% sucrose' },
-    { name: 'Muscovado', description: 'Traditional unrefined cane sugar with rich molasses flavor' },
-    { name: 'Molasses', description: 'Thick, dark syrup byproduct of sugar refining' },
-  ];
-
-  console.log('Seeding sugar types...');
-  for (const st of sugarTypes) {
-    await prisma.sugarType.upsert({
-      where: { name: st.name },
-      update: {},
-      create: st,
     });
   }
 

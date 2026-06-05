@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, Truck, FileText, CheckCircle, Activity, Leaf, LogIn, DollarSign, Sprout, Scale, Shield, BarChart3, Users, Clock, Award, ChevronDown } from 'lucide-react';
+import { ArrowRight, Truck, FileText, CheckCircle, Activity, Leaf, LogIn, DollarSign, Sprout, Scale, Shield, Clock, Award } from 'lucide-react';
 
 export function LandingPage() {
   const navigate = useNavigate();
@@ -19,7 +19,6 @@ export function LandingPage() {
           <div className="hidden md:flex items-center gap-6 lg:gap-8 text-sm font-semibold text-slate-600">
             <a href="#features" className="hover:text-emerald-600 transition-colors whitespace-nowrap">Features</a>
             <a href="#how-it-works" className="hover:text-emerald-600 transition-colors whitespace-nowrap">How It Works</a>
-            <a href="#roles" className="hover:text-emerald-600 transition-colors whitespace-nowrap">Roles</a>
             <a href="#testimonials" className="hover:text-emerald-600 transition-colors whitespace-nowrap">Testimonials</a>
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
@@ -66,7 +65,7 @@ export function LandingPage() {
               Fair, transparent <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-emerald-400">harvest payouts</span> for everyone.
             </h1>
             <p className="text-lg md:text-xl text-slate-600 mb-8 leading-relaxed max-w-xl">
-              From the sugarcane field to the refinery. Track your deliveries, verify your earnings, and get paid fairly — all in one place.
+              From the sugarcane field to the mill. Track your bagon deliveries, know your earnings, and get paid fairly — all in one place.
             </p>
             <div className="flex flex-col sm:flex-row items-center gap-4">
               <button 
@@ -88,7 +87,7 @@ export function LandingPage() {
                 <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" /> Transparent Pricing
               </div>
               <div className="flex items-center gap-1.5 sm:gap-2">
-                <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" /> Immutable Audits
+                <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" /> Accurate Weights
               </div>
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" /> 24/7 Support
@@ -116,23 +115,23 @@ export function LandingPage() {
                     <Truck className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-extrabold text-slate-900 text-lg tracking-tight">Delivery #TKT-8291</h3>
+                    <h3 className="font-extrabold text-slate-900 text-lg tracking-tight">Delivery QDN-2026-001</h3>
                     <p className="text-sm font-medium text-slate-500 mt-0.5">Farm: Hacienda San Jose</p>
                   </div>
                 </div>
                 <div className="px-4 py-1.5 bg-emerald-50 text-emerald-700 rounded-full text-xs font-bold uppercase border border-emerald-200 tracking-wider">
-                  Reconciled
+                  Paid
                 </div>
               </div>
               
               <div className="grid grid-cols-3 gap-4 mb-6">
                 <div className="bg-gradient-to-br from-slate-50 to-slate-100/50 p-4 rounded-2xl border border-slate-100">
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Mill Weight</span>
-                  <span className="text-2xl font-black text-slate-800">15,400 <span className="text-base text-slate-500 font-semibold">kg</span></span>
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Gross Weight</span>
+                  <span className="text-2xl font-black text-slate-800">17,400 <span className="text-base text-slate-500 font-semibold">kg</span></span>
                 </div>
                 <div className="bg-gradient-to-br from-slate-50 to-slate-100/50 p-4 rounded-2xl border border-slate-100">
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Refinery</span>
-                  <span className="text-2xl font-black text-slate-800">15,380 <span className="text-base text-slate-500 font-semibold">kg</span></span>
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Net Weight</span>
+                  <span className="text-2xl font-black text-slate-800">15,400 <span className="text-base text-slate-500 font-semibold">kg</span></span>
                 </div>
                 <div className="bg-gradient-to-br from-slate-50 to-slate-100/50 p-4 rounded-2xl border border-slate-100">
                   <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Monthly Deliveries</span>
@@ -144,9 +143,6 @@ export function LandingPage() {
                  <div>
                     <span className="block text-emerald-100 text-xs font-bold uppercase tracking-wider mb-1">Farmer Payout</span>
                     <span className="text-3xl font-black">₱38,500.00</span>
-                 </div>
-                 <div className="bg-emerald-500/50 px-3 py-1.5 rounded-lg border border-emerald-400/50 backdrop-blur-sm">
-                    <span className="text-xs font-bold">@ ₱2.50 / kg</span>
                  </div>
               </div>
             </div>
@@ -215,9 +211,9 @@ export function LandingPage() {
               <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/20 mb-6 group-hover:scale-110 transition-transform">
                 <Activity className="w-7 h-7 text-white" />
               </div>
-              <h3 className="text-xl font-extrabold mb-3 text-slate-900">Automated Reconciliation</h3>
+              <h3 className="text-xl font-extrabold mb-3 text-slate-900">Bagon Delivery Tracking</h3>
               <p className="text-slate-600 text-sm flex-1 leading-relaxed font-medium">
-                Mill outbound weights are automatically compared against records. Discrepancies are flagged instantly so you always get paid for exactly what you delivered.
+                Each delivery is linked to a specific bagon with known tare weight. Gross and net weights are calculated instantly so you always know your delivered volume.
               </p>
             </motion.div>
             
@@ -230,7 +226,7 @@ export function LandingPage() {
               </div>
               <h3 className="text-xl font-extrabold mb-3 text-slate-900">Transparent Payouts</h3>
               <p className="text-slate-600 text-sm flex-1 leading-relaxed font-medium">
-                Live visibility into pricing. Farmers can see exactly how much their delivery is worth the moment the weight is reconciled at the refinery. No more hidden fees.
+                Farmers record mill payments manually and track their earnings. Full visibility into every delivery's net weight and payout amount — no more guesswork.
               </p>
             </motion.div>
             
@@ -241,9 +237,9 @@ export function LandingPage() {
               <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/20 mb-6 group-hover:scale-110 transition-transform">
                 <Scale className="w-7 h-7 text-white" />
               </div>
-              <h3 className="text-xl font-extrabold mb-3 text-slate-900">Role-Based Access</h3>
+              <h3 className="text-xl font-extrabold mb-3 text-slate-900">Farm & Expense Management</h3>
               <p className="text-slate-600 text-sm flex-1 leading-relaxed font-medium">
-                Farmers see their own data and earnings. Admins oversee the platform. Everyone stays in their lane with clear permissions.
+                Manage multiple farms, track operational expenses, and monitor profitability — all from a single farmer dashboard built for sugarcane growers.
               </p>
             </motion.div>
           </div>
@@ -310,8 +306,8 @@ export function LandingPage() {
                 <span className="text-2xl font-black text-white">3</span>
               </div>
               <FileText className="w-8 h-8 text-emerald-600 mx-auto mb-3" />
-              <h3 className="text-lg font-extrabold text-slate-900 mb-2">Reconciliation</h3>
-              <p className="text-sm text-slate-600 font-medium">Admin verifies mill weight and price, then reconciles your quedan.</p>
+              <h3 className="text-lg font-extrabold text-slate-900 mb-2">Recording</h3>
+              <p className="text-sm text-slate-600 font-medium">Mill payment is recorded by the farmer and linked to the delivery quedan.</p>
             </motion.div>
             
             <motion.div 
@@ -326,7 +322,7 @@ export function LandingPage() {
               </div>
               <DollarSign className="w-8 h-8 text-emerald-600 mx-auto mb-3" />
               <h3 className="text-lg font-extrabold text-slate-900 mb-2">Payout</h3>
-              <p className="text-sm text-slate-600 font-medium">Farmer receives instant payout calculation based on verified weight.</p>
+              <p className="text-sm text-slate-600 font-medium">Track payment history and see how much you've earned per delivery and per farm.</p>
             </motion.div>
           </div>
         </div>
@@ -337,13 +333,13 @@ export function LandingPage() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold uppercase tracking-wider mb-4 border border-emerald-100">
-              <Users className="w-4 h-4" /> Built for Everyone
+              <Sprout className="w-4 h-4" /> Built for Sugarcane Farmers
             </div>
-            <h2 className="text-3xl md:text-5xl font-extrabold mb-4 text-slate-900 tracking-tight">Tailored for every role</h2>
-            <p className="text-slate-600 max-w-2xl mx-auto text-lg leading-relaxed">Each user gets a personalized dashboard designed for their specific workflow.</p>
+            <h2 className="text-3xl md:text-5xl font-extrabold mb-4 text-slate-900 tracking-tight">Everything a farmer needs</h2>
+            <p className="text-slate-600 max-w-2xl mx-auto text-lg leading-relaxed">A single, powerful dashboard for tracking deliveries, payments, and farm expenses.</p>
           </div>
           
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="max-w-md mx-auto">
             <motion.div 
               whileHover={{ y: -4 }}
               className="bg-gradient-to-br from-emerald-50 to-white border border-emerald-100 hover:border-emerald-300 hover:shadow-xl hover:shadow-emerald-100/50 transition-all rounded-3xl p-6 text-center group overflow-hidden relative"
@@ -354,18 +350,6 @@ export function LandingPage() {
               </div>
               <h3 className="text-lg font-extrabold text-slate-900 mb-2">Farmer</h3>
               <p className="text-sm text-slate-600 font-medium">Track deliveries, view earnings, manage expenses, and monitor payout history in real-time.</p>
-            </motion.div>
-            
-            <motion.div 
-              whileHover={{ y: -4 }}
-              className="bg-gradient-to-br from-purple-50 to-white border border-purple-100 hover:border-purple-300 hover:shadow-xl hover:shadow-purple-100/50 transition-all rounded-3xl p-6 text-center group overflow-hidden relative"
-            >
-              <div className="absolute top-0 right-0 w-24 h-24 bg-purple-100/50 rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="w-16 h-16 mx-auto bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/20 mb-4">
-                <Shield className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-lg font-extrabold text-slate-900 mb-2">Admin</h3>
-              <p className="text-sm text-slate-600 font-medium">Full platform oversight, user management, reports, pricing, and dispute resolution.</p>
             </motion.div>
           </div>
         </div>
@@ -418,7 +402,7 @@ export function LandingPage() {
                   </div>
                 ))}
               </div>
-              <p className="text-slate-600 font-medium mb-6 leading-relaxed">"The automated reconciliation saves us hours every day. Discrepancies are caught instantly and resolved quickly."</p>
+              <p className="text-slate-600 font-medium mb-6 leading-relaxed">"Tracking deliveries is so much easier now. I can see every bagon's weight and know exactly what I'm getting paid."</p>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white font-bold">PC</div>
                 <div>
@@ -439,12 +423,12 @@ export function LandingPage() {
                   </div>
                 ))}
               </div>
-              <p className="text-slate-600 font-medium mb-6 leading-relaxed">"As an admin, I have complete visibility into all operations. The reporting tools are excellent for compliance and audits."</p>
+              <p className="text-slate-600 font-medium mb-6 leading-relaxed">"CaneTrack makes it easy to track all my bagon deliveries and expenses. I can see my earnings at a glance without any confusion."</p>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">AS</div>
+                <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold">AS</div>
                 <div>
                   <p className="font-bold text-slate-900 text-sm">Ana Santos</p>
-                  <p className="text-xs text-slate-500">Admin, CaneTrack HQ</p>
+                  <p className="text-xs text-slate-500">Farmer, Hacienda Luz</p>
                 </div>
               </div>
             </motion.div>
@@ -523,7 +507,6 @@ export function LandingPage() {
               <ul className="space-y-3 text-sm">
                 <li><a href="#features" className="hover:text-emerald-400 transition-colors">Features</a></li>
                 <li><a href="#how-it-works" className="hover:text-emerald-400 transition-colors">How It Works</a></li>
-                <li><a href="#roles" className="hover:text-emerald-400 transition-colors">Roles</a></li>
                 <li><a href="#testimonials" className="hover:text-emerald-400 transition-colors">Testimonials</a></li>
               </ul>
             </div>

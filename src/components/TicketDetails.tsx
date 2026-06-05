@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Printer, Clock, User, Truck, Scale, AlertTriangle, CheckCircle, FileText, Calendar, MapPin, Phone, Mail, Eye, Plus, Minus, Building2, Wallet, Camera, Trash2, DollarSign } from 'lucide-react';
+import { X, Printer, Clock, User, Truck, Scale, CheckCircle, FileText, Calendar, MapPin, Phone, Mail, Plus, Minus, Building2, Wallet, Camera, Trash2, DollarSign, AlertTriangle } from 'lucide-react';
 import api from '../api/axiosInstance';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../hooks/useAuth';
@@ -15,17 +15,11 @@ interface TicketDetailsProps {
 
 const timelineIcons: any = {
   CREATED: Clock,
-  RECONCILED: CheckCircle,
-  FLAGGED: AlertTriangle,
-  RESOLVED: CheckCircle,
   UPDATED: Clock,
 };
 
 const timelineColors: any = {
   CREATED: { dot: 'bg-blue-500', line: 'bg-blue-300', bg: 'bg-blue-50 dark:bg-blue-950/30', text: 'text-blue-700 dark:text-blue-400', border: 'border-blue-200 dark:border-blue-800' },
-  RECONCILED: { dot: 'bg-emerald-500', line: 'bg-emerald-300', bg: 'bg-emerald-50 dark:bg-emerald-950/30', text: 'text-emerald-700 dark:text-emerald-400', border: 'border-emerald-200 dark:border-emerald-800' },
-  FLAGGED: { dot: 'bg-red-500', line: 'bg-red-300', bg: 'bg-red-50 dark:bg-red-950/30', text: 'text-red-700 dark:text-red-400', border: 'border-red-200 dark:border-red-800' },
-  RESOLVED: { dot: 'bg-purple-500', line: 'bg-purple-300', bg: 'bg-purple-50 dark:bg-purple-950/30', text: 'text-purple-700 dark:text-purple-400', border: 'border-purple-200 dark:border-purple-800' },
   UPDATED: { dot: 'bg-slate-500', line: 'bg-slate-300', bg: 'bg-slate-50 dark:bg-slate-950/30', text: 'text-slate-700 dark:text-slate-400', border: 'border-slate-200 dark:border-slate-800' },
 };
 
@@ -68,14 +62,6 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
   const [expPhotoPreview, setExpPhotoPreview] = useState<string | null>(null);
   const [showExpForm, setShowExpForm] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
-  const [showDisputeModal, setShowDisputeModal] = useState(false);
-  const [disputeReason, setDisputeReason] = useState('');
-  const [disputePhoto, setDisputePhoto] = useState<File | null>(null);
-  const [disputePhotoPreview, setDisputePhotoPreview] = useState<string | null>(null);
-  const [showResolveModal, setShowResolveModal] = useState(false);
-  const [resolveForm, setResolveForm] = useState({ adjustedWeight: '', adjustedPrice: '', notes: '' });
-  const [showRejectModal, setShowRejectModal] = useState(false);
-  const [rejectReason, setRejectReason] = useState('');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [payForm, setPayForm] = useState({ method: 'BANK_TRANSFER', referenceNumber: '', grossAmount: '', deductions: '0', netAmount: '', notes: '' });
   const [payProof, setPayProof] = useState<File | null>(null);
@@ -83,15 +69,14 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
   const { isDark } = useTheme();
   const { user } = useAuth();
   const totalExp = expenses.reduce((sum: number, e: any) => sum + Number(e.amount), 0);
-  const isLocked = ticket && (ticket.status === 'RECONCILED' || ticket.status === 'DISPUTED');
-  const qualityFactor = ticket?.brix != null && ticket?.pol != null ? (Number(ticket.brix) + Number(ticket.pol)) / 200 : null;
+  const isLocked = ticket?.status === 'PAID';
   const profitLoss = ticket?.payment ? Number(ticket.payment.netAmount) - totalExp : null;
 
   useEffect(() => {
     Promise.all([
       api.get(`/tickets/${ticketId}`).then(res => { setTicket(res.data.ticket); setTimeline(res.data.timeline || []); }),
       api.get(`/expenses?quedanId=${ticketId}`).then(res => setExpenses(res.data.expenses)),
-      api.get('/expense-categories').then(res => setCategories(res.data.categories.filter((c: any) => c.type === 'DELIVERY' && c.isActive)))
+      api.get('/expense-categories').then(res => setCategories(res.data.categories.filter((c: any) => c.isActive)))
     ]).then(() => setLoading(false)).catch(() => setLoading(false));
   }, [ticketId]);
 
@@ -135,57 +120,6 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
     } catch (e: any) { toast.error(e.response?.data?.message || 'Delete failed'); }
   };
 
-  const handleFlagDispute = async () => {
-    if (!disputeReason.trim() || disputeReason.trim().length < 10) { toast.error('Please provide a reason (min 10 characters)'); return; }
-    try {
-      let photoUrl = '';
-      if (disputePhoto) {
-        const fd = new FormData();
-        fd.append('file', disputePhoto);
-        const { data } = await api.post('/upload', fd);
-        photoUrl = data.url;
-      }
-      await api.patch(`/tickets/${ticketId}`, { status: 'DISPUTED', disputeNotes: disputeReason.trim(), disputePhotoUrl: photoUrl || undefined });
-      toast.success('Dispute flagged successfully');
-      setShowDisputeModal(false);
-      setDisputeReason('');
-      setDisputePhoto(null);
-      setDisputePhotoPreview(null);
-      const res = await api.get(`/tickets/${ticketId}`);
-      setTicket(res.data.ticket);
-      setTimeline(res.data.timeline || []);
-    } catch (e: any) { toast.error(e.response?.data?.message || 'Failed to flag dispute'); }
-  };
-
-  const handleAcceptAdjust = async () => {
-    if (!resolveForm.notes.trim() || resolveForm.notes.trim().length < 10) { toast.error('Please provide resolution notes (min 10 characters)'); return; }
-    try {
-      const payload: any = { status: 'RECONCILED', notes: resolveForm.notes.trim(), disputeFinal: true };
-      if (resolveForm.adjustedWeight) payload.adjustedWeight = Number(resolveForm.adjustedWeight);
-      if (resolveForm.adjustedPrice) payload.adjustedPrice = Number(resolveForm.adjustedPrice);
-      await api.patch(`/tickets/${ticketId}`, payload);
-      toast.success('Dispute resolved — quedan reconciled');
-      setShowResolveModal(false);
-      setResolveForm({ adjustedWeight: '', adjustedPrice: '', notes: '' });
-      const res = await api.get(`/tickets/${ticketId}`);
-      setTicket(res.data.ticket);
-      setTimeline(res.data.timeline || []);
-    } catch (e: any) { toast.error(e.response?.data?.message || 'Failed to resolve dispute'); }
-  };
-
-  const handleRejectDispute = async () => {
-    if (!rejectReason.trim() || rejectReason.trim().length < 10) { toast.error('Please provide a reason (min 10 characters)'); return; }
-    try {
-      await api.patch(`/tickets/${ticketId}`, { disputeFinal: true, notes: rejectReason.trim() });
-      toast.success('Dispute rejected — permanently recorded');
-      setShowRejectModal(false);
-      setRejectReason('');
-      const res = await api.get(`/tickets/${ticketId}`);
-      setTicket(res.data.ticket);
-      setTimeline(res.data.timeline || []);
-    } catch (e: any) { toast.error(e.response?.data?.message || 'Failed to reject dispute'); }
-  };
-
   const handleProcessPayment = async () => {
     if (!payForm.method) { toast.error('Select a payment method'); return; }
     const gross = parseFloat(payForm.grossAmount);
@@ -217,12 +151,6 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
 
   const handlePrint = () => {
     if (!ticket) return;
-    const variance = ticket.reconciliation
-      ? `${ticket.reconciliation.difference > 0 ? '+' : ''}${ticket.reconciliation.difference} kg`
-      : 'N/A';
-    const refineryWt = ticket.reconciliation
-      ? formatWeight(ticket.reconciliation.refineryWeight)
-      : 'N/A';
 
     const printContent = `<!DOCTYPE html>
 <html>
@@ -237,10 +165,8 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
   .header .subtitle { font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 2px; margin-top: 4px; }
   .ticket-no { font-size: 32px; font-weight: 900; font-family: 'Courier New', monospace; color: #059669; margin: 8px 0; letter-spacing: 1px; }
   .status { display: inline-block; padding: 4px 16px; border-radius: 100px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; border: 1.5px solid; }
-  .status.RECONCILED { background: #ecfdf5; color: #059669; border-color: #a7f3d0; }
+  .status.PAID { background: #ecfdf5; color: #059669; border-color: #a7f3d0; }
   .status.PENDING { background: #fefce8; color: #d97706; border-color: #fde68a; }
-  .status.DISPUTED { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
-  .status.SUBMITTED { background: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
   .section { margin-bottom: 24px; }
   .section-title { font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: #10b981; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 2px solid #e2e8f0; }
@@ -253,16 +179,6 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
   .info-group { border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; }
   .info-group h4 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #10b981; margin-bottom: 8px; }
   .footer { text-align: center; padding-top: 20px; border-top: 2px solid #e2e8f0; font-size: 11px; color: #94a3b8; margin-top: 24px; }
-  .timeline-section { margin-top: 24px; }
-  .timeline-item { display: flex; gap: 12px; padding: 8px 0; }
-  .timeline-dot { width: 12px; height: 12px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
-  .timeline-dot.created { background: #3b82f6; }
-  .timeline-dot.reconciled { background: #10b981; }
-  .timeline-dot.flagged { background: #ef4444; }
-  .timeline-dot.resolved { background: #8b5cf6; }
-  .timeline-content .tl-label { font-size: 13px; font-weight: 700; }
-  .timeline-content .tl-desc { font-size: 11px; color: #64748b; margin-top: 1px; }
-  .timeline-content .tl-date { font-size: 10px; color: #94a3b8; margin-top: 1px; }
 </style></head>
 <body>
 <div class="print-container">
@@ -277,23 +193,16 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
     <div class="weight-highlight">
       <div class="row"><span class="field-label">Gross Weight</span><span class="field-value">${formatWeight(ticket.grossWeight)}</span></div>
       <div class="row"><span class="field-label">Tare Weight</span><span class="field-value">${formatWeight(ticket.tareWeight)}</span></div>
-      <div class="row total"><span>Mill Weight</span><span>${formatWeight(ticket.millWeight)}</span></div>
-      <div class="row" style="margin-top:6px;padding-top:6px;border-top:1px solid #e2e8f0;"><span class="field-label">Refinery Weight</span><span class="field-value">${refineryWt}</span></div>
-      <div class="row"><span class="field-label">Variance</span><span class="field-value">${variance}</span></div>
+      <div class="row total"><span>Net Weight</span><span>${formatWeight(ticket.netWeight)}</span></div>
     </div>
   </div>
 
   <div class="grid-2">
     <div class="info-group">
-      <h4>Truck Information</h4>
-      <div class="field"><div class="field-label">Plate Number</div><div class="field-value">${ticket.truckPlate}</div></div>
+      <h4>Bagon Information</h4>
+      <div class="field"><div class="field-label">Plate Number</div><div class="field-value">${ticket.bagon?.plateNumber || '-'}</div></div>
       <div class="field"><div class="field-label">Farm Origin</div><div class="field-value">${ticket.farm?.farmName || '-'}</div></div>
       <div class="field"><div class="field-label">Farm Location</div><div class="field-value">${ticket.farm?.location || '-'}</div></div>
-    </div>
-    <div class="info-group">
-      <h4>Financial Summary</h4>
-      <div class="field"><div class="field-label">Price per Kg</div><div class="field-value">₱${ticket.pricePerKg?.toFixed(2) || '2.50'}</div></div>
-      <div class="field"><div class="field-label">Total Value</div><div class="field-value">₱${ticket.totalValue?.toFixed(2) || '0.00'}</div></div>
     </div>
   </div>
 
@@ -307,18 +216,6 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
     <div class="info-group">
       <h4>Updated</h4>
       <div class="field-value">${new Date(ticket.updatedAt).toLocaleString()}</div>
-    </div>
-    <div class="info-group">
-      <h4>Verified</h4>
-      <div class="field-value">${ticket.verifiedAt ? new Date(ticket.verifiedAt).toLocaleString() : 'Not yet verified'}</div>
-    </div>
-    <div class="info-group">
-      <h4>Reconciled</h4>
-      <div class="field-value">${ticket.reconciliation?.reconciledAt ? new Date(ticket.reconciliation.reconciledAt).toLocaleString() : 'Pending'}</div>
-    </div>
-    <div class="info-group">
-      <h4>Resolved</h4>
-      <div class="field-value">${ticket.reconciliation?.resolvedAt ? new Date(ticket.reconciliation.resolvedAt).toLocaleString() : 'N/A'}</div>
     </div>
     </div>
   </div>
@@ -339,29 +236,14 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
     </div>
   </div>
 
-  ${ticket.reconciliation ? `
-  <div class="info-group" style="margin-bottom: 16px;">
-    <h4>Receiver</h4>
-    <div class="field"><div class="field-value">${ticket.reconciliation.admin?.name || '-'}</div></div>
-    <div class="field"><div class="field-label">Email</div><div class="field-value">${ticket.reconciliation.admin?.email || '-'}</div></div>
-    <div class="field"><div class="field-label">Contact</div><div class="field-value">${ticket.reconciliation.admin?.contactNumber || '-'}</div></div>
-  </div>
-  ` : ''}
-
   ${ticket.notes ? `<div class="info-group" style="margin-bottom: 16px;"><h4>Notes & Remarks</h4><div class="field-value">${ticket.notes}</div></div>` : ''}
-  ${ticket.reconciliation?.notes ? `<div class="info-group" style="margin-bottom: 16px;"><h4>Resolution Notes</h4><div class="field-value">${ticket.reconciliation.notes}</div></div>` : ''}
 
   ${timeline.length > 0 ? `
-  <div class="timeline-section">
+  <div class="section">
     <div class="section-title">Activity Timeline</div>
     ${timeline.map((e: any) => `
     <div class="timeline-item">
-      <div class="timeline-dot ${e.type.toLowerCase()}"></div>
-      <div class="timeline-content">
-        <div class="tl-label">${e.label}</div>
-        <div class="tl-desc">${e.description}</div>
-        <div class="tl-date">${new Date(e.date).toLocaleString()}</div>
-      </div>
+      <div class="field-value">${e.label}: ${e.description} — ${new Date(e.date).toLocaleString()}</div>
     </div>
     `).join('')}
   </div>
@@ -423,33 +305,15 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
                           <StatusBadge status={ticket.status} />
                         </div>
                         <p className={`text-sm mt-1 font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                          {ticket.farm?.farmName || 'Unknown Farm'} &bull; {ticket.truckPlate}
+                          {ticket.farm?.farmName || 'Unknown Farm'} &bull; {ticket.bagon?.plateNumber || '-'}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {user?.role === 'FARMER' && ticket?.status !== 'RECONCILED' && ticket?.status !== 'DISPUTED' && ticket?.status !== 'PAID' && (
-                        <button onClick={() => setShowDisputeModal(true)}
-                          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider border transition-all shadow-sm ${isDark ? 'bg-red-950/30 border-red-800 text-red-400 hover:bg-red-900/50 hover:text-red-300' : 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100'}`}>
-                          <AlertTriangle className="w-4 h-4" /> Flag Dispute
-                        </button>
-                      )}
-                      {user?.role === 'ADMIN' && ticket?.status === 'DISPUTED' && (
-                        <button onClick={() => { setResolveForm({ adjustedWeight: String(ticket.millWeight || ''), adjustedPrice: String(ticket.adjustedPrice || ticket.pricePerKg || ''), notes: '' }); setShowResolveModal(true); }}
-                          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider border transition-all shadow-sm ${isDark ? 'bg-emerald-950/30 border-emerald-800 text-emerald-400 hover:bg-emerald-900/50 hover:text-emerald-300' : 'bg-emerald-50 border-emerald-200 text-emerald-600 hover:bg-emerald-100'}`}>
-                          <CheckCircle className="w-4 h-4" /> Accept & Adjust
-                        </button>
-                      )}
-                      {user?.role === 'ADMIN' && ticket?.status === 'DISPUTED' && (
-                        <button onClick={() => { setRejectReason(''); setShowRejectModal(true); }}
-                          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider border transition-all shadow-sm ${isDark ? 'bg-red-950/30 border-red-800 text-red-400 hover:bg-red-900/50 hover:text-red-300' : 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100'}`}>
-                          <X className="w-4 h-4" /> Reject Dispute
-                        </button>
-                      )}
-                      {user?.role === 'ADMIN' && ticket?.status === 'RECONCILED' && !ticket.payment && (
-                        <button onClick={() => { setPayForm({ method: 'BANK_TRANSFER', referenceNumber: '', grossAmount: String(ticket.totalValue || ''), deductions: '0', netAmount: String(ticket.totalValue || ''), notes: '' }); setShowPaymentModal(true); }}
+                      {ticket?.status !== 'PAID' && (
+                        <button onClick={() => { setPayForm({ method: 'BANK_TRANSFER', referenceNumber: '', grossAmount: ticket.netWeight ? String(Number(ticket.netWeight) * 2.5) : '', deductions: '0', netAmount: ticket.netWeight ? String(Number(ticket.netWeight) * 2.5) : '', notes: '' }); setShowPaymentModal(true); }}
                           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider border transition-all shadow-sm ${isDark ? 'bg-blue-950/30 border-blue-800 text-blue-400 hover:bg-blue-900/50 hover:text-blue-300' : 'bg-blue-50 border-blue-200 text-blue-600 hover:bg-blue-100'}`}>
-                          <DollarSign className="w-4 h-4" /> Process Payment
+                          <DollarSign className="w-4 h-4" /> Record Payment
                         </button>
                       )}
                       <button
@@ -471,33 +335,15 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
                 <div className="p-6 sm:p-8 space-y-8 overflow-y-auto max-h-[calc(100vh-12rem)]">
                   {/* Weights Section */}
                   <div>
-                    <SectionTitle title="Weights & Valuation" icon={Scale} />
+                    <SectionTitle title="Weights" icon={Scale} />
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                       <DetailRow label="Gross Weight" value={formatWeight(ticket.grossWeight)} icon={Plus} />
                       <DetailRow label="Tare Weight" value={formatWeight(ticket.tareWeight)} icon={Minus} />
-                      <DetailRow label="Mill Weight" value={formatWeight(ticket.millWeight)} icon={Scale} />
-                      <DetailRow
-                        label="Refinery Weight"
-                        value={ticket.reconciliation ? formatWeight(ticket.reconciliation.refineryWeight) : 'Pending'}
-                        icon={Scale}
-                      />
-                      <DetailRow
-                        label="Variance"
-                        value={ticket.reconciliation ? `${ticket.reconciliation.difference > 0 ? '+' : ''}${ticket.reconciliation.difference} kg` : 'N/A'}
-                        icon={ticket.reconciliation && Math.abs(ticket.reconciliation.difference) > 50 ? AlertTriangle : CheckCircle}
-                      />
-                      <DetailRow label="Price per Kg" value={`₱${ticket.pricePerKg?.toFixed(2) || '2.50'}`} icon={FileText} />
-                      {qualityFactor !== null && (
-                        <DetailRow label="Quality Factor" value={qualityFactor.toFixed(4)} icon={FileText} />
-                      )}
-                      {qualityFactor !== null && (
-                        <DetailRow label="Effective Price" value={`₱${((ticket.pricePerKg || 2.50) * qualityFactor).toFixed(2)}`} icon={FileText} />
-                      )}
-                      <DetailRow label="Total Value" value={`₱${ticket.totalValue?.toFixed(2) || '0.00'}`} icon={FileText} />
+                      <DetailRow label="Net Weight" value={formatWeight(ticket.netWeight)} icon={Scale} />
                       <DetailRow
                         label="Status"
                         value={ticket.status}
-                        icon={ticket.status === 'RECONCILED' ? CheckCircle : ticket.status === 'DISPUTED' ? AlertTriangle : Clock}
+                        icon={ticket.status === 'PAID' ? CheckCircle : Clock}
                       />
                     </div>
                   </div>
@@ -548,6 +394,19 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
                           <div className={`p-2 rounded-xl ${isDark ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-600'}`}>
                             <Truck className="w-4 h-4" />
                           </div>
+                          <span className={`text-xs font-extrabold uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Bagon</span>
+                        </div>
+                        <p className={`font-bold text-base ${isDark ? 'text-white' : 'text-slate-900'}`}>{ticket.bagon?.plateNumber || '-'}</p>
+                        {ticket.bagon?.type && (
+                          <p className={`text-sm mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{ticket.bagon.type} Bagon</p>
+                        )}
+                      </div>
+
+                      <div className={`p-5 rounded-2xl border relative overflow-hidden ${isDark ? 'border-slate-700 bg-slate-800/50' : 'border-slate-100 bg-slate-50/50'}`}>
+                        <div className="flex items-center gap-2 mb-4">
+                          <div className={`p-2 rounded-xl ${isDark ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-600'}`}>
+                            <User className="w-4 h-4" />
+                          </div>
                           <span className={`text-xs font-extrabold uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Operator</span>
                         </div>
                         <p className={`font-bold text-base ${isDark ? 'text-white' : 'text-slate-900'}`}>{ticket.farmer?.name || '-'}</p>
@@ -564,58 +423,15 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
                           </div>
                         )}
                       </div>
-
-                      <div className={`p-5 rounded-2xl border relative overflow-hidden ${isDark ? 'border-slate-700 bg-slate-800/50' : 'border-slate-100 bg-slate-50/50'}`}>
-                        <div className="flex items-center gap-2 mb-4">
-                          <div className={`p-2 rounded-xl ${isDark ? 'bg-orange-900/30 text-orange-400' : 'bg-orange-100 text-orange-600'}`}>
-                            <CheckCircle className="w-4 h-4" />
-                          </div>
-                          <span className={`text-xs font-extrabold uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Receiver</span>
-                        </div>
-                        {ticket.reconciliation ? (
-                          <>
-                            <p className={`font-bold text-base ${isDark ? 'text-white' : 'text-slate-900'}`}>{ticket.reconciliation.admin?.name || '-'}</p>
-                            {ticket.reconciliation.admin?.email && (
-                              <div className="flex items-center gap-1.5 mt-2 text-xs">
-                                <Mail className={`w-3 h-3 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} />
-                                <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>{ticket.reconciliation.admin.email}</span>
-                              </div>
-                            )}
-                            {ticket.reconciliation.admin?.contactNumber && (
-                              <div className="flex items-center gap-1.5 mt-1 text-xs">
-                                <Phone className={`w-3 h-3 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} />
-                                <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>{ticket.reconciliation.admin.contactNumber}</span>
-                              </div>
-                            )}
-                          </>
-                        ) : (
-                          <p className={`text-sm font-medium ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Not yet assigned</p>
-                        )}
-                      </div>
                     </div>
                   </div>
 
                   {/* Dates */}
                   <div>
                     <SectionTitle title="Important Dates" icon={Calendar} />
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <DetailRow label="Created" value={formatDate(ticket.createdAt)} icon={Clock} />
                       <DetailRow label="Updated" value={formatDate(ticket.updatedAt)} icon={Clock} />
-                      <DetailRow
-                        label="Verified"
-                        value={ticket.verifiedAt ? formatDate(ticket.verifiedAt) : 'Pending'}
-                        icon={CheckCircle}
-                      />
-                      <DetailRow
-                        label="Reconciled"
-                        value={ticket.reconciliation?.reconciledAt ? formatDate(ticket.reconciliation.reconciledAt) : 'Pending'}
-                        icon={CheckCircle}
-                      />
-                      <DetailRow
-                        label="Resolved"
-                        value={ticket.reconciliation?.resolvedAt ? formatDate(ticket.reconciliation.resolvedAt) : 'N/A'}
-                        icon={CheckCircle}
-                      />
                     </div>
                   </div>
 
@@ -625,39 +441,6 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
                       <SectionTitle title="Notes & Remarks" icon={FileText} />
                       <div className={`p-5 rounded-2xl border ${isDark ? 'border-slate-700 bg-slate-800/50' : 'border-slate-100 bg-slate-50'}`}>
                         <p className={`text-sm leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{ticket.notes}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Dispute Info */}
-                  {ticket.disputeNotes && (
-                    <div>
-                      <SectionTitle title="Dispute Details" icon={AlertTriangle} />
-                      <div className={`p-5 rounded-2xl border-2 ${isDark ? 'border-red-800 bg-red-950/20' : 'border-red-200 bg-red-50'}`}>
-                        <div className="flex items-start gap-3">
-                          <div className={`p-2 rounded-xl shrink-0 ${isDark ? 'bg-red-900/50 text-red-400' : 'bg-red-100 text-red-600'}`}>
-                            <AlertTriangle className="w-5 h-5" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className={`font-bold text-sm ${isDark ? 'text-red-400' : 'text-red-700'}`}>Dispute Reason</p>
-                            <p className={`text-sm mt-1 leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{ticket.disputeNotes}</p>
-                            {ticket.disputePhotoUrl && (
-                              <button type="button" onClick={() => setLightboxUrl(ticket.disputePhotoUrl)} className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-blue-500 hover:text-blue-400">
-                                <img src={ticket.disputePhotoUrl} alt="Dispute photo" className="h-12 rounded-lg object-cover border border-red-500/30" />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Resolution Notes */}
-                  {ticket.reconciliation?.notes && (
-                    <div>
-                      <SectionTitle title="Resolution Notes" icon={FileText} />
-                      <div className={`p-5 rounded-2xl border ${isDark ? 'border-slate-700 bg-slate-800/50' : 'border-slate-100 bg-slate-50'}`}>
-                        <p className={`text-sm leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{ticket.reconciliation.notes}</p>
                       </div>
                     </div>
                   )}
@@ -685,22 +468,10 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
                         <span>Total Expenses</span>
                         <span className="font-mono">₱{totalExp.toFixed(2)}</span>
                       </div>
-                      {ticket.totalValue && (
-                        <div className={`flex items-center justify-between px-4 sm:px-5 py-3 text-sm font-bold border-t ${isDark ? 'border-slate-700 bg-slate-800/50 text-white' : 'border-slate-200 bg-slate-50 text-slate-900'}`}>
-                          <span>Total Payment</span>
-                          <span className="font-mono">₱{Number(ticket.totalValue).toFixed(2)}</span>
-                        </div>
-                      )}
-                      {ticket.totalValue && (
-                        <div className={`flex items-center justify-between px-4 sm:px-5 py-3 text-sm font-bold border-t-2 ${isDark ? 'border-emerald-700 bg-emerald-950/30 text-emerald-400' : 'border-emerald-300 bg-emerald-50 text-emerald-700'}`}>
-                          <span>Net Proceeds</span>
-                          <span className="font-mono">₱{(Number(ticket.totalValue) - totalExp).toFixed(2)}</span>
-                        </div>
-                      )}
                     </div>
                     {isLocked ? (
                       <div className={`mt-3 p-3 rounded-xl border text-center text-sm font-medium ${isDark ? 'border-slate-700 bg-slate-800/50 text-slate-400' : 'border-slate-200 bg-slate-50 text-slate-500'}`}>
-                        Expenses are locked — quedan is {ticket.status.toLowerCase()}.
+                        Expenses are locked — quedan is paid.
                       </div>
                     ) : showExpForm ? (
                       <form onSubmit={handleAddExpense} className={`mt-3 p-4 sm:p-5 rounded-2xl border space-y-3 ${isDark ? 'border-slate-700 bg-slate-800/50' : 'border-slate-200 bg-slate-50'}`}>
@@ -743,7 +514,11 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
                             </div>
                           )}
                           {ticket.payment.notes && <div className={`text-xs mt-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{ticket.payment.notes}</div>}
-                          {ticket.payment.proofUrl && <button type="button" onClick={() => setLightboxUrl(ticket.payment.proofUrl)} className="mt-2"><img src={ticket.payment.proofUrl} alt="Payment proof" className="h-16 rounded-xl object-cover border border-blue-500/30 hover:border-blue-500" /></button>}
+                          {ticket.payment.proofUrl && (
+                            <button type="button" onClick={() => setLightboxUrl(ticket.payment.proofUrl)} className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-blue-500 hover:text-blue-400">
+                              <Camera className="w-3.5 h-3.5" /> View Proof
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -753,302 +528,107 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
                   {timeline.length > 0 && (
                     <div>
                       <SectionTitle title="Activity Timeline" icon={Clock} />
-                      <div className="relative">
-                        {/* Vertical line */}
-                        <div className={`absolute left-[19px] top-3 bottom-3 w-0.5 ${isDark ? 'bg-slate-700' : 'bg-slate-200'}`} />
-                        
-                        <div className="space-y-0">
-                          {timeline.map((event: any, idx: number) => {
-                            const Icon = timelineIcons[event.type] || Clock;
-                            const colors = timelineColors[event.type] || timelineColors.CREATED;
-                            return (
-                              <div key={idx} className="relative flex gap-5 pb-6 last:pb-0">
-                                <div className={`relative z-10 w-10 h-10 rounded-full flex items-center justify-center border-2 shrink-0 ${colors.dot} ${colors.border} shadow-sm`}>
-                                  <Icon className="w-4 h-4 text-white" />
-                                </div>
-                                <div className="flex-1 pt-1 min-w-0">
-                                  <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest border ${colors.bg} ${colors.text} ${colors.border}`}>
-                                    {event.label}
+                      <div className="space-y-3">
+                        {timeline.map((event: any, i: number) => {
+                          const Icon = timelineIcons[event.type] || Clock;
+                          const colors = timelineColors[event.type] || timelineColors.UPDATED;
+                          return (
+                            <div key={i} className="flex gap-4">
+                              <div className="flex flex-col items-center">
+                                <div className={`w-3 h-3 rounded-full ${colors.dot} ring-4 ${isDark ? 'ring-slate-900' : 'ring-white'}`} />
+                                {i < timeline.length - 1 && <div className={`w-0.5 flex-1 ${colors.line}`} />}
+                              </div>
+                              <div className={`flex-1 pb-4 ${i < timeline.length - 1 ? '' : ''}`}>
+                                <div className={`p-4 rounded-2xl border ${colors.bg} ${colors.border}`}>
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <Icon className={`w-4 h-4 ${colors.text}`} />
+                                    <span className={`text-sm font-extrabold ${colors.text}`}>{event.label}</span>
                                   </div>
-                                  <p className={`text-sm mt-2 font-medium ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{event.description}</p>
-                                  <p className={`text-xs mt-0.5 font-medium ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{formatDate(event.date)}</p>
+                                  <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{event.description}</p>
+                                  <p className={`text-[10px] font-semibold mt-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{formatDate(event.date)}</p>
                                 </div>
                               </div>
-                            );
-                          })}
-                        </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
                 </div>
               </>
             ) : (
-              <div className="flex flex-col items-center justify-center h-64 gap-3">
-                <AlertTriangle className={`w-10 h-10 ${isDark ? 'text-red-400' : 'text-red-500'}`} />
-                <p className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Failed to load ticket details</p>
-                <button onClick={onClose} className="text-sm text-emerald-500 hover:underline font-semibold">Close</button>
+              <div className="p-12 text-center">
+                <p className={`text-lg font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Ticket not found</p>
               </div>
             )}
           </motion.div>
         </motion.div>
       )}
-      </AnimatePresence>
-      {/* Dispute Modal */}
-      <AnimatePresence>
-        {showDisputeModal && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[60] flex items-center justify-center p-4" onClick={() => setShowDisputeModal(false)}>
-            <div className={`absolute inset-0 backdrop-blur-sm ${isDark ? 'bg-black/60' : 'bg-slate-900/50'}`} />
-            <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className={`relative w-full max-w-lg rounded-2xl border shadow-2xl overflow-hidden ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700 shadow-black/40' : 'bg-white border-slate-200 shadow-slate-200/40'}`}
-              onClick={e => e.stopPropagation()}>
-              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-500 via-red-400 to-red-500" />
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-red-100"><AlertTriangle className="w-5 h-5 text-red-600" /></div>
-                    <div>
-                      <h2 className={`text-lg font-extrabold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Flag Dispute</h2>
-                      <p className={`text-xs font-medium mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Report an issue with this quedan</p>
-                    </div>
-                  </div>
-                  <button onClick={() => { setShowDisputeModal(false); setDisputeReason(''); setDisputePhoto(null); setDisputePhotoPreview(null); }} className={`p-1.5 rounded-lg transition-colors ${isDark ? 'text-slate-500 hover:text-white hover:bg-slate-700' : 'text-slate-400 hover:text-slate-900 hover:bg-slate-100'}`}><X className="w-5 h-5" /></button>
+    </AnimatePresence>
+
+    {/* Payment Modal */}
+    <AnimatePresence>
+      {showPaymentModal && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[60] flex items-center justify-center p-4" onClick={() => setShowPaymentModal(false)}>
+          <div className={`absolute inset-0 backdrop-blur-sm ${isDark ? 'bg-black/60' : 'bg-slate-900/50'}`} />
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
+            className={`relative w-full max-w-md rounded-2xl sm:rounded-[2rem] border shadow-2xl overflow-hidden ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}
+            onClick={e => e.stopPropagation()}>
+            <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-500 via-blue-400 to-blue-500" />
+            <div className="p-6 sm:p-8">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2.5 rounded-xl ${isDark ? 'bg-blue-900/50' : 'bg-blue-100'}`}><DollarSign className="w-5 h-5 text-blue-500" /></div>
+                  <h2 className={`text-lg font-extrabold ${isDark ? 'text-white' : 'text-slate-900'}`}>Record Payment</h2>
                 </div>
-                <div className="space-y-4">
-                  <div>
-                    <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Reason *</label>
-                    <textarea rows={4} value={disputeReason} onChange={e => setDisputeReason(e.target.value)} placeholder="Describe the issue (min 10 characters)..."
-                      className={`w-full px-4 py-3 border rounded-xl outline-none text-sm font-medium resize-none focus:ring-4 focus:ring-red-500/10 focus:border-red-500 transition-all min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400'}`} />
-                    <p className={`text-xs mt-1 ml-1 font-medium ${disputeReason.trim().length < 10 ? 'text-red-500' : isDark ? 'text-slate-500' : 'text-slate-400'}`}>{disputeReason.length}/10 min characters</p>
-                  </div>
-                  <div>
-                    <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Supporting Photo (optional)</label>
-                    <input type="file" accept="image/*" onChange={e => {
-                      const file = e.target.files?.[0] || null;
-                      if (file) {
-                        if (!file.type.startsWith('image/')) { toast.error('Only image files allowed'); return; }
-                        if (file.size > 5 * 1024 * 1024) { toast.error('File must be under 5MB'); return; }
-                      }
-                      setDisputePhoto(file);
-                      setDisputePhotoPreview(file ? URL.createObjectURL(file) : null);
-                    }} className={`w-full text-sm file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:cursor-pointer min-h-[44px] ${isDark ? 'text-slate-300 file:bg-red-600 file:text-white' : 'text-slate-600 file:bg-red-500 file:text-white'}`} />
-                    {disputePhotoPreview && <img src={disputePhotoPreview} alt="Dispute photo preview" className="h-20 mt-2 rounded-xl object-cover border border-red-500/30" />}
-                  </div>
-                  <div className="flex gap-3 pt-2">
-                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleFlagDispute}
-                      className="flex-1 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-bold py-3 rounded-xl text-sm shadow-lg shadow-red-600/25 min-h-[44px] flex items-center justify-center gap-2">
-                      <AlertTriangle className="w-4 h-4" /> Flag Dispute
-                    </motion.button>
-                    <button onClick={() => { setShowDisputeModal(false); setDisputeReason(''); setDisputePhoto(null); setDisputePhotoPreview(null); }} className={`px-6 py-3 rounded-xl font-bold text-sm min-h-[44px] ${isDark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}`}>Cancel</button>
-                  </div>
-                </div>
+                <button onClick={() => setShowPaymentModal(false)} className={`p-2 rounded-xl ${isDark ? 'text-slate-500 hover:text-white' : 'text-slate-400 hover:text-slate-900'}`}><X className="w-5 h-5" /></button>
               </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      {/* Accept & Adjust Modal */}
-      <AnimatePresence>
-        {showResolveModal && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[60] flex items-center justify-center p-4" onClick={() => setShowResolveModal(false)}>
-            <div className={`absolute inset-0 backdrop-blur-sm ${isDark ? 'bg-black/60' : 'bg-slate-900/50'}`} />
-            <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className={`relative w-full max-w-lg rounded-2xl border shadow-2xl overflow-hidden ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700 shadow-black/40' : 'bg-white border-slate-200 shadow-slate-200/40'}`}
-              onClick={e => e.stopPropagation()}>
-              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-500 via-emerald-400 to-emerald-500" />
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-emerald-100"><CheckCircle className="w-5 h-5 text-emerald-600" /></div>
-                    <div>
-                      <h2 className={`text-lg font-extrabold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Accept & Adjust</h2>
-                      <p className={`text-xs font-medium mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Resolve dispute and reconcile quedan</p>
-                    </div>
-                  </div>
-                  <button onClick={() => { setShowResolveModal(false); setResolveForm({ adjustedWeight: '', adjustedPrice: '', notes: '' }); }} className={`p-1.5 rounded-lg transition-colors ${isDark ? 'text-slate-500 hover:text-white hover:bg-slate-700' : 'text-slate-400 hover:text-slate-900 hover:bg-slate-100'}`}><X className="w-5 h-5" /></button>
+              <form onSubmit={e => { e.preventDefault(); handleProcessPayment(); }} className="space-y-4">
+                <div>
+                  <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-1.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Method *</label>
+                  <select required value={payForm.method} onChange={e => setPayForm({...payForm, method: e.target.value})} className={`w-full px-4 py-3 border rounded-xl outline-none text-sm font-medium min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'}`}>
+                    <option value="BANK_TRANSFER">Bank Transfer</option>
+                    <option value="GCASH">GCash</option>
+                    <option value="CASH">Cash</option>
+                    <option value="CHECK">Check</option>
+                  </select>
                 </div>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Adjusted Weight (kg)</label>
-                      <input type="number" step="0.01" min="0" value={resolveForm.adjustedWeight} onChange={e => setResolveForm({...resolveForm, adjustedWeight: e.target.value})} placeholder="Weight"
-                        className={`w-full px-4 py-3 border rounded-xl outline-none text-sm font-mono font-bold focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400'}`} />
-                    </div>
-                    <div>
-                      <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Adjusted Price (₱/kg)</label>
-                      <input type="number" step="0.01" min="0" value={resolveForm.adjustedPrice} onChange={e => setResolveForm({...resolveForm, adjustedPrice: e.target.value})} placeholder="Price"
-                        className={`w-full px-4 py-3 border rounded-xl outline-none text-sm font-mono font-bold focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400'}`} />
-                    </div>
+                <input value={payForm.referenceNumber} onChange={e => setPayForm({...payForm, referenceNumber: e.target.value})} placeholder="Reference Number" className={`w-full px-4 py-3 border rounded-xl outline-none text-sm font-medium min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-400'}`} />
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-1.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Gross Amount *</label>
+                    <input required type="number" step="0.01" min="0" value={payForm.grossAmount} onChange={e => setPayForm({...payForm, grossAmount: e.target.value})} className={`w-full px-4 py-3 border rounded-xl outline-none text-sm font-mono font-bold min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'}`} />
                   </div>
                   <div>
-                    <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Resolution Notes *</label>
-                    <textarea rows={4} value={resolveForm.notes} onChange={e => setResolveForm({...resolveForm, notes: e.target.value})} placeholder="Describe the resolution (min 10 characters)..."
-                      className={`w-full px-4 py-3 border rounded-xl outline-none text-sm font-medium resize-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400'}`} />
-                    <p className={`text-xs mt-1 ml-1 font-medium ${resolveForm.notes.trim().length < 10 ? 'text-red-500' : isDark ? 'text-slate-500' : 'text-slate-400'}`}>{resolveForm.notes.length}/10 min characters</p>
-                  </div>
-                  <div className="flex gap-3 pt-2">
-                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleAcceptAdjust}
-                      className="flex-1 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold py-3 rounded-xl text-sm shadow-lg shadow-emerald-600/25 min-h-[44px] flex items-center justify-center gap-2">
-                      <CheckCircle className="w-4 h-4" /> Accept & Reconcile
-                    </motion.button>
-                    <button onClick={() => { setShowResolveModal(false); setResolveForm({ adjustedWeight: '', adjustedPrice: '', notes: '' }); }} className={`px-6 py-3 rounded-xl font-bold text-sm min-h-[44px] ${isDark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}`}>Cancel</button>
+                    <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-1.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Deductions</label>
+                    <input type="number" step="0.01" min="0" value={payForm.deductions} onChange={e => setPayForm({...payForm, deductions: e.target.value})} className={`w-full px-4 py-3 border rounded-xl outline-none text-sm font-mono font-bold min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'}`} />
                   </div>
                 </div>
-              </div>
-            </motion.div>
+                <div className={`p-4 rounded-xl border text-center text-sm font-bold ${isDark ? 'bg-emerald-950/30 border-emerald-800 text-emerald-400' : 'bg-emerald-50 border-emerald-200 text-emerald-700'}`}>
+                  Net: ₱{Math.max(0, (parseFloat(payForm.grossAmount) || 0) - (parseFloat(payForm.deductions) || 0)).toFixed(2)}
+                </div>
+                <input value={payForm.notes} onChange={e => setPayForm({...payForm, notes: e.target.value})} placeholder="Notes" className={`w-full px-4 py-3 border rounded-xl outline-none text-sm font-medium min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-400'}`} />
+                <input type="file" accept="image/*" onChange={e => setPayProof(e.target.files?.[0] || null)} className={`w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:cursor-pointer min-h-[44px] ${isDark ? 'text-slate-300 file:bg-emerald-600 file:text-white' : 'text-slate-600 file:bg-emerald-500 file:text-white'}`} />
+                <div className="flex gap-3 pt-2">
+                  <button type="submit" className="flex-1 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold py-3 rounded-xl text-sm shadow-lg shadow-blue-600/30 min-h-[44px]"><DollarSign className="w-4 h-4 inline mr-1" /> Record Payment</button>
+                  <button type="button" onClick={() => setShowPaymentModal(false)} className={`px-6 py-3 rounded-xl font-bold text-sm min-h-[44px] ${isDark ? 'bg-slate-700 text-slate-300' : 'bg-slate-200 text-slate-700'}`}>Cancel</button>
+                </div>
+              </form>
+            </div>
           </motion.div>
-        )}
-      </AnimatePresence>
-      {/* Reject Dispute Modal */}
-      <AnimatePresence>
-        {showRejectModal && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[60] flex items-center justify-center p-4" onClick={() => setShowRejectModal(false)}>
-            <div className={`absolute inset-0 backdrop-blur-sm ${isDark ? 'bg-black/60' : 'bg-slate-900/50'}`} />
-            <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className={`relative w-full max-w-lg rounded-2xl border shadow-2xl overflow-hidden ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700 shadow-black/40' : 'bg-white border-slate-200 shadow-slate-200/40'}`}
-              onClick={e => e.stopPropagation()}>
-              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-500 via-red-400 to-red-500" />
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-red-100"><X className="w-5 h-5 text-red-600" /></div>
-                    <div>
-                      <h2 className={`text-lg font-extrabold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Reject Dispute</h2>
-                      <p className={`text-xs font-medium mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Mark dispute as rejected — no payment issued</p>
-                    </div>
-                  </div>
-                  <button onClick={() => { setShowRejectModal(false); setRejectReason(''); }} className={`p-1.5 rounded-lg transition-colors ${isDark ? 'text-slate-500 hover:text-white hover:bg-slate-700' : 'text-slate-400 hover:text-slate-900 hover:bg-slate-100'}`}><X className="w-5 h-5" /></button>
-                </div>
-                <div className="space-y-4">
-                  <div>
-                    <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Reason *</label>
-                    <textarea rows={4} value={rejectReason} onChange={e => setRejectReason(e.target.value)} placeholder="Explain why the dispute is rejected (min 10 characters)..."
-                      className={`w-full px-4 py-3 border rounded-xl outline-none text-sm font-medium resize-none focus:ring-4 focus:ring-red-500/10 focus:border-red-500 transition-all min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400'}`} />
-                    <p className={`text-xs mt-1 ml-1 font-medium ${rejectReason.trim().length < 10 ? 'text-red-500' : isDark ? 'text-slate-500' : 'text-slate-400'}`}>{rejectReason.length}/10 min characters</p>
-                  </div>
-                  <div className="flex gap-3 pt-2">
-                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleRejectDispute}
-                      className="flex-1 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-bold py-3 rounded-xl text-sm shadow-lg shadow-red-600/25 min-h-[44px] flex items-center justify-center gap-2">
-                      <X className="w-4 h-4" /> Reject & Finalize
-                    </motion.button>
-                    <button onClick={() => { setShowRejectModal(false); setRejectReason(''); }} className={`px-6 py-3 rounded-xl font-bold text-sm min-h-[44px] ${isDark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}`}>Cancel</button>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      {/* Payment Modal */}
-      <AnimatePresence>
-        {showPaymentModal && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[60] flex items-center justify-center p-4" onClick={() => setShowPaymentModal(false)}>
-            <div className={`absolute inset-0 backdrop-blur-sm ${isDark ? 'bg-black/60' : 'bg-slate-900/50'}`} />
-            <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className={`relative w-full max-w-lg rounded-2xl border shadow-2xl overflow-hidden ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700 shadow-black/40' : 'bg-white border-slate-200 shadow-slate-200/40'}`}
-              onClick={e => e.stopPropagation()}>
-              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-blue-400 to-blue-500" />
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-blue-100"><DollarSign className="w-5 h-5 text-blue-600" /></div>
-                    <div>
-                      <h2 className={`text-lg font-extrabold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Process Payment</h2>
-                      <p className={`text-xs font-medium mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Record payment for this quedan</p>
-                    </div>
-                  </div>
-                  <button onClick={() => { setShowPaymentModal(false); setPayForm({ method: 'BANK_TRANSFER', referenceNumber: '', grossAmount: '', deductions: '0', netAmount: '', notes: '' }); setPayProof(null); }} className={`p-1.5 rounded-lg transition-colors ${isDark ? 'text-slate-500 hover:text-white hover:bg-slate-700' : 'text-slate-400 hover:text-slate-900 hover:bg-slate-100'}`}><X className="w-5 h-5" /></button>
-                </div>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Method *</label>
-                      <select value={payForm.method} onChange={e => setPayForm({...payForm, method: e.target.value})} className={`w-full px-4 py-3 border rounded-xl outline-none text-sm font-medium focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}>
-                        <option value="BANK_TRANSFER">Bank Transfer</option>
-                        <option value="GCASH">GCash</option>
-                        <option value="CASH">Cash</option>
-                        <option value="CHECK">Check</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Reference #</label>
-                      <input value={payForm.referenceNumber} onChange={e => setPayForm({...payForm, referenceNumber: e.target.value})} placeholder="Optional"
-                        className={`w-full px-4 py-3 border rounded-xl outline-none text-sm font-mono font-bold focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400'}`} />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Gross Amount *</label>
-                      <input type="number" step="0.01" min="0" value={payForm.grossAmount} onChange={e => {
-                        const gross = parseFloat(e.target.value) || 0;
-                        const ded = parseFloat(payForm.deductions) || 0;
-                        setPayForm({...payForm, grossAmount: e.target.value, netAmount: String(Math.max(0, gross - ded))});
-                      }} className={`w-full px-4 py-3 border rounded-xl outline-none text-sm font-mono font-bold focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400'}`} />
-                    </div>
-                    <div>
-                      <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Deductions</label>
-                      <input type="number" step="0.01" min="0" value={payForm.deductions} onChange={e => {
-                        const ded = parseFloat(e.target.value) || 0;
-                        const gross = parseFloat(payForm.grossAmount) || 0;
-                        setPayForm({...payForm, deductions: e.target.value, netAmount: String(Math.max(0, gross - ded))});
-                      }} className={`w-full px-4 py-3 border rounded-xl outline-none text-sm font-mono font-bold focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400'}`} />
-                    </div>
-                  </div>
-                  <div>
-                    <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Net Amount</label>
-                    <div className={`w-full px-4 py-3 border rounded-xl text-sm font-mono font-bold min-h-[44px] flex items-center ${isDark ? 'bg-slate-800 border-slate-700 text-emerald-400' : 'bg-slate-50 border-slate-200 text-emerald-700'}`}>
-                      ₱{(parseFloat(payForm.netAmount) || 0).toFixed(2)}
-                    </div>
-                  </div>
-                  <div>
-                    <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Notes</label>
-                    <input value={payForm.notes} onChange={e => setPayForm({...payForm, notes: e.target.value})} placeholder="Optional payment notes"
-                      className={`w-full px-4 py-3 border rounded-xl outline-none text-sm font-medium focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400'}`} />
-                  </div>
-                  <div>
-                    <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Proof of Payment</label>
-                    <input type="file" accept="image/*" onChange={e => {
-                      const file = e.target.files?.[0] || null;
-                      if (file) { if (!file.type.startsWith('image/')) { toast.error('Only images allowed'); return; } if (file.size > 5*1024*1024) { toast.error('Max 5MB'); return; } }
-                      setPayProof(file);
-                    }} className={`w-full text-sm file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:cursor-pointer min-h-[44px] ${isDark ? 'text-slate-300 file:bg-blue-600 file:text-white' : 'text-slate-600 file:bg-blue-500 file:text-white'}`} />
-                  </div>
-                  <div className="flex gap-3 pt-2">
-                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleProcessPayment}
-                      className="flex-1 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold py-3 rounded-xl text-sm shadow-lg shadow-blue-600/25 min-h-[44px] flex items-center justify-center gap-2">
-                      <DollarSign className="w-4 h-4" /> Process Payment
-                    </motion.button>
-                    <button onClick={() => { setShowPaymentModal(false); setPayForm({ method: 'BANK_TRANSFER', referenceNumber: '', grossAmount: '', deductions: '0', netAmount: '', notes: '' }); setPayProof(null); }} className={`px-6 py-3 rounded-xl font-bold text-sm min-h-[44px] ${isDark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}`}>Cancel</button>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      {/* Receipt lightbox */}
-      <AnimatePresence>
-        {lightboxUrl && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] flex items-center justify-center p-4"
-            onClick={() => setLightboxUrl(null)}
-          >
-            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="relative max-w-3xl max-h-[90vh]"
-              onClick={e => e.stopPropagation()}
-            >
-              <button onClick={() => setLightboxUrl(null)} className="absolute -top-3 -right-3 z-10 w-8 h-8 rounded-full bg-white shadow-lg flex items-center justify-center text-slate-700 hover:text-slate-900 font-bold"><X className="w-4 h-4" /></button>
-              <img src={lightboxUrl} alt="Receipt" className="max-w-full max-h-[90vh] rounded-2xl shadow-2xl" />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        </motion.div>
+      )}
+    </AnimatePresence>
+
+    {/* Lightbox */}
+    <AnimatePresence>
+      {lightboxUrl && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[70] bg-black/80 flex items-center justify-center p-4" onClick={() => setLightboxUrl(null)}>
+          <button onClick={() => setLightboxUrl(null)} className="absolute top-4 right-4 text-white p-2 hover:bg-white/20 rounded-xl transition-colors"><X className="w-6 h-6" /></button>
+          <motion.img initial={{ scale: 0.8 }} animate={{ scale: 1 }} src={lightboxUrl} alt="Full view" className="max-w-full max-h-full rounded-2xl shadow-2xl" onClick={e => e.stopPropagation()} />
+        </motion.div>
+      )}
+    </AnimatePresence>
     </>
   );
 }

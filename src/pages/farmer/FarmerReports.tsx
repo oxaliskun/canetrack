@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { motion } from 'motion/react';
-import { BarChart, FileText, DollarSign, Truck as TruckIcon, Leaf, TrendingUp, Sprout, PieChart, Search, Download, Weight, MapPin, Calendar } from 'lucide-react';
+import { BarChart, FileText, DollarSign, Truck as TruckIcon, Leaf, TrendingUp, Sprout, PieChart, Search, Download, Weight, MapPin, Calendar, Eye } from 'lucide-react';
 import { PieChart as RechartsPie, Pie, Cell, BarChart as RechartsBar, Bar, XAxis, YAxis, CartesianGrid, LineChart as RechartsLine, Line, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
 import api from '../../api/axiosInstance';
 import { useTheme } from '../../context/ThemeContext';
@@ -14,13 +14,11 @@ const tabs = [
   { id: 'expenses', label: 'Expenses', icon: Sprout },
   { id: 'profitloss', label: 'Profit/Loss', icon: TrendingUp },
   { id: 'farms', label: 'Farms', icon: Leaf },
-  { id: 'trucks', label: 'Trucks', icon: TruckIcon },
+  { id: 'bagon', label: 'Bagon', icon: TruckIcon },
 ];
 
 const statusColors: Record<string, string> = {
   PENDING: 'bg-yellow-100 text-yellow-700',
-  RECONCILED: 'bg-emerald-100 text-emerald-700',
-  DISPUTED: 'bg-red-100 text-red-700',
   PAID: 'bg-blue-100 text-blue-700',
 };
 
@@ -85,7 +83,7 @@ export function FarmerReports() {
     tickets.forEach((t: any) => {
       const m = new Date(t.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
       if (!map[m]) map[m] = { month: m, kg: 0, gross: 0, deductions: 0, net: 0, count: 0 };
-      map[m].kg += Number(t.millWeight || 0);
+      map[m].kg += Number(t.netWeight || 0);
       map[m].count += 1;
       if (t.payment) {
         map[m].gross += Number(t.payment.grossAmount || 0);
@@ -135,20 +133,20 @@ export function FarmerReports() {
     tickets.forEach((t: any) => {
       const fid = t.farmId;
       if (!map[fid]) map[fid] = { id: fid, name: farmMap[fid] || 'Unknown', kg: 0, earnings: 0, count: 0 };
-      map[fid].kg += Number(t.millWeight || 0);
+      map[fid].kg += Number(t.netWeight || 0);
       map[fid].count += 1;
       if (t.payment) map[fid].earnings += Number(t.payment.netAmount || 0);
     });
     return Object.values(map);
   }, [tickets, farmMap]);
 
-  const trucksReport = useMemo(() => {
+  const bagonReport = useMemo(() => {
     const map: Record<string, any> = {};
     tickets.forEach((t: any) => {
-      const plate = t.truck?.plateNumber || 'Unknown';
-      if (!map[plate]) map[plate] = { plate, trips: 0, kg: 0, farm: t.truck?.farm?.farmName || '' };
+      const plate = t.bagon?.plateNumber || 'Unknown';
+      if (!map[plate]) map[plate] = { plate, trips: 0, kg: 0, farm: t.farm?.farmName || '' };
       map[plate].trips += 1;
-      map[plate].kg += Number(t.millWeight || 0);
+      map[plate].kg += Number(t.netWeight || 0);
     });
     return Object.values(map);
   }, [tickets]);
@@ -219,8 +217,6 @@ export function FarmerReports() {
                       <th className="px-5 py-4 text-left">Date</th>
                       <th className="px-5 py-4 text-left">Quedan #</th>
                       <th className="px-5 py-4 text-left">Farm</th>
-                      <th className="px-5 py-4 text-left">Variant</th>
-                      <th className="px-5 py-4 text-left">Sugar Type</th>
                       <th className="px-5 py-4 text-right">Net KG</th>
                       <th className="px-5 py-4 text-center">Status</th>
                       <th className="px-5 py-4 text-center"></th>
@@ -229,12 +225,10 @@ export function FarmerReports() {
                   <tbody>
                     {deliveriesData.map((t: any) => (
                       <tr key={t.id} className={`border-t ${isDark ? 'border-slate-700 hover:bg-slate-700/30' : 'border-slate-100 hover:bg-slate-50'}`}>
-                        <td className="px-5 py-4 font-medium">{formatDate(t.createdAt)}</td>
-                        <td className={`px-5 py-4 font-mono font-bold ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>{t.ticketNo}</td>
-                        <td className="px-5 py-4">{farmMap[t.farmId] || 'Unknown'}</td>
-                        <td className="px-5 py-4">{t.variant?.name || '-'}</td>
-                        <td className="px-5 py-4">{t.sugarType?.name || '-'}</td>
-                        <td className="px-5 py-4 text-right font-mono font-bold">{formatWeight(Number(t.millWeight) || 0)}</td>
+                        <td className="px-5 py-4 font-medium whitespace-nowrap">{formatDate(t.createdAt)}</td>
+                        <td className={`px-5 py-4 font-mono font-bold text-xs sm:text-sm truncate max-w-[120px] sm:max-w-none ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>{t.ticketNo}</td>
+                        <td className="px-5 py-4 truncate max-w-[120px] sm:max-w-none">{farmMap[t.farmId] || 'Unknown'}</td>
+                        <td className="px-5 py-4 text-right font-mono font-bold">{formatWeight(Number(t.netWeight) || 0)}</td>
                         <td className="px-5 py-4 text-center">
                           <span className={`inline-flex px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${statusColors[t.status] || 'bg-slate-100 text-slate-700'}`}>{t.status}</span>
                         </td>
@@ -455,13 +449,13 @@ export function FarmerReports() {
         </div>
       )}
 
-      {/* === TRUCKS === */}
-      {activeTab === 'trucks' && (
+      {/* === BAGON === */}
+      {activeTab === 'bagon' && (
         <div className="space-y-6">
-          {trucksReport.length === 0 ? (
+          {bagonReport.length === 0 ? (
             <div className={`flex flex-col items-center justify-center py-32 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
               <TruckIcon className="w-12 h-12 mb-4 opacity-50" />
-              <p className={`text-2xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>No truck data yet</p>
+              <p className={`text-2xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>No bagon data yet</p>
             </div>
           ) : (
             <div className={`rounded-2xl border shadow-sm overflow-hidden ${isDark ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-slate-200'}`}>
@@ -477,7 +471,7 @@ export function FarmerReports() {
                     </tr>
                   </thead>
                   <tbody>
-                    {trucksReport.map((t: any) => (
+                    {bagonReport.map((t: any) => (
                       <tr key={t.plate} className={`border-t ${isDark ? 'border-slate-700 hover:bg-slate-700/30' : 'border-slate-100 hover:bg-slate-50'}`}>
                         <td className="px-5 py-4 font-mono font-bold">{t.plate}</td>
                         <td className={`px-5 py-4 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{t.farm}</td>

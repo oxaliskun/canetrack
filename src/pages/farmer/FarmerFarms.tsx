@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import api from '../../api/axiosInstance';
 import { useTheme } from '../../context/ThemeContext';
@@ -15,7 +15,6 @@ interface Farm {
   cropType: string | null;
   description: string | null;
   isArchived: boolean;
-  verificationStatus: string;
   ownerId: string;
   createdAt: string;
   updatedAt: string;
@@ -61,7 +60,7 @@ export function FarmerFarms() {
 
   useEffect(() => {
     fetchFarms();
-    api.get('/expense-categories').then(res => setExpCategories(res.data.categories.filter((c: any) => c.type === 'FARM' && c.isActive)));
+    api.get('/expense-categories').then(res => setExpCategories(res.data.categories.filter((c: any) => c.isActive)));
     api.get('/farm-expenses').then(res => {
       const grouped: Record<string, number> = {};
       res.data.farmExpenses.forEach((e: any) => { grouped[e.farmId] = (grouped[e.farmId] || 0) + Number(e.amount); });
@@ -291,7 +290,7 @@ export function FarmerFarms() {
                     {farm.cropType && (
                       <div className="flex items-center gap-2.5">
                         <Leaf className={`w-4 h-4 shrink-0 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} />
-                        <span className={`text-sm font-medium ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{farm.cropType}</span>
+                        <span className={`text-sm font-medium truncate ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{farm.cropType}</span>
                       </div>
                     )}
                     {farmExpenses[farm.id] > 0 && (
@@ -410,7 +409,7 @@ export function FarmerFarms() {
                       <input type="file" accept="image/*" multiple
                         className={`w-full py-2.5 px-4 border rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-emerald-500 file:text-white hover:file:bg-emerald-400 min-h-[44px] ${isDark ? 'bg-slate-800/50 border-slate-700 text-white' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`}
                         onChange={e => {
-                          const files = Array.from(e.target.files || []);
+                          const files = Array.from(e.target.files || []) as File[];
                           setDocFiles(prev => [...prev, ...files]);
                           setDocPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]);
                         }} />

@@ -1,53 +1,29 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Home, FileText, LogOut, Users, FilePlus, Leaf, Settings, BarChart, User, Shield, Truck, CheckCircle, Sprout, Bell, Moon, Sun, History, X, ShieldCheck, Tags, Package, DollarSign, AlertTriangle, PieChart } from 'lucide-react';
+import { Home, FileText, LogOut, Leaf, User, Sprout, Truck, DollarSign, PieChart, X } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
-import { NotificationDropdown } from './NotificationDropdown';
 import api from '../api/axiosInstance';
 import { cn } from '../lib/utils';
 
 interface SidebarProps {
-  role: string;
   userName: string;
   onClose?: () => void;
 }
 
-export function Sidebar({ role, userName, onClose }: SidebarProps) {
+export function Sidebar({ userName, onClose }: SidebarProps) {
   const { logout } = useAuth();
   const { isDark } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const getLinks = () => {
-    switch (role) {
-      case 'ADMIN':
-        return [
-          { name: 'Dashboard', path: '/dashboard/admin', icon: Home },
-          { name: 'Verifications', path: '/dashboard/admin/verifications', icon: ShieldCheck },
-          { name: 'Farmers', path: '/dashboard/admin/users', icon: Users },
-          { name: 'Farms', path: '/dashboard/farmer/farms', icon: Leaf },
-          { name: 'Trucks', path: '/dashboard/admin/trucks', icon: Truck },
-          { name: 'Quedans', path: '/dashboard/admin/tickets', icon: FileText },
-          { name: 'Disputes', path: '/dashboard/admin/disputes', icon: AlertTriangle },
-          { name: 'Payments', path: '/dashboard/farmer/payments', icon: DollarSign },
-          { name: 'Variants', path: '/dashboard/admin/variants', icon: Sprout },
-          { name: 'Sugar Types', path: '/dashboard/admin/sugar-types', icon: Package },
-          { name: 'Pricing', path: '/dashboard/admin/pricing', icon: DollarSign },
-          { name: 'Categories', path: '/dashboard/admin/expense-categories', icon: Tags },
-          { name: 'Reports', path: '/dashboard/admin/reports', icon: BarChart },
-        ];
-      case 'FARMER':
-        return [
-           { name: 'Dashboard', path: '/dashboard/farmer', icon: Home },
-           { name: 'Farms', path: '/dashboard/farmer/farms', icon: Sprout },
-           { name: 'Trucks', path: '/dashboard/farmer/trucks', icon: Truck },
-           { name: 'Expenses', path: '/dashboard/farmer/expenses', icon: FileText },
-           { name: 'Payments', path: '/dashboard/farmer/payments', icon: DollarSign },
-           { name: 'Reports', path: '/dashboard/farmer/reports', icon: PieChart },
-        ];
-      default: return [];
-    }
-  };
+  const links = [
+    { name: 'Dashboard', path: '/dashboard', icon: Home },
+    { name: 'Farms', path: '/dashboard/farms', icon: Sprout },
+    { name: 'Bagon', path: '/dashboard/bagon', icon: Truck },
+    { name: 'Expenses', path: '/dashboard/expenses', icon: FileText },
+    { name: 'Payments', path: '/dashboard/payments', icon: DollarSign },
+    { name: 'Reports', path: '/dashboard/reports', icon: PieChart },
+  ];
 
   const handleLogout = async () => {
     try {
@@ -55,30 +31,6 @@ export function Sidebar({ role, userName, onClose }: SidebarProps) {
     } catch {}
     logout();
     navigate('/login');
-  };
-
-  const getRoleIcon = () => {
-    switch (role) {
-      case 'ADMIN': return <Shield className="w-4 h-4 text-purple-600" />;
-      case 'FARMER': return <Sprout className="w-4 h-4 text-emerald-600" />;
-      default: return <User className="w-4 h-4 text-slate-600" />;
-    }
-  };
-
-  const getGradient = () => {
-    switch (role) {
-      case 'ADMIN': return 'from-purple-500 to-purple-600 shadow-purple-500/20';
-      case 'FARMER': return 'from-emerald-500 to-emerald-600 shadow-emerald-500/20';
-      default: return 'from-slate-500 to-slate-600 shadow-slate-500/20';
-    }
-  };
-
-  const getRoleColor = () => {
-    switch (role) {
-      case 'ADMIN': return 'from-purple-500 to-purple-600 shadow-purple-500/20';
-      case 'FARMER': return 'from-emerald-500 to-emerald-600 shadow-emerald-500/20';
-      default: return 'from-slate-500 to-slate-600 shadow-slate-500/20';
-    }
   };
 
   return (
@@ -108,15 +60,15 @@ export function Sidebar({ role, userName, onClose }: SidebarProps) {
           <div className={`absolute top-0 right-0 w-16 h-16 rounded-bl-full opacity-50 ${isDark ? 'bg-emerald-900/50' : 'bg-emerald-50'}`} />
           <p className={`text-[10px] font-extrabold uppercase tracking-widest mb-1 ml-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Welcome Back</p>
           <p className={`text-sm lg:text-base font-bold truncate tracking-tight ml-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>{userName}</p>
-          <div className={`mt-3 inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r ${getRoleColor()} text-white text-[10px] rounded-full shadow-md font-black uppercase tracking-widest`}>
-            {getRoleIcon()}
-            {role.replace('_', ' ')}
+          <div className={`mt-3 inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-[10px] rounded-full shadow-md font-black uppercase tracking-widest shadow-emerald-500/20`}>
+            <Sprout className="w-4 h-4" />
+            Farmer
           </div>
         </div>
       </div>
 
       <nav className="flex-1 py-2 lg:py-4 flex flex-col gap-1 lg:gap-2 px-3 lg:px-6 overflow-y-auto custom-scrollbar">
-        {getLinks().map(link => {
+        {links.map(link => {
           const Icon = link.icon;
           const isActive = location.pathname === link.path;
 
@@ -145,12 +97,7 @@ export function Sidebar({ role, userName, onClose }: SidebarProps) {
       </nav>
 
       <div className={`p-3 lg:p-4 border-t flex flex-col gap-1 lg:gap-2 safe-bottom ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
-        <div className="flex items-center justify-between px-2 mb-1">
-          <span className={`text-[10px] font-extrabold uppercase tracking-widest ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
-            Menu
-          </span>
-          <NotificationDropdown />
-        </div>
+
         <Link
           to="/dashboard/profile"
           onClick={() => onClose?.()}
@@ -168,41 +115,7 @@ export function Sidebar({ role, userName, onClose }: SidebarProps) {
           <User className={cn("w-5 h-5 shrink-0 transition-transform group-hover:scale-110", location.pathname === '/dashboard/profile' ? (isDark ? "text-emerald-400" : "text-emerald-600") : (isDark ? "text-slate-600" : "text-slate-400"))} />
           <span className="truncate">My Profile</span>
         </Link>
-        <Link
-          to="/dashboard/settings"
-          onClick={() => onClose?.()}
-          className={cn(
-            "group flex items-center gap-3 px-4 py-3 rounded-xl lg:rounded-2xl text-sm font-bold transition-all duration-200 min-h-[44px]",
-            location.pathname === '/dashboard/settings'
-              ? isDark
-                ? "text-emerald-400 bg-emerald-950/50 shadow-sm border border-emerald-800/50"
-                : "text-emerald-700 bg-emerald-50 shadow-sm border border-emerald-100"
-              : isDark
-                ? "text-slate-400 hover:text-white hover:bg-slate-800/50"
-                : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
-          )}
-        >
-          <Settings className={cn("w-5 h-5 shrink-0 transition-transform group-hover:scale-110", location.pathname === '/dashboard/settings' ? (isDark ? "text-emerald-400" : "text-emerald-600") : (isDark ? "text-slate-600" : "text-slate-400"))} />
-          <span className="truncate">Settings</span>
-        </Link>
 
-        <Link
-          to="/dashboard/activity-logs"
-          onClick={() => onClose?.()}
-          className={cn(
-            "group flex items-center gap-3 px-4 py-3 rounded-xl lg:rounded-2xl text-sm font-bold transition-all duration-200 min-h-[44px]",
-            location.pathname === '/dashboard/activity-logs'
-              ? isDark
-                ? "text-emerald-400 bg-emerald-950/50 shadow-sm border border-emerald-800/50"
-                : "text-emerald-700 bg-emerald-50 shadow-sm border border-emerald-100"
-              : isDark
-                ? "text-slate-400 hover:text-white hover:bg-slate-800/50"
-                : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
-          )}
-        >
-          <History className={cn("w-5 h-5 shrink-0 transition-transform group-hover:scale-110", location.pathname === '/dashboard/activity-logs' ? (isDark ? "text-emerald-400" : "text-emerald-600") : (isDark ? "text-slate-600" : "text-slate-400"))} />
-          <span className="truncate">My Activity</span>
-        </Link>
 
         <button
           onClick={handleLogout}

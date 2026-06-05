@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import api from '../api/axiosInstance';
@@ -18,16 +18,10 @@ export function Login() {
   const [address, setAddress] = useState('');
   const [farmName, setFarmName] = useState('');
   const [farmLocation, setFarmLocation] = useState('');
-  const [idFile, setIdFile] = useState<File | null>(null);
-  const [idPreview, setIdPreview] = useState<string>('');
-  const [idImageUrl, setIdImageUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [attempts, setAttempts] = useState(Number(localStorage.getItem('login_attempts') || 0));
-  const [verificationEmail, setVerificationEmail] = useState('');
-  const [verificationCode, setVerificationCode] = useState('');
-  const [verifying, setVerifying] = useState(false);
   const [lockoutUntil, setLockoutUntil] = useState<number | null>(() => {
     const saved = localStorage.getItem('lockout_until');
     if (saved && Number(saved) > Date.now()) return Number(saved);
@@ -37,14 +31,6 @@ export function Login() {
   });
   const [countdown, setCountdown] = useState(0);
   const { isDark, toggleTheme } = useTheme();
-  const [forgotMode, setForgotMode] = useState(false);
-  const [resetStep, setResetStep] = useState<'email' | 'code' | 'password'>('email');
-  const [resetEmail, setResetEmail] = useState('');
-  const [resetCode, setResetCode] = useState('');
-  const [resetPassword, setResetPassword] = useState('');
-  const [showResetPassword, setShowResetPassword] = useState(false);
-  const [resetConfirmPassword, setResetConfirmPassword] = useState('');
-  const [showResetConfirmPassword, setShowResetConfirmPassword] = useState(false);
   
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -98,35 +84,16 @@ export function Login() {
           setLoading(false);
           return;
         }
-        let uploadUrl = '';
-        if (idFile) {
-          const formData = new FormData();
-          formData.append('file', idFile);
-          const uploadRes = await api.post('/upload', formData);
-          uploadUrl = uploadRes.data.url;
-        }
-        const { data } = await api.post('/auth/register', { name, email, password, contactNumber, address, farmName, farmLocation, idImageUrl: uploadUrl || undefined });
-        setVerificationEmail(data.email);
-        setSuccess('Verification code sent to your email!');
-        setPassword(''); setConfirmPassword(''); setContactNumber(''); setAddress(''); setFarmName(''); setFarmLocation(''); setIdFile(null); setIdPreview(''); setIdImageUrl('');
+        await api.post('/auth/register', { name, email, password, contactNumber, address, farmName, farmLocation });
+        setSuccess('Account created successfully! You may now sign in.');
+        setPassword(''); setConfirmPassword(''); setContactNumber(''); setAddress(''); setFarmName(''); setFarmLocation('');
       } else {
         const { data } = await api.post('/auth/login', { email, password });
         setAttempts(0); localStorage.setItem('login_attempts', '0');
         login(data.token, data.user);
-        const roleMap: Record<string, string> = {
-          FARMER: '/dashboard/farmer', ADMIN: '/dashboard/admin'
-        };
-        navigate(roleMap[data.user.role]);
+        navigate('/dashboard');
       }
     } catch (err: any) {
-      if (err.response?.data?.verificationStatus === 'PENDING') {
-        navigate('/pending-verification');
-        return;
-      }
-      if (err.response?.data?.verificationStatus === 'REJECTED') {
-        navigate('/verification-rejected', { state: { reason: err.response.data.rejectionReason } });
-        return;
-      }
       const newAttempts = attempts + 1;
       setAttempts(newAttempts); localStorage.setItem('login_attempts', String(newAttempts));
       if (newAttempts >= 3) {
@@ -135,69 +102,6 @@ export function Login() {
       } else {
         setError(err.response?.data?.message || (err.code === 'ERR_NETWORK' ? 'Network error — check if the server is running' : 'Authentication failed. Please try again.'));
       }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerifyCode = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setVerifying(true); setError('');
-    try {
-      await api.post('/auth/verify-email', { email: verificationEmail, code: verificationCode });
-      navigate('/pending-verification');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Verification failed');
-    } finally {
-      setVerifying(false);
-    }
-  };
-
-  const handleResendCode = async () => {
-    setLoading(true); setError(''); setSuccess('');
-    try {
-      await api.post('/auth/resend-code', { email: verificationEmail });
-      setSuccess('New verification code sent!');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to resend code');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleForgotSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true); setError(''); setSuccess('');
-    try {
-      if (resetStep === 'email') {
-        await api.post('/auth/forgot-password', { email: resetEmail });
-        setSuccess('Reset code sent to your email!');
-        setResetStep('code');
-      } else if (resetStep === 'code') {
-        setResetStep('password');
-        setSuccess('Code verified. Set your new password.');
-      } else if (resetStep === 'password') {
-        if (resetPassword !== resetConfirmPassword) {
-          setError('Passwords do not match');
-          setLoading(false);
-          return;
-        }
-        if (!/[a-zA-Z]/.test(resetPassword) || !/[0-9]/.test(resetPassword)) {
-          setError('Password must contain both letters and numbers');
-          setLoading(false);
-          return;
-        }
-        await api.post('/auth/reset-password', { email: resetEmail, code: resetCode, newPassword: resetPassword });
-        setSuccess('Password reset successfully! Sign in with your new password.');
-        setTimeout(() => {
-          setForgotMode(false);
-          setResetStep('email');
-          setResetEmail(''); setResetCode(''); setResetPassword(''); setResetConfirmPassword('');
-          setEmail(resetEmail);
-        }, 2000);
-      }
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Something went wrong');
     } finally {
       setLoading(false);
     }
@@ -297,148 +201,7 @@ export function Login() {
               </p>
             </div>
 
-            {verificationEmail ? (
-              <form className="space-y-4 sm:space-y-5" onSubmit={handleVerifyCode}>
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/50 mb-4">
-                    <Mail className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
-                  </div>
-                  <h3 className={`text-lg font-extrabold ${isDark ? 'text-white' : 'text-slate-900'}`}>Check your email</h3>
-                  <p className={`text-sm mt-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                    We sent a 6-digit code to <strong className={isDark ? 'text-white' : 'text-slate-800'}>{verificationEmail}</strong>
-                  </p>
-                </motion.div>
-
-                <div className="max-w-[240px] mx-auto">
-                  <label className={`block text-[11px] sm:text-xs font-bold uppercase tracking-widest mb-2 ml-1 text-center ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Verification Code</label>
-                  <input
-                    type="text"
-                    required
-                    maxLength={6}
-                    className={`w-full text-center text-2xl font-bold tracking-[8px] py-4 border rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none min-h-[52px] ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`}
-                    value={verificationCode}
-                    onChange={e => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    placeholder="000000"
-                  />
-                </div>
-
-                <AnimatePresence mode="wait">
-                  {error && <motion.div initial={{opacity:0, height:0}} animate={{opacity:1, height:'auto'}} exit={{opacity:0, height:0}} className="bg-red-950/30 text-red-400 p-4 rounded-xl sm:rounded-2xl text-sm font-bold border border-red-900/50 flex items-start gap-3">
-                    <div className="mt-0.5"><div className="w-2 h-2 rounded-full bg-red-500" /></div>
-                    {error}
-                  </motion.div>}
-                  {success && <motion.div initial={{opacity:0, height:0}} animate={{opacity:1, height:'auto'}} exit={{opacity:0, height:0}} className="bg-emerald-950/30 text-emerald-400 p-4 rounded-xl sm:rounded-2xl text-sm font-bold border border-emerald-800/50 flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
-                    {success}
-                  </motion.div>}
-                </AnimatePresence>
-
-                <motion.button
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.98 }}
-                  type="submit"
-                  disabled={verifying || verificationCode.length !== 6}
-                  className={`w-full flex justify-center items-center py-3.5 sm:py-4 px-4 rounded-xl sm:rounded-2xl font-bold transition-all shadow-lg min-h-[48px] ${verifying || verificationCode.length !== 6 ? 'bg-slate-600 text-slate-400 cursor-not-allowed' : 'text-white bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 shadow-emerald-600/30'}`}
-                >
-                  {verifying ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Verify Email'}
-                </motion.button>
-
-                <p className="text-center">
-                  <button type="button" onClick={handleResendCode} disabled={loading} className={`text-sm font-medium hover:underline ${isDark ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-700'}`}>
-                    {loading ? 'Sending...' : 'Resend code'}
-                  </button>
-                </p>
-                <p className="text-center">
-                  <button type="button" onClick={() => { setVerificationEmail(''); setVerificationCode(''); setError(''); setSuccess(''); }} className={`text-sm font-medium hover:underline ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                    Back to sign in
-                  </button>
-                </p>
-              </form>
-            ) : forgotMode ? (
-              <form className="space-y-4 sm:space-y-5" onSubmit={handleForgotSubmit}>
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/50 mb-4">
-                    <Lock className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
-                  </div>
-                  <h3 className={`text-lg font-extrabold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                    {resetStep === 'email' ? 'Reset Password' : resetStep === 'code' ? 'Check your email' : 'Set new password'}
-                  </h3>
-                  <p className={`text-sm mt-2 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                    {resetStep === 'email' ? 'Enter your email and we\'ll send a reset code.' : resetStep === 'code' ? `We sent a code to ${resetEmail}` : 'Enter your new password.'}
-                  </p>
-                </motion.div>
-
-                {resetStep === 'email' && (
-                  <div>
-                    <label className={`block text-[11px] sm:text-xs font-bold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Email address</label>
-                    <div className="relative">
-                      <input type="email" required className={`w-full pl-11 sm:pl-12 pr-4 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium min-h-[44px] ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={resetEmail} onChange={e => setResetEmail(e.target.value)} placeholder="you@example.com" />
-                      <Mail className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-500" />
-                    </div>
-                  </div>
-                )}
-
-                {resetStep === 'code' && (
-                  <div className="max-w-[240px] mx-auto">
-                    <label className={`block text-[11px] sm:text-xs font-bold uppercase tracking-widest mb-2 ml-1 text-center ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Reset Code</label>
-                    <input type="text" required maxLength={6} className={`w-full text-center text-2xl font-bold tracking-[8px] py-4 border rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none min-h-[52px] ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={resetCode} onChange={e => setResetCode(e.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="000000" />
-                  </div>
-                )}
-
-                {resetStep === 'password' && (
-                  <>
-                    <div>
-                      <label className={`block text-[11px] sm:text-xs font-bold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>New Password</label>
-                      <div className="relative">
-                        <input type={showResetPassword ? 'text' : 'password'} required className={`w-full pl-11 sm:pl-12 pr-12 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium tracking-widest min-h-[44px] ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={resetPassword} onChange={e => setResetPassword(e.target.value)} placeholder="••••••••" />
-                        <Lock className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-500" />
-                        <button type="button" onClick={() => setShowResetPassword(!showResetPassword)} className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors">
-                          {showResetPassword ? <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" /> : <Eye className="w-4 h-4 sm:w-5 sm:h-5" />}
-                        </button>
-                      </div>
-                    </div>
-                    <div>
-                      <label className={`block text-[11px] sm:text-xs font-bold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Confirm New Password</label>
-                      <div className="relative">
-                        <input type={showResetConfirmPassword ? 'text' : 'password'} required className={`w-full pl-11 sm:pl-12 pr-12 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium tracking-widest min-h-[44px] ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={resetConfirmPassword} onChange={e => setResetConfirmPassword(e.target.value)} placeholder="••••••••" />
-                        <Lock className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-500" />
-                        <button type="button" onClick={() => setShowResetConfirmPassword(!showResetConfirmPassword)} className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors">
-                          {showResetConfirmPassword ? <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" /> : <Eye className="w-4 h-4 sm:w-5 sm:h-5" />}
-                        </button>
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                <AnimatePresence mode="wait">
-                  {error && <motion.div initial={{opacity:0, height:0}} animate={{opacity:1, height:'auto'}} exit={{opacity:0, height:0}} className="bg-red-950/30 text-red-400 p-4 rounded-xl sm:rounded-2xl text-sm font-bold border border-red-900/50 flex items-start gap-3">
-                    <div className="mt-0.5"><div className="w-2 h-2 rounded-full bg-red-500" /></div>
-                    {error}
-                  </motion.div>}
-                  {success && <motion.div initial={{opacity:0, height:0}} animate={{opacity:1, height:'auto'}} exit={{opacity:0, height:0}} className="bg-emerald-950/30 text-emerald-400 p-4 rounded-xl sm:rounded-2xl text-sm font-bold border border-emerald-800/50 flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
-                    {success}
-                  </motion.div>}
-                </AnimatePresence>
-
-                <motion.button
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.98 }}
-                  type="submit"
-                  disabled={loading || (resetStep === 'code' && resetCode.length !== 6)}
-                  className={`w-full flex justify-center items-center py-3.5 sm:py-4 px-4 rounded-xl sm:rounded-2xl font-bold transition-all shadow-lg min-h-[48px] ${loading || (resetStep === 'code' && resetCode.length !== 6) ? 'bg-slate-600 text-slate-400 cursor-not-allowed' : 'text-white bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 shadow-emerald-600/30'}`}
-                >
-                  {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : resetStep === 'email' ? 'Send Reset Code' : resetStep === 'code' ? 'Continue' : 'Reset Password'}
-                </motion.button>
-
-                <p className="text-center">
-                  <button type="button" onClick={() => { setForgotMode(false); setError(''); setSuccess(''); setResetStep('email'); setResetEmail(''); setResetCode(''); setResetPassword(''); setResetConfirmPassword(''); }} className={`text-sm font-medium hover:underline ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                    Back to sign in
-                  </button>
-                </p>
-              </form>
-            ) : (
-            <><form className="space-y-4 sm:space-y-5" onSubmit={handleSubmit}>
+            <form className="space-y-4 sm:space-y-5" onSubmit={handleSubmit}>
               <div className="space-y-3 sm:space-y-4">
                 <AnimatePresence>
                   {isRegistering && (
@@ -462,33 +225,6 @@ export function Login() {
                         <div className="relative">
                           <input type="tel" required={isRegistering} className={`w-full pl-11 sm:pl-12 pr-4 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium min-h-[44px] ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={contactNumber} onChange={e => setContactNumber(e.target.value)} placeholder="09123456789" />
                           <Phone className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-500" />
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                <AnimatePresence>
-                  {isRegistering && (
-                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-                      <div className="pb-3 sm:pb-4">
-                        <label className={`block text-[11px] sm:text-xs font-bold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Valid ID (for verification)</label>
-                        <div className="relative">
-                          <input type="file" accept="image/*" className={`w-full py-2.5 px-4 border rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-emerald-500 file:text-white hover:file:bg-emerald-400 min-h-[44px] ${isDark ? 'bg-slate-800/50 border-slate-700 text-white' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`}
-                            onChange={e => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                setIdFile(file);
-                                setIdPreview(URL.createObjectURL(file));
-                                setIdImageUrl('');
-                              }
-                            }} />
-                          {idPreview && (
-                            <div className="mt-2 flex items-center gap-2">
-                              <img src={idPreview} alt="ID preview" className="h-10 w-16 object-cover rounded-lg border border-slate-700" />
-                              <button type="button" onClick={() => { setIdFile(null); setIdPreview(''); setIdImageUrl(''); }} className="text-xs text-red-400 hover:text-red-300 font-bold">Remove</button>
-                            </div>
-                          )}
                         </div>
                       </div>
                     </motion.div>
@@ -546,10 +282,7 @@ export function Login() {
                 </div>
 
                 <div>
-                  <div className="flex justify-between items-center mb-2 ml-1 pr-1">
-                     <label className={`block text-[11px] sm:text-xs font-bold uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Password</label>
-                     {!isRegistering && <button type="button" onClick={() => { setForgotMode(true); setResetStep('email'); setResetEmail(email); setError(''); setSuccess(''); }} className="text-xs font-bold text-emerald-500 hover:text-emerald-400">Forgot?</button>}
-                  </div>
+                  <label className={`block text-[11px] sm:text-xs font-bold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Password</label>
                   <div className="relative">
                     <input type={showPassword ? 'text' : 'password'} required className={`w-full pl-11 sm:pl-12 pr-12 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium tracking-widest min-h-[44px] ${isDark ? 'bg-slate-800/50 border-slate-700 text-white placeholder-slate-600' : 'bg-slate-50/50 border-slate-200 text-slate-900'}`} value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" />
                     <Lock className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-500" />
@@ -602,7 +335,7 @@ export function Login() {
                   ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
                   : 'text-white bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 shadow-emerald-600/30'}`}
               >
-                {isLocked ? `Locked ${countdown}s` : loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (isRegistering ? 'Create Client Account' : 'Sign In securely')}
+                {isLocked ? `Locked ${countdown}s` : loading ? <Loader2 className="w-5 h-5 animate-spin" /> : (isRegistering ? 'Create Client Account' : 'Sign In')}
               </motion.button>
             </form>
 
@@ -612,19 +345,16 @@ export function Login() {
                    <button onClick={() => { setIsRegistering(!isRegistering); setError(''); setSuccess(''); setPassword(''); setConfirmPassword(''); setAttempts(0); localStorage.setItem('login_attempts', '0'); setLockoutUntil(null); localStorage.removeItem('lockout_until'); }} className="text-emerald-500 hover:text-emerald-400 font-bold ml-1 transition-colors underline decoration-2 underline-offset-4 decoration-emerald-800">
                    {isRegistering ? "Sign in instead" : "Create Account"}
                  </button>
-               </p>
+                </p>
             </div>
 
             <div className={`mt-6 sm:mt-8 lg:mt-12 rounded-xl sm:rounded-2xl p-4 sm:p-5 relative overflow-hidden border ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700' : 'bg-gradient-to-br from-slate-50 to-white border-slate-100'}`}>
                 <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-emerald-400 to-emerald-600" />
-                <h4 className={`text-[11px] sm:text-xs font-bold uppercase tracking-widest mb-2 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>For Administrators</h4>
+                <h4 className={`text-[11px] sm:text-xs font-bold uppercase tracking-widest mb-2 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>For Sugarcane Farmers</h4>
                 <p className={`text-xs sm:text-sm font-medium leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-                  Admin accounts are created internally. Farmers register here and must be verified by an administrator.
+                  Create your account to track bagon deliveries, record payments, and manage your farm operations.
                 </p>
-
             </div>
-          </>
-          )}
           </motion.div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { User, Lock, Save, ShieldCheck, Phone, MapPin, Sprout, Loader2, Camera, Trash2 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
@@ -21,8 +21,6 @@ export function Profile() {
   const [passwords, setPasswords] = useState({ new: '', confirm: '' });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const isFarmer = authUser?.role === 'FARMER';
-
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -32,7 +30,7 @@ export function Profile() {
         setContactNumber(u.contactNumber || '');
         setAddress(u.address || '');
         setProfilePicture(u.profilePicture || '');
-        if (isFarmer && u.farms && u.farms.length > 0) {
+        if (u.farms && u.farms.length > 0) {
           setFarmName(u.farms[0].farmName || '');
           setFarmLocation(u.farms[0].location || '');
         }
@@ -82,11 +80,7 @@ export function Profile() {
     }
     setSaving(true);
     try {
-      const payload: any = { name: name.trim(), contactNumber, address, profilePicture };
-      if (isFarmer) {
-        payload.farmName = farmName.trim();
-        payload.farmLocation = farmLocation.trim();
-      }
+      const payload: any = { name: name.trim(), contactNumber, address, profilePicture, farmName: farmName.trim(), farmLocation: farmLocation.trim() };
       await api.patch('/users/profile', payload);
       // Update local user state
       if (authUser) {
@@ -182,7 +176,7 @@ export function Profile() {
                   <h2 className={`text-xl sm:text-2xl font-extrabold truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>{authUser?.name}</h2>
                   <p className={`font-mono text-xs sm:text-sm truncate ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{authUser?.email}</p>
                   <div className={`mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] sm:text-xs font-bold uppercase tracking-widest ${isDark ? 'bg-emerald-900/30 text-emerald-400' : 'bg-emerald-100 text-emerald-700'}`}>
-                    <ShieldCheck className="w-3 h-3" /> {authUser?.role.replace('_', ' ')}
+                    <ShieldCheck className="w-3 h-3" /> Farmer
                   </div>
                 </div>
               </div>
@@ -218,11 +212,9 @@ export function Profile() {
                   </div>
                 </div>
 
-                {isFarmer && (
-                  <>
-                    <div className={`pt-4 border-t ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
-                      <h3 className={`text-base sm:text-lg font-bold mb-4 sm:mb-6 flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-900'}`}><Sprout className={`w-5 h-5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} /> Farm Information</h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                  <div className={`pt-4 border-t ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
+                    <h3 className={`text-base sm:text-lg font-bold mb-4 sm:mb-6 flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-900'}`}><Sprout className={`w-5 h-5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} /> Farm Information</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                         <div>
                           <label className={labelClass}>Farm Name</label>
                           <input type="text" value={farmName} onChange={e => setFarmName(e.target.value)} className={inputClass} placeholder="My Sugarcane Farm" />
@@ -231,10 +223,8 @@ export function Profile() {
                           <label className={labelClass}>Farm Location</label>
                           <input type="text" value={farmLocation} onChange={e => setFarmLocation(e.target.value)} className={inputClass} placeholder="Barangay, Municipality, Province" />
                         </div>
-                      </div>
                     </div>
-                  </>
-                )}
+                  </div>
 
                 <div className="flex justify-end pt-3 sm:pt-4">
                   <button type="submit" disabled={saving} className={`flex items-center gap-2 px-5 sm:px-6 py-3 rounded-xl font-bold shadow-lg transition-all disabled:opacity-50 min-h-[44px] ${isDark ? 'bg-emerald-600 text-white hover:bg-emerald-500 shadow-emerald-600/20' : 'bg-slate-900 text-white hover:bg-slate-800 shadow-slate-900/20'}`}>
@@ -298,21 +288,19 @@ export function Profile() {
               <div>
                 <p className={`text-[10px] font-extrabold uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Role</p>
                 <div className={`mt-1 inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] sm:text-xs font-bold uppercase tracking-widest ${isDark ? 'bg-emerald-900/30 text-emerald-400' : 'bg-emerald-100 text-emerald-700'}`}>
-                  <ShieldCheck className="w-3 h-3" /> {authUser?.role.replace('_', ' ')}
+                  <ShieldCheck className="w-3 h-3" /> Farmer
                 </div>
               </div>
-              {isFarmer && (
-                <>
-                  <div className={`pt-4 border-t ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
-                    <p className={`text-[10px] font-extrabold uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Farm Name</p>
-                    <p className={`font-bold mt-1 text-sm truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>{farmName || '—'}</p>
-                  </div>
-                  <div>
-                    <p className={`text-[10px] font-extrabold uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Farm Location</p>
-                    <p className={`font-medium mt-1 text-xs sm:text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{farmLocation || '—'}</p>
-                  </div>
-                </>
-              )}
+              <>
+                <div className={`pt-4 border-t ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
+                  <p className={`text-[10px] font-extrabold uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Farm Name</p>
+                  <p className={`font-bold mt-1 text-sm truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>{farmName || '—'}</p>
+                </div>
+                <div>
+                  <p className={`text-[10px] font-extrabold uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Farm Location</p>
+                  <p className={`font-medium mt-1 text-xs sm:text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{farmLocation || '—'}</p>
+                </div>
+              </>
             </div>
           </motion.div>
         </div>
