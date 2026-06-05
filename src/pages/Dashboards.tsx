@@ -114,8 +114,9 @@ export function Dashboard() {
   const fetchData = () => {
     Promise.all([
       api.get('/tickets'),
-      api.get('/expenses')
-    ]).then(([ticketsRes, expRes]) => {
+      api.get('/expenses'),
+      api.get('/farm-expenses')
+    ]).then(([ticketsRes, expRes, farmExpRes]) => {
       const ts = ticketsRes.data.tickets;
       setTickets(ts);
 
@@ -126,9 +127,13 @@ export function Dashboard() {
       const monthlyEarnings = monthTickets
         .filter((t: any) => t.payment)
         .reduce((s: number, t: any) => s + Number(t.payment.netAmount || 0), 0);
-      const monthlyExpenses = expRes.data.expenses
+      const deliveryExp = expRes.data.expenses
         .filter((e: any) => new Date(e.createdAt) >= monthStart)
         .reduce((s: number, e: any) => s + Number(e.amount), 0);
+      const farmExp = farmExpRes.data.farmExpenses
+        .filter((e: any) => new Date(e.createdAt) >= monthStart)
+        .reduce((s: number, e: any) => s + Number(e.amount), 0);
+      const monthlyExpenses = deliveryExp + farmExp;
 
       setMonthlyStats({ kg: monthlyKg, earnings: monthlyEarnings, expenses: monthlyExpenses, profit: monthlyEarnings - monthlyExpenses });
 

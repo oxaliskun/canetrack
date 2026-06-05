@@ -31,6 +31,7 @@ export function FarmerReports() {
   const [activeTab, setActiveTab] = useState('deliveries');
   const [tickets, setTickets] = useState<any[]>([]);
   const [expenses, setExpenses] = useState<any[]>([]);
+  const [farmExpenses, setFarmExpenses] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [farms, setFarms] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,14 +41,16 @@ export function FarmerReports() {
 
   const fetchData = async () => {
     try {
-      const [ticketsRes, expRes, catRes, farmsRes] = await Promise.all([
+      const [ticketsRes, expRes, farmExpRes, catRes, farmsRes] = await Promise.all([
         api.get('/tickets'),
         api.get('/expenses'),
+        api.get('/farm-expenses'),
         api.get('/expense-categories'),
         api.get('/farms/mine'),
       ]);
       setTickets(ticketsRes.data.tickets || []);
       setExpenses(expRes.data.expenses || []);
+      setFarmExpenses(farmExpRes.data.farmExpenses || []);
       setCategories(catRes.data.categories || []);
       setFarms(farmsRes.data.farms || []);
     } catch { toast.error('Failed to load report data'); }
@@ -94,24 +97,26 @@ export function FarmerReports() {
     return Object.values(map).sort((a: any, b: any) => new Date(a.month).getTime() - new Date(b.month).getTime());
   }, [tickets]);
 
+  const allExpenses = useMemo(() => [...expenses, ...farmExpenses], [expenses, farmExpenses]);
+
   const expensesByCategory = useMemo(() => {
     const map: Record<string, number> = {};
-    expenses.forEach((e: any) => {
+    allExpenses.forEach((e: any) => {
       const name = catMap[e.categoryId] || 'Unknown';
       map[name] = (map[name] || 0) + Number(e.amount);
     });
     return Object.entries(map).map(([name, value]) => ({ name, value }));
-  }, [expenses, catMap]);
+  }, [allExpenses, catMap]);
 
   const expensesByMonth = useMemo(() => {
     const map: Record<string, number> = {};
-    expenses.forEach((e: any) => {
+    allExpenses.forEach((e: any) => {
       const m = new Date(e.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
       map[m] = (map[m] || 0) + Number(e.amount);
     });
     return Object.entries(map).map(([month, amount]) => ({ month, amount }))
       .sort((a, b) => new Date(a.month).getTime() - new Date(b.month).getTime());
-  }, [expenses]);
+  }, [allExpenses]);
 
   const profitLossData = useMemo(() => {
     const map: Record<string, any> = {};
@@ -120,13 +125,13 @@ export function FarmerReports() {
       if (!map[m]) map[m] = { month: m, earnings: 0, expenses: 0 };
       if (t.payment) map[m].earnings += Number(t.payment.netAmount || 0);
     });
-    expenses.forEach((e: any) => {
+    allExpenses.forEach((e: any) => {
       const m = new Date(e.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
       if (!map[m]) map[m] = { month: m, earnings: 0, expenses: 0 };
       map[m].expenses += Number(e.amount);
     });
     return Object.values(map).sort((a: any, b: any) => new Date(a.month).getTime() - new Date(b.month).getTime());
-  }, [tickets, expenses]);
+  }, [tickets, allExpenses]);
 
   const farmsReport = useMemo(() => {
     const map: Record<string, any> = {};

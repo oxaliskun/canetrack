@@ -573,7 +573,14 @@ apiRouter.post('/payments', authMiddleware, async (req: AuthRequest, res: Respon
 
 apiRouter.get('/payments', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const payments = await prisma.payment.findMany({ orderBy: { createdAt: 'desc' } });
+    const farms = await prisma.farm.findMany({ where: { ownerId: req.user!.userId }, select: { id: true } });
+    const farmIds = farms.map(f => f.id);
+    const tickets = await prisma.weightTicket.findMany({ where: { farmId: { in: farmIds } }, select: { id: true } });
+    const ticketIds = tickets.map(t => t.id);
+    const payments = await prisma.payment.findMany({
+      where: { quedanId: { in: ticketIds } },
+      orderBy: { createdAt: 'desc' }
+    });
     res.json({ payments });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 });

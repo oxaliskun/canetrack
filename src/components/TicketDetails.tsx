@@ -311,7 +311,7 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
                     </div>
                     <div className="flex items-center gap-2">
                       {ticket?.status !== 'PAID' && (
-                        <button onClick={() => { setPayForm({ method: 'BANK_TRANSFER', referenceNumber: '', grossAmount: ticket.netWeight ? String(Number(ticket.netWeight) * 2.5) : '', deductions: '0', netAmount: ticket.netWeight ? String(Number(ticket.netWeight) * 2.5) : '', notes: '' }); setShowPaymentModal(true); }}
+                        <button onClick={() => { setPayForm({ method: 'BANK_TRANSFER', referenceNumber: '', grossAmount: '', deductions: '0', notes: '' }); setShowPaymentModal(true); }}
                           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider border transition-all shadow-sm ${isDark ? 'bg-blue-950/30 border-blue-800 text-blue-400 hover:bg-blue-900/50 hover:text-blue-300' : 'bg-blue-50 border-blue-200 text-blue-600 hover:bg-blue-100'}`}>
                           <DollarSign className="w-4 h-4" /> Record Payment
                         </button>
