@@ -118,6 +118,7 @@ export function FarmerPayments() {
           grossAmount: gross,
           deductions,
           netAmount: net,
+          status: 'PAID',
           notes: payForm.notes || null,
           proofUrl: proofUrl || undefined,
         });
