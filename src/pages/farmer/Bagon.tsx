@@ -22,6 +22,8 @@ interface BagonForm {
   tareWeight: string;
 }
 
+const tareOptions = ['1.5', '1.8', '2.0', '2.2', '2.5', '2.8', '3.0', '3.5'];
+
 const emptyForm: BagonForm = { plateNumber: '', type: '18ft', tareWeight: '' };
 
 export function Bagon() {
@@ -30,6 +32,7 @@ export function Bagon() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editBagon, setEditBagon] = useState<BagonData | null>(null);
   const [form, setForm] = useState<BagonForm>(emptyForm);
+  const [tareSelect, setTareSelect] = useState('');
   const [search, setSearch] = useState('');
   const { isDark } = useTheme();
 
@@ -48,16 +51,19 @@ export function Bagon() {
   const openAdd = () => {
     setEditBagon(null);
     setForm(emptyForm);
+    setTareSelect('');
     setModalOpen(true);
   };
 
   const openEdit = (bagon: BagonData) => {
     setEditBagon(bagon);
+    const tareInTons = bagon.tareWeight ? (bagon.tareWeight / 1000).toFixed(2) : '';
     setForm({
       plateNumber: bagon.plateNumber,
       type: bagon.type,
-      tareWeight: bagon.tareWeight?.toString() || '',
+      tareWeight: tareInTons,
     });
+    setTareSelect(tareOptions.includes(tareInTons) ? tareInTons : tareInTons ? '__other__' : '');
     setModalOpen(true);
   };
 
@@ -74,7 +80,7 @@ export function Bagon() {
       toast.error('Plate number can only contain letters, numbers, and hyphens');
       return;
     }
-    const tare = form.tareWeight ? Number(form.tareWeight) : null;
+    const tare = form.tareWeight ? Number(form.tareWeight) * 1000 : null; // convert tons to kg
     try {
       if (editBagon) {
         await api.patch(`/bagon/${editBagon.id}`, { plateNumber: plate, type: form.type, tareWeight: tare });
@@ -275,10 +281,18 @@ export function Bagon() {
                       </select>
                     </div>
                     <div>
-                      <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Tare Weight (kg)</label>
-                      <input type="number" step="0.01" min="0" value={form.tareWeight} onChange={e => setForm({...form, tareWeight: e.target.value})}
-                        className={`w-full px-4 sm:px-5 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium text-sm shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400'}`}
-                        placeholder="4000" />
+                      <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Tare Weight (tons)</label>
+                      <select value={tareSelect} onChange={e => { const v = e.target.value; setTareSelect(v); if (v !== '__other__') setForm({...form, tareWeight: v }); }}
+                        className={`w-full px-4 sm:px-5 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium text-sm shadow-sm min-h-[44px] appearance-none ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}>
+                        <option value="">— Select —</option>
+                        {tareOptions.map(opt => <option key={opt} value={opt}>{opt} t</option>)}
+                        <option value="__other__">Others (manual input)</option>
+                      </select>
+                      {tareSelect === '__other__' && (
+                        <input type="number" step="0.01" min="0" value={form.tareWeight} onChange={e => setForm({...form, tareWeight: e.target.value})}
+                          className={`mt-2 w-full px-4 sm:px-5 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium text-sm shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400'}`}
+                          placeholder="e.g. 2.4" />
+                      )}
                     </div>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-3 pt-3 sm:pt-4">
