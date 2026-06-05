@@ -31,12 +31,19 @@ interface FarmForm {
 
 const emptyForm: FarmForm = { farmName: '', location: '', barangay: '', hectares: '', cropType: '', description: '' };
 
+const cropOptions = [
+  'Phil 2000-1318', 'VMC 87-599', 'VMC 86-550', 'Phil 8013',
+  'Phil 99-1793', 'VMC 84-524', 'VMC 88-354', 'BS 6615',
+  'Phil 2004-1165', 'Phil 2009-1869'
+];
+
 export function FarmerFarms() {
   const [farms, setFarms] = useState<Farm[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editFarm, setEditFarm] = useState<Farm | null>(null);
   const [form, setForm] = useState<FarmForm>(emptyForm);
+  const [cropSelect, setCropSelect] = useState('');
   const [search, setSearch] = useState('');
   const [docFiles, setDocFiles] = useState<File[]>([]);
   const [docPreviews, setDocPreviews] = useState<string[]>([]);
@@ -71,6 +78,7 @@ export function FarmerFarms() {
   const openAdd = () => {
     setEditFarm(null);
     setForm(emptyForm);
+    setCropSelect('');
     setDocFiles([]);
     setDocPreviews([]);
     setModalOpen(true);
@@ -78,15 +86,23 @@ export function FarmerFarms() {
 
   const openEdit = (farm: Farm) => {
     setEditFarm(farm);
+    const ct = farm.cropType || '';
     setForm({
       farmName: farm.farmName,
       location: farm.location,
       barangay: farm.barangay || '',
       hectares: farm.hectares?.toString() || '',
-      cropType: farm.cropType || '',
+      cropType: ct,
       description: farm.description || '',
     });
+    setCropSelect(cropOptions.includes(ct) ? ct : ct ? '__other__' : '');
     setModalOpen(true);
+  };
+
+  const handleCropChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    setCropSelect(val);
+    setForm(prev => ({ ...prev, cropType: val === '__other__' ? '' : val }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -431,8 +447,17 @@ export function FarmerFarms() {
                     </div>
                   </div>
                   <div>
-                    <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Crop Type</label>
-                    <input value={form.cropType} onChange={e => setForm({...form, cropType: e.target.value})} className={`w-full px-4 sm:px-5 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium text-sm shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400'}`} placeholder="e.g. Sugarcane, Rice" />
+                    <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Crop Type / Variety</label>
+                    <select value={cropSelect} onChange={handleCropChange} className={`w-full px-4 sm:px-5 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium text-sm shadow-sm min-h-[44px] appearance-none ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}>
+                      <option value="">— Select —</option>
+                      {cropOptions.map(opt => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                      <option value="__other__">Others (please specify)</option>
+                    </select>
+                    {cropSelect === '__other__' && (
+                      <input value={form.cropType} onChange={e => setForm({...form, cropType: e.target.value})} className={`mt-2 w-full px-4 sm:px-5 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium text-sm shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400'}`} placeholder="Type your variety..." />
+                    )}
                   </div>
                   <div>
                     <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Description</label>
