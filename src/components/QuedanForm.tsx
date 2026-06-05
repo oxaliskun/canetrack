@@ -23,9 +23,11 @@ export function QuedanForm({ onSuccess }: { onSuccess?: () => void }) {
   }, [user]);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const files = (Array.from(e.target.files || []) as File[]).slice(0, 3);
-    setPhotos(files);
-    setPhotoPreviews(files.map(f => URL.createObjectURL(f)));
+    const incoming = Array.from(e.target.files || []) as File[];
+    const combined = [...photos, ...incoming].slice(0, 3);
+    setPhotos(combined);
+    setPhotoPreviews(combined.map(f => URL.createObjectURL(f)));
+    e.target.value = '';
   };
 
   const removePhoto = (i: number) => {
