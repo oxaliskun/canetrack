@@ -311,7 +311,7 @@ apiRouter.get('/auth/me', authMiddleware, async (req: AuthRequest, res: Response
         include: { farms: { select: { id: true, farmName: true, location: true, barangay: true, hectares: true, cropType: true, description: true, isArchived: true } } }
       });
       if (!user) { res.status(404).json({ message: 'User not found' }); return; }
-      res.json({ user: { id: user.id, userId: user.id, name: user.name, email: user.email, contactNumber: user.contactNumber, address: user.address, profilePicture: user.profilePicture, farms: user.farms } });
+    res.json({ user: { id: user.id, userId: user.id, name: user.name, email: user.email, contactNumber: user.contactNumber, address: user.address, profilePicture: user.profilePicture, assignedMill: user.assignedMill, paNumber: user.paNumber, millName: user.millName, farms: user.farms } });
   } catch(e: any) { res.status(500).json({ message: e.message }); }
 });
 
@@ -329,7 +329,7 @@ apiRouter.get('/users/profile', authMiddleware, async (req: AuthRequest, res: Re
 
 apiRouter.patch('/users/profile', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { name, contactNumber, address, profilePicture } = req.body;
+    const { name, contactNumber, address, profilePicture, paNumber, millName } = req.body;
 
     if (name !== undefined && !name.trim()) {
       res.status(400).json({ message: 'Name cannot be empty' });
@@ -341,11 +341,13 @@ apiRouter.patch('/users/profile', authMiddleware, async (req: AuthRequest, res: 
     if (contactNumber !== undefined) updateData.contactNumber = contactNumber;
     if (address !== undefined) updateData.address = address;
     if (profilePicture !== undefined) updateData.profilePicture = profilePicture;
+    if (paNumber !== undefined) updateData.paNumber = paNumber;
+    if (millName !== undefined) updateData.millName = millName;
 
     const user = await prisma.user.update({
       where: { id: req.user!.userId },
       data: updateData,
-      select: { id: true, name: true, email: true, contactNumber: true, address: true, profilePicture: true }
+      select: { id: true, name: true, email: true, contactNumber: true, address: true, profilePicture: true, assignedMill: true, paNumber: true, millName: true }
     });
 
     res.json({ message: 'Profile updated successfully', user });
