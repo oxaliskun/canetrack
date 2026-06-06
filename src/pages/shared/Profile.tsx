@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
-import { User, Lock, Save, ShieldCheck, Phone, MapPin, Sprout, Loader2, Camera, Trash2 } from 'lucide-react';
+import { User, Lock, Save, ShieldCheck, Phone, MapPin, Sprout, Loader2, Camera, Trash2, Building2, Hash } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../context/ThemeContext';
 import api from '../../api/axiosInstance';
@@ -16,6 +16,8 @@ export function Profile() {
   const [contactNumber, setContactNumber] = useState('');
   const [address, setAddress] = useState('');
   const [profilePicture, setProfilePicture] = useState('');
+  const [paNumber, setPaNumber] = useState('');
+  const [millName, setMillName] = useState('');
   const [farmName, setFarmName] = useState('');
   const [farmLocation, setFarmLocation] = useState('');
   const [passwords, setPasswords] = useState({ old: '', new: '', confirm: '' });
@@ -30,6 +32,8 @@ export function Profile() {
         setContactNumber(u.contactNumber || '');
         setAddress(u.address || '');
         setProfilePicture(u.profilePicture || '');
+        setPaNumber(u.paNumber || '');
+        setMillName(u.millName || '');
         if (u.farms && u.farms.length > 0) {
           setFarmName(u.farms[0].farmName || '');
           setFarmLocation(u.farms[0].location || '');
@@ -80,7 +84,7 @@ export function Profile() {
     }
     setSaving(true);
     try {
-      const payload: any = { name: name.trim(), contactNumber, address, profilePicture, farmName: farmName.trim(), farmLocation: farmLocation.trim() };
+      const payload: any = { name: name.trim(), contactNumber, address, profilePicture, paNumber: paNumber || undefined, millName: millName || undefined, farmName: farmName.trim(), farmLocation: farmLocation.trim() };
       await api.patch('/users/profile', payload);
       // Update local user state
       if (authUser) {
@@ -90,6 +94,8 @@ export function Profile() {
           contactNumber,
           address,
           profilePicture,
+          paNumber,
+          millName,
         };
         localStorage.setItem('canetrack_user', JSON.stringify(updatedUser));
       }
@@ -206,6 +212,20 @@ export function Profile() {
                       <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     </div>
                   </div>
+                  <div>
+                    <label className={labelClass}>P.A. No.</label>
+                    <div className="relative">
+                      <input type="text" value={paNumber} onChange={e => setPaNumber(e.target.value)} className={`${inputClass} pl-9 sm:pl-10`} placeholder="e.g. 2-120089-01-9" />
+                      <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className={labelClass}>Mill Name</label>
+                    <div className="relative">
+                      <input type="text" value={millName} onChange={e => setMillName(e.target.value)} className={`${inputClass} pl-9 sm:pl-10`} placeholder="e.g. BUSCO SUGAR MILLING CO., INC." />
+                      <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    </div>
+                  </div>
                 </div>
 
                 <div>
@@ -299,16 +319,22 @@ export function Profile() {
                   <ShieldCheck className="w-3 h-3" /> Farmer
                 </div>
               </div>
-              <>
-                <div className={`pt-4 border-t ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
-                  <p className={`text-[10px] font-extrabold uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Farm Name</p>
-                  <p className={`font-bold mt-1 text-sm truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>{farmName || '—'}</p>
-                </div>
-                <div>
-                  <p className={`text-[10px] font-extrabold uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Farm Location</p>
-                  <p className={`font-medium mt-1 text-xs sm:text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{farmLocation || '—'}</p>
-                </div>
-              </>
+              <div className={`pt-4 border-t ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
+                <p className={`text-[10px] font-extrabold uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>P.A. No.</p>
+                <p className={`font-mono font-bold mt-1 text-sm truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>{paNumber || '—'}</p>
+              </div>
+              <div>
+                <p className={`text-[10px] font-extrabold uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Mill Name</p>
+                <p className={`font-bold mt-1 text-sm truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>{millName || '—'}</p>
+              </div>
+              <div className={`pt-4 border-t ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
+                <p className={`text-[10px] font-extrabold uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Farm Name</p>
+                <p className={`font-bold mt-1 text-sm truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>{farmName || '—'}</p>
+              </div>
+              <div>
+                <p className={`text-[10px] font-extrabold uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Farm Location</p>
+                <p className={`font-medium mt-1 text-xs sm:text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{farmLocation || '—'}</p>
+              </div>
             </div>
           </motion.div>
         </div>
