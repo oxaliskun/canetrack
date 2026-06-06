@@ -30,7 +30,6 @@ model User {
 
   farms           Farm[]
   tickets         WeightTicket[]
-  bagon           Bagon[]
   trucks          Truck[]
   expenses        Expense[]
 }
@@ -40,12 +39,10 @@ model Bagon {
   plateNumber String   @unique
   type        String   @default("18ft")
   tareWeight  Float?
-  ownerId     String
   isArchived  Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt @default(now())
 
-  owner User @relation(fields: [ownerId], references: [id])
   tickets WeightTicket[]
 }
 

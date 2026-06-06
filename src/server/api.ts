@@ -429,70 +429,10 @@ apiRouter.post('/upload', (req: Request, res: Response): void => {
 });
 
 // --- BAGON ROUTES ---
-apiRouter.post('/bagon', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    const { plateNumber, type, tareWeight } = req.body;
-    if (!plateNumber) {
-      res.status(400).json({ message: 'Plate number is required' });
-      return;
-    }
-    const validTypes = ['14ft', '18ft', '20ft'];
-    if (type && !validTypes.includes(type)) {
-      res.status(400).json({ message: 'Type must be 14ft, 18ft, or 20ft' });
-      return;
-    }
-    const bagon = await prisma.bagon.create({
-      data: { plateNumber: plateNumber.toUpperCase(), type: type || '18ft', tareWeight: tareWeight ? Number(tareWeight) : null, ownerId: req.user!.userId }
-    });
-    res.status(201).json(bagon);
-  } catch (e: any) {
-    if (e.code === 'P2002') { res.status(409).json({ message: 'Plate number already exists' }); return; }
-    res.status(500).json({ message: e.message });
-  }
-});
-
 apiRouter.get('/bagon', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const bagons = await prisma.bagon.findMany({ where: { ownerId: req.user!.userId }, orderBy: { createdAt: 'desc' } });
+    const bagons = await prisma.bagon.findMany({ where: { isArchived: false }, orderBy: { createdAt: 'desc' } });
     res.json({ bagons });
-  } catch (e: any) { res.status(500).json({ message: e.message }); }
-});
-
-apiRouter.get('/bagon/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
-  try {
-    const bagon = await prisma.bagon.findFirst({ where: { id: req.params.id, ownerId: req.user!.userId } });
-    if (!bagon) { res.status(404).json({ message: 'Bagon not found' }); return; }
-    res.json(bagon);
-  } catch (e: any) { res.status(500).json({ message: e.message }); }
-});
-
-apiRouter.patch('/bagon/:id', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    const existing = await prisma.bagon.findFirst({ where: { id: req.params.id, ownerId: req.user!.userId } });
-    if (!existing) { res.status(404).json({ message: 'Bagon not found' }); return; }
-    const { plateNumber, type, tareWeight, isArchived } = req.body;
-    const validTypes = ['14ft', '18ft', '20ft'];
-    if (type && !validTypes.includes(type)) {
-      res.status(400).json({ message: 'Type must be 14ft, 18ft, or 20ft' });
-      return;
-    }
-    const bagon = await prisma.bagon.update({
-      where: { id: req.params.id },
-      data: { ...(plateNumber && { plateNumber: plateNumber.toUpperCase() }), ...(type && { type }), ...(tareWeight !== undefined && { tareWeight: tareWeight ? Number(tareWeight) : null }), ...(isArchived !== undefined && { isArchived }) }
-    });
-    res.json(bagon);
-  } catch (e: any) {
-    if (e.code === 'P2002') { res.status(409).json({ message: 'Plate number already exists' }); return; }
-    res.status(500).json({ message: e.message });
-  }
-});
-
-apiRouter.delete('/bagon/:id', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    const existing = await prisma.bagon.findFirst({ where: { id: req.params.id, ownerId: req.user!.userId } });
-    if (!existing) { res.status(404).json({ message: 'Bagon not found' }); return; }
-    await prisma.bagon.delete({ where: { id: req.params.id } });
-    res.json({ message: 'Bagon deleted' });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 });
 

@@ -30,21 +30,21 @@ async function main() {
     });
   }
 
-  // Seed Bagons for the farmer
-  const farmer = await prisma.user.findUnique({ where: { email: 'farmer@canetrack.com' } });
-  if (farmer) {
-    const existingBagons = await prisma.bagon.count({ where: { ownerId: farmer.id } });
-    if (existingBagons === 0) {
-      await prisma.bagon.createMany({
-        data: [
-          { plateNumber: 'ABC-1234', type: '18ft', tareWeight: 3200, ownerId: farmer.id },
-          { plateNumber: 'XYZ-5678', type: '20ft', tareWeight: 3800, ownerId: farmer.id },
-          { plateNumber: 'DEF-9012', type: '14ft', tareWeight: 2800, ownerId: farmer.id },
-        ],
-      });
-      console.log('Seeded 3 bagons for sample farmer.');
-    }
-  }
+  // Seed Bagons (system-wide, no owner)
+  await prisma.bagon.deleteMany();
+  await prisma.bagon.createMany({
+    data: [
+      { plateNumber: 'ABC-1234', type: '18ft', tareWeight: 3200 },
+      { plateNumber: 'XYZ-5678', type: '20ft', tareWeight: 3800 },
+      { plateNumber: 'DEF-9012', type: '14ft', tareWeight: 2800 },
+      { plateNumber: 'GHI-3456', type: '18ft', tareWeight: 3100 },
+      { plateNumber: 'JKL-7890', type: '20ft', tareWeight: 4000 },
+      { plateNumber: 'MNO-1234', type: '14ft', tareWeight: 2200 },
+      { plateNumber: 'PQR-5678', type: '18ft', tareWeight: 3300 },
+      { plateNumber: 'STU-9012', type: '20ft', tareWeight: 3900 },
+    ],
+  });
+  console.log('Seeded 8 system-wide bagons.');
 
   // Seed Expense Categories
   const expenseCategories = [
