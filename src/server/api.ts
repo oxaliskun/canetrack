@@ -294,7 +294,7 @@ apiRouter.post('/auth/login', async (req: Request, res: Response): Promise<void>
       return;
     }
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '8h' });
-    res.json({ token, user: { id: user.id, userId: user.id, name: user.name, email: user.email, contactNumber: user.contactNumber, address: user.address, profilePicture: user.profilePicture } });
+    res.json({ token, user: { id: user.id, userId: user.id, name: user.name, email: user.email, contactNumber: user.contactNumber, address: user.address, profilePicture: user.profilePicture, paNumber: user.paNumber, millName: user.millName } });
   } catch (e: any) {
     res.status(500).json({ message: e.message });
   }
@@ -323,7 +323,7 @@ apiRouter.get('/users/profile', authMiddleware, async (req: AuthRequest, res: Re
       include: { farms: { select: { id: true, farmName: true, location: true, barangay: true, hectares: true, cropType: true, description: true, isArchived: true } } }
     });
     if (!user) { res.status(404).json({ message: 'User not found' }); return; }
-    res.json({ user: { id: user.id, userId: user.id, name: user.name, email: user.email, contactNumber: user.contactNumber, address: user.address, profilePicture: user.profilePicture, farms: user.farms } });
+    res.json({ user: { id: user.id, userId: user.id, name: user.name, email: user.email, contactNumber: user.contactNumber, address: user.address, profilePicture: user.profilePicture, assignedMill: user.assignedMill, paNumber: user.paNumber, millName: user.millName, farms: user.farms } });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 });
 

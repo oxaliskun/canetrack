@@ -9,6 +9,8 @@ interface User {
   address?: string;
   profilePicture?: string;
   assignedMill?: string;
+  paNumber?: string;
+  millName?: string;
   farms?: { id: string; farmName: string; location: string; barangay?: string; hectares?: number }[];
 }
 
