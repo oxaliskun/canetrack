@@ -5,6 +5,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { toast } from 'sonner';
 import { formatDate } from '../../lib/utils';
 import { Sprout, MapPin, Ruler, Archive, Edit3, Plus, X, Leaf, Search, Save, Wallet, Camera } from 'lucide-react';
+import { CANE_VARIETIES } from '../../lib/constants';
 
 interface Farm {
   id: string;
@@ -30,12 +31,6 @@ interface FarmForm {
 }
 
 const emptyForm: FarmForm = { farmName: '', location: '', barangay: '', hectares: '', cropType: '', description: '' };
-
-const cropOptions = [
-  'Phil 2000-1318', 'VMC 87-599', 'VMC 86-550', 'Phil 8013',
-  'Phil 99-1793', 'VMC 84-524', 'VMC 88-354', 'BS 6615',
-  'Phil 2004-1165', 'Phil 2009-1869'
-];
 
 export function FarmerFarms() {
   const [farms, setFarms] = useState<Farm[]>([]);
@@ -95,7 +90,7 @@ export function FarmerFarms() {
       cropType: ct,
       description: farm.description || '',
     });
-    setCropSelect(cropOptions.includes(ct) ? ct : ct ? '__other__' : '');
+    setCropSelect(CANE_VARIETIES.includes(ct) ? ct : ct ? '__other__' : '');
     setModalOpen(true);
   };
 
@@ -450,7 +445,7 @@ export function FarmerFarms() {
                     <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Crop Type / Variety</label>
                     <select value={cropSelect} onChange={handleCropChange} className={`w-full px-4 sm:px-5 py-3 sm:py-3.5 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium text-sm shadow-sm min-h-[44px] appearance-none ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}>
                       <option value="">— Select —</option>
-                      {cropOptions.map(opt => (
+                      {CANE_VARIETIES.map(opt => (
                         <option key={opt} value={opt}>{opt}</option>
                       ))}
                       <option value="__other__">Others (please specify)</option>

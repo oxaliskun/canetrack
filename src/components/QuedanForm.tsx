@@ -110,7 +110,7 @@ export function QuedanForm({ onSuccess }: { onSuccess?: () => void }) {
       <div className="space-y-4 sm:space-y-5">
         <div>
           <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Farm Origin</label>
-          <select required value={form.farmId} onChange={e=>setForm({...form, farmId: e.target.value})} className={`w-full px-4 sm:px-5 py-3 sm:py-4 border rounded-xl sm:rounded-2xl focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none text-sm sm:text-base cursor-pointer shadow-sm font-semibold min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}>
+            <select required value={form.farmId} onChange={e => { const f = farms.find((x: any) => x.id === e.target.value) as any; setForm({...form, farmId: e.target.value, caneVariety: f?.cropType || ''}) }} className={`w-full px-4 sm:px-5 py-3 sm:py-4 border rounded-xl sm:rounded-2xl focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none text-sm sm:text-base cursor-pointer shadow-sm font-semibold min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}>
             <option value="" disabled>Select a Farm...</option>
             {farms.map((f: any) => <option key={f.id} value={f.id}>{f.farmName}</option>)}
           </select>
@@ -201,11 +201,12 @@ export function QuedanForm({ onSuccess }: { onSuccess?: () => void }) {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <div>
               <label className={`block text-[10px] font-extrabold uppercase tracking-widest mb-1.5 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Cane Variety</label>
-              <select value={form.caneVariety} onChange={e => setForm({...form, caneVariety: e.target.value})}
-                className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium text-sm shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'}`}>
-                <option value="">— Select —</option>
-                {CANE_VARIETIES.map(v => <option key={v} value={v}>{v}</option>)}
-              </select>
+              <input list="caneVarieties" value={form.caneVariety} onChange={e => setForm({...form, caneVariety: e.target.value})}
+                className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium text-sm shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-400'}`}
+                placeholder="Select or type variety..." />
+              <datalist id="caneVarieties">
+                {CANE_VARIETIES.map(v => <option key={v} value={v} />)}
+              </datalist>
             </div>
             <div>
               <label className={`block text-[10px] font-extrabold uppercase tracking-widest mb-1.5 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Load Remarks</label>
