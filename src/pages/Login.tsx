@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import api from '../api/axiosInstance';
 import { useAuth } from '../hooks/useAuth';
@@ -45,16 +45,7 @@ export function Login() {
   const { isDark } = useTheme();
   
   const navigate = useNavigate();
-  const location = useLocation();
   const { login } = useAuth();
-
-  useEffect(() => {
-    const state = location.state as { verified?: string } | null;
-    if (state?.verified) {
-      setSuccess(state.verified);
-      navigate('', { replace: true, state: {} });
-    }
-  }, []);
 
   useEffect(() => {
     const saved = localStorage.getItem('lockout_until');
@@ -141,7 +132,13 @@ export function Login() {
     setLoading(true); setError(''); setSuccess('');
     try {
       const res = await api.post('/auth/verify-email', { email: regEmail, code: verificationCode });
-      navigate('/login', { state: { verified: res.data.message } });
+      setSuccess(res.data.message);
+      setShowVerification(false);
+      setVerificationCode('');
+      setRegEmail('');
+      setName(''); setEmail(''); setPassword(''); setConfirmPassword('');
+      setContactNumber(''); setAddress('');
+      setIsRegistering(false);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Verification failed');
     } finally {
