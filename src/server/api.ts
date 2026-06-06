@@ -383,6 +383,8 @@ apiRouter.patch('/users/verify', authMiddleware, (req: AuthRequest, res: Respons
         return;
       }
 
+      const { millName } = req.body;
+
       const baseUrl = `${req.protocol}://${req.get('host')}`;
       const verificationDoc = `${baseUrl}/uploads/${validIdFile.filename}` + (landDocFile ? `,${baseUrl}/uploads/${landDocFile.filename}` : '');
       const verificationSelfie = `${baseUrl}/uploads/${selfieFile.filename}`;
@@ -392,7 +394,8 @@ apiRouter.patch('/users/verify', authMiddleware, (req: AuthRequest, res: Respons
         data: {
           verificationStatus: 'VERIFIED',
           verificationDoc,
-          verificationSelfie
+          verificationSelfie,
+          ...(millName && { millName })
         },
         select: { id: true, name: true, email: true, contactNumber: true, address: true, profilePicture: true, paNumber: true, millName: true, verificationStatus: true }
       });

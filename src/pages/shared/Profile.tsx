@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
-import { User, Lock, Save, ShieldCheck, Phone, MapPin, Sprout, Loader2, Camera, Trash2, Building2, Upload, CheckCircle, AlertTriangle } from 'lucide-react';
+import { User, Lock, Save, ShieldCheck, Phone, MapPin, Loader2, Camera, Trash2, Building2, Upload, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../context/ThemeContext';
 import api from '../../api/axiosInstance';
@@ -22,6 +22,7 @@ export function Profile() {
   const [verificationStatus, setVerificationStatus] = useState('UNVERIFIED');
   const [farmName, setFarmName] = useState('');
   const [farmLocation, setFarmLocation] = useState('');
+  const [verifyMillName, setVerifyMillName] = useState('');
   const [passwords, setPasswords] = useState({ old: '', new: '', confirm: '' });
   const [validId, setValidId] = useState<File | null>(null);
   const [validIdPreview, setValidIdPreview] = useState('');
@@ -29,6 +30,19 @@ export function Profile() {
   const [landDocumentPreview, setLandDocumentPreview] = useState('');
   const [selfie, setSelfie] = useState<File | null>(null);
   const [selfiePreview, setSelfiePreview] = useState('');
+
+  const mindanaoMills = [
+    'Busco Sugar Milling Co., Inc. (BUSCO)',
+    'Crystal Sugar Milling Co., Inc. (CSM)',
+    'Cotabato Sugar Central Co., Inc.',
+    'Davao Sugar Central',
+    'Bukidnon Sugar Milling Co., Inc. (BUSMICO)',
+    'Greenfield Sugar Corporation',
+    'Philippine Sugar Milling Corporation (PSMC)',
+    'Talisay Sugar Milling Co., Inc.',
+    'Southern Sugar Milling Co., Inc.',
+    'Agusan Sugar Milling Corporation',
+  ];
   const fileInputRef = useRef<HTMLInputElement>(null);
   const validIdRef = useRef<HTMLInputElement>(null);
   const landDocRef = useRef<HTMLInputElement>(null);
@@ -45,6 +59,7 @@ export function Profile() {
         setProfilePicture(u.profilePicture || '');
         setPaNumber(u.paNumber || '');
         setMillName(u.millName || '');
+        setVerifyMillName(u.millName || '');
         setVerificationStatus(u.verificationStatus || 'UNVERIFIED');
         if (u.farms && u.farms.length > 0) {
           setFarmName(u.farms[0].farmName || '');
@@ -98,13 +113,15 @@ export function Profile() {
       formData.append('validId', validId);
       if (landDocument) formData.append('landDocument', landDocument);
       formData.append('selfie', selfie);
+      if (verifyMillName) formData.append('millName', verifyMillName);
 
       const res = await api.patch('/users/verify', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setVerificationStatus('VERIFIED');
+      setMillName(verifyMillName);
       if (res.data.user) {
-        const updatedUser = { ...authUser, ...res.data.user, verificationStatus: 'VERIFIED' };
+        const updatedUser = { ...authUser, ...res.data.user, verificationStatus: 'VERIFIED', millName: verifyMillName };
         localStorage.setItem('canetrack_user', JSON.stringify(updatedUser));
         login(localStorage.getItem('canetrack_token') || '', updatedUser);
       }
@@ -124,7 +141,7 @@ export function Profile() {
     }
     setSaving(true);
     try {
-      const payload: any = { name: name.trim(), contactNumber, address, profilePicture, paNumber: paNumber || undefined, millName: millName || undefined, farmName: farmName.trim(), farmLocation: farmLocation.trim() };
+      const payload: any = { name: name.trim(), contactNumber, address, profilePicture, paNumber: paNumber || undefined, millName: millName || undefined };
       await api.patch('/users/profile', payload);
       // Update local user state
       if (authUser) {
@@ -345,10 +362,24 @@ export function Profile() {
                           )}
                         </div>
 
+                        <div>
+                          <label className={`${labelClass} ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>Mill Company <span className="text-red-500">*</span></label>
+                          <select
+                            value={verifyMillName}
+                            onChange={e => setVerifyMillName(e.target.value)}
+                            className={`${inputClass} appearance-none ${!verifyMillName ? 'text-slate-400' : ''}`}
+                          >
+                            <option value="" disabled>Select your mill company</option>
+                            {mindanaoMills.map(mill => (
+                              <option key={mill} value={mill}>{mill}</option>
+                            ))}
+                          </select>
+                        </div>
+
                         <button
                           type="button"
                           onClick={handleVerifySubmit}
-                          disabled={verifying || !validId || !selfie}
+                          disabled={verifying || !validId || !selfie || !verifyMillName}
                           className={`flex items-center gap-2 px-5 py-3 rounded-xl font-bold shadow-lg transition-all disabled:opacity-50 min-h-[44px] w-full justify-center ${isDark ? 'bg-amber-600 text-white hover:bg-amber-500 shadow-amber-600/20' : 'bg-amber-600 text-white hover:bg-amber-500 shadow-amber-600/20'}`}
                         >
                           {verifying ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />} Submit for Verification
@@ -362,20 +393,6 @@ export function Profile() {
                       <CheckCircle className="w-4 h-4" /> Verified
                     </div>
                   )}
-
-                  <div className={`pt-4 border-t ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
-                    <h3 className={`text-base sm:text-lg font-bold mb-4 sm:mb-6 flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-900'}`}><Sprout className={`w-5 h-5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} /> Farm Information</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                        <div>
-                          <label className={labelClass}>Farm Name</label>
-                          <input type="text" value={farmName} onChange={e => setFarmName(e.target.value)} className={inputClass} placeholder="My Sugarcane Farm" />
-                        </div>
-                        <div>
-                          <label className={labelClass}>Farm Location</label>
-                          <input type="text" value={farmLocation} onChange={e => setFarmLocation(e.target.value)} className={inputClass} placeholder="Barangay, Municipality, Province" />
-                        </div>
-                    </div>
-                  </div>
 
                 <div className="flex justify-end pt-3 sm:pt-4">
                   <button type="submit" disabled={saving} className={`flex items-center gap-2 px-5 sm:px-6 py-3 rounded-xl font-bold shadow-lg transition-all disabled:opacity-50 min-h-[44px] ${isDark ? 'bg-emerald-600 text-white hover:bg-emerald-500 shadow-emerald-600/20' : 'bg-slate-900 text-white hover:bg-slate-800 shadow-slate-900/20'}`}>
