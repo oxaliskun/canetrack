@@ -496,6 +496,56 @@ apiRouter.delete('/bagon/:id', authMiddleware, async (req: AuthRequest, res: Res
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 });
 
+// --- TRUCK ROUTES ---
+apiRouter.post('/trucks', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { plateNumber, driverName, driverContact, compatibleTypes } = req.body;
+    if (!plateNumber || !driverName) {
+      res.status(400).json({ message: 'Plate number and driver name are required' });
+      return;
+    }
+    const truck = await prisma.truck.create({
+      data: { plateNumber: plateNumber.toUpperCase(), driverName, driverContact: driverContact || null, compatibleTypes: compatibleTypes || '14ft,18ft,20ft', ownerId: req.user!.userId }
+    });
+    res.status(201).json(truck);
+  } catch (e: any) {
+    if (e.code === 'P2002') { res.status(409).json({ message: 'Plate number already exists' }); return; }
+    res.status(500).json({ message: e.message });
+  }
+});
+
+apiRouter.get('/trucks', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const trucks = await prisma.truck.findMany({ where: { ownerId: req.user!.userId }, orderBy: { createdAt: 'desc' } });
+    res.json({ trucks });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+});
+
+apiRouter.patch('/trucks/:id', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const existing = await prisma.truck.findFirst({ where: { id: req.params.id, ownerId: req.user!.userId } });
+    if (!existing) { res.status(404).json({ message: 'Truck not found' }); return; }
+    const { plateNumber, driverName, driverContact, compatibleTypes, isArchived } = req.body;
+    const truck = await prisma.truck.update({
+      where: { id: req.params.id },
+      data: { ...(plateNumber && { plateNumber: plateNumber.toUpperCase() }), ...(driverName && { driverName }), ...(driverContact !== undefined && { driverContact }), ...(compatibleTypes && { compatibleTypes }), ...(isArchived !== undefined && { isArchived }) }
+    });
+    res.json(truck);
+  } catch (e: any) {
+    if (e.code === 'P2002') { res.status(409).json({ message: 'Plate number already exists' }); return; }
+    res.status(500).json({ message: e.message });
+  }
+});
+
+apiRouter.delete('/trucks/:id', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const existing = await prisma.truck.findFirst({ where: { id: req.params.id, ownerId: req.user!.userId } });
+    if (!existing) { res.status(404).json({ message: 'Truck not found' }); return; }
+    await prisma.truck.update({ where: { id: req.params.id }, data: { isArchived: true } });
+    res.json({ message: 'Truck archived' });
+  } catch (e: any) { res.status(500).json({ message: e.message }); }
+});
+
 // --- EXPENSE CATEGORY ROUTES ---
 apiRouter.get('/expense-categories', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
@@ -669,7 +719,7 @@ apiRouter.delete('/payments/:id', authMiddleware, async (req: AuthRequest, res: 
 // --- TICKETS ROUTES ---
 apiRouter.post('/tickets', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
    try {
-      const { bagonId, farmId, grossWeight, tareWeight, brix, pol, sampleCollected, notes, truckNumber, caneVariety, loadRemarks, unloadingType, deliveryDate, authorizedSignatory } = req.body;
+      const { bagonId, truckId, farmId, grossWeight, tareWeight, brix, pol, sampleCollected, notes, truckNumber, caneVariety, loadRemarks, unloadingType, deliveryDate, authorizedSignatory } = req.body;
 
       if (!bagonId || !farmId || grossWeight == null || tareWeight == null) {
         res.status(400).json({ message: 'bagonId, farmId, grossWeight, tareWeight are required' });
@@ -706,14 +756,15 @@ apiRouter.post('/tickets', authMiddleware, async (req: AuthRequest, res: Respons
           status: 'PENDING',
           notes,
           farmerId: req.user!.userId,
-          truckNumber,
-          caneVariety,
-          loadRemarks,
-          unloadingType,
-          deliveryDate: deliveryDate ? new Date(deliveryDate) : undefined,
-          authorizedSignatory
-        },
-       include: { farm: true, bagon: true }
+           truckId: truckId || undefined,
+           truckNumber,
+           caneVariety,
+           loadRemarks,
+           unloadingType,
+           deliveryDate: deliveryDate ? new Date(deliveryDate) : undefined,
+           authorizedSignatory
+         },
+        include: { farm: true, bagon: true, truck: true }
      });
 
      res.status(201).json(ticket);
@@ -737,6 +788,7 @@ apiRouter.get('/tickets', authMiddleware, async (req: AuthRequest, res: Response
         farm: true,
         farmer: { select: { name: true, assignedMill: true, millName: true, paNumber: true } },
         bagon: true,
+        truck: true,
         deliveryReceipts: true,
         payment: true
       },
@@ -756,6 +808,7 @@ apiRouter.get('/tickets/:id', authMiddleware, async (req: AuthRequest, res: Resp
         farm: { include: { owner: { select: { name: true, email: true, contactNumber: true, address: true, assignedMill: true, millName: true, paNumber: true } } } },
         farmer: { select: { name: true, email: true, contactNumber: true, millName: true, paNumber: true } },
         bagon: true,
+        truck: true,
         deliveryReceipts: true,
         payment: true
       }
@@ -803,9 +856,9 @@ apiRouter.patch('/tickets/:id', authMiddleware, async (req: AuthRequest, res: Re
     const farms = await prisma.farm.findMany({ where: { ownerId: req.user!.userId }, select: { id: true } });
     const farmIds = farms.map(f => f.id);
     if (!farmIds.includes(ticket.farmId)) { res.status(403).json({ message: 'Access denied' }); return; }
-    const { bagonId, grossWeight, tareWeight, brix, pol, sampleCollected, notes, truckNumber, caneVariety, loadRemarks, unloadingType, deliveryDate, authorizedSignatory } = req.body;
+    const { bagonId, truckId, grossWeight, tareWeight, brix, pol, sampleCollected, notes, truckNumber, caneVariety, loadRemarks, unloadingType, deliveryDate, authorizedSignatory } = req.body;
     const { status } = req.body;
-    const hasOtherFields = bagonId !== undefined || grossWeight != null || tareWeight != null || brix !== undefined || pol !== undefined || sampleCollected !== undefined || notes !== undefined || truckNumber !== undefined || caneVariety !== undefined || loadRemarks !== undefined || unloadingType !== undefined || deliveryDate !== undefined || authorizedSignatory !== undefined;
+    const hasOtherFields = bagonId !== undefined || truckId !== undefined || grossWeight != null || tareWeight != null || brix !== undefined || pol !== undefined || sampleCollected !== undefined || notes !== undefined || truckNumber !== undefined || caneVariety !== undefined || loadRemarks !== undefined || unloadingType !== undefined || deliveryDate !== undefined || authorizedSignatory !== undefined;
 
     if (ticket.status !== 'PENDING' && hasOtherFields) {
       res.status(400).json({ message: 'Can only edit PENDING tickets' }); return;
@@ -813,6 +866,7 @@ apiRouter.patch('/tickets/:id', authMiddleware, async (req: AuthRequest, res: Re
 
     const updateData: any = {};
     if (bagonId) updateData.bagonId = bagonId;
+    if (truckId !== undefined) updateData.truckId = truckId || null;
     if (grossWeight != null) updateData.grossWeight = Number(grossWeight);
     if (tareWeight != null) updateData.tareWeight = Number(tareWeight);
     if (grossWeight != null && tareWeight != null) {

@@ -23,19 +23,26 @@ const LOAD_REMARKS = [
 const todayStr = () => new Date().toISOString().split('T')[0];
 
 export function QuedanForm({ onSuccess }: { onSuccess?: () => void }) {
-  const [form, setForm] = useState({ bagonPlate: '', bagonId: '', farmId: '', grossWeight: '', tareWeight: '', brix: '', pol: '', sampleCollected: false, truckNumber: '', deliveryDate: todayStr(), authorizedSignatory: '', caneVariety: '', loadRemarks: '', unloadingType: '' });
+  const [form, setForm] = useState({ bagonPlate: '', bagonId: '', truckId: '', farmId: '', grossWeight: '', tareWeight: '', brix: '', pol: '', sampleCollected: false, truckNumber: '', deliveryDate: todayStr(), authorizedSignatory: '', caneVariety: '', loadRemarks: '', unloadingType: '' });
   const [farms, setFarms] = useState([]);
   const [bagons, setBagons] = useState([]);
+  const [trucks, setTrucks] = useState([]);
   const [photos, setPhotos] = useState<File[]>([]);
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const { user } = useAuth();
   const { isDark } = useTheme();
 
+  const selectedTruck = trucks.find((t: any) => t.id === form.truckId) as any;
+  const compatibleBagons = selectedTruck
+    ? bagons.filter((b: any) => !b.isArchived && selectedTruck.compatibleTypes.split(',').includes(b.type))
+    : bagons.filter((b: any) => !b.isArchived);
+
   useEffect(() => {
     if (!user) return;
     api.get('/farms').then(res => setFarms(res.data.farms));
     api.get('/bagon').then(res => setBagons(res.data.bagons));
+    api.get('/trucks').then(res => setTrucks(res.data.trucks));
   }, [user]);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -60,6 +67,7 @@ export function QuedanForm({ onSuccess }: { onSuccess?: () => void }) {
     try {
       const { data } = await api.post('/tickets', {
         bagonId: form.bagonId,
+        truckId: form.truckId || undefined,
         farmId: form.farmId,
         grossWeight: form.grossWeight,
         tareWeight: form.tareWeight,
@@ -81,7 +89,7 @@ export function QuedanForm({ onSuccess }: { onSuccess?: () => void }) {
         await api.post('/delivery-receipts', { quedanId: ticketId, imageUrl: uploadData.url });
       }
       toast.success('Quedan encoded successfully.');
-      setForm({ bagonPlate: '', bagonId: '', farmId: '', grossWeight: '', tareWeight: '', brix: '', pol: '', sampleCollected: false, truckNumber: '', deliveryDate: todayStr(), authorizedSignatory: '', caneVariety: '', loadRemarks: '', unloadingType: '' });
+      setForm({ bagonPlate: '', bagonId: '', truckId: '', farmId: '', grossWeight: '', tareWeight: '', brix: '', pol: '', sampleCollected: false, truckNumber: '', deliveryDate: todayStr(), authorizedSignatory: '', caneVariety: '', loadRemarks: '', unloadingType: '' });
       setPhotos([]);
       setPhotoPreviews([]);
       onSuccess?.();
@@ -101,11 +109,42 @@ export function QuedanForm({ onSuccess }: { onSuccess?: () => void }) {
 
       <div className="space-y-4 sm:space-y-5">
         <div>
-          <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Bagon</label>
-          <select required value={form.bagonId} onChange={e => { const b = bagons.find((b: any) => b.id === e.target.value); setForm({...form, bagonId: e.target.value, bagonPlate: b ? b.plateNumber : '', tareWeight: b?.tareWeight ? b.tareWeight.toString() : ''}) } } className={`w-full px-4 sm:px-5 py-3 sm:py-4 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none text-sm sm:text-base font-semibold shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}>
-            <option value="">Select a Bagon...</option>
-            {bagons.filter((b: any) => !b.isArchived).map((b: any) => <option key={b.id} value={b.id}>{b.plateNumber} ({b.type})</option>)}
+          <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Farm Origin</label>
+          <select required value={form.farmId} onChange={e=>setForm({...form, farmId: e.target.value})} className={`w-full px-4 sm:px-5 py-3 sm:py-4 border rounded-xl sm:rounded-2xl focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none text-sm sm:text-base cursor-pointer shadow-sm font-semibold min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}>
+            <option value="" disabled>Select a Farm...</option>
+            {farms.map((f: any) => <option key={f.id} value={f.id}>{f.farmName}</option>)}
           </select>
+          {form.farmId && (() => { const f = farms.find((f: any) => f.id === form.farmId); return f?.owner?.assignedMill ? (
+            <div className={`flex items-center gap-2 mt-2 px-3 sm:px-4 py-2 rounded-xl border text-xs sm:text-sm font-medium min-h-[36px] ${isDark ? 'bg-slate-800/50 border-slate-700 text-slate-400' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
+              <Building2 className="w-3.5 h-3.5 shrink-0" /> Mill/Central: <span className="font-bold">{f.owner.assignedMill}</span>
+            </div>
+          ) : null})()}
+        </div>
+
+        <div>
+          <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Truck</label>
+          <select value={form.truckId} onChange={e => { const t = trucks.find((tr: any) => tr.id === e.target.value) as any; setForm({...form, truckId: e.target.value, bagonId: '', bagonPlate: '', tareWeight: '', truckNumber: t?.plateNumber || form.truckNumber, authorizedSignatory: t?.driverName || form.authorizedSignatory}) } } className={`w-full px-4 sm:px-5 py-3 sm:py-4 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none text-sm sm:text-base font-semibold shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}>
+            <option value="">— No truck selected —</option>
+            {trucks.filter((t: any) => !t.isArchived).map((t: any) => <option key={t.id} value={t.id}>{t.plateNumber} — {t.driverName}</option>)}
+          </select>
+        </div>
+
+        <div>
+          <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Trailer (Bagon)</label>
+          <select required value={form.bagonId} onChange={e => { const b = bagons.find((b: any) => b.id === e.target.value); setForm({...form, bagonId: e.target.value, bagonPlate: b ? b.plateNumber : '', tareWeight: b?.tareWeight ? b.tareWeight.toString() : ''}) } } className={`w-full px-4 sm:px-5 py-3 sm:py-4 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none text-sm sm:text-base font-semibold shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}>
+            <option value="">Select a Trailer...</option>
+            {compatibleBagons.map((b: any) => <option key={b.id} value={b.id}>{b.plateNumber} ({b.type})</option>)}
+          </select>
+          {selectedTruck && compatibleBagons.length === 0 && (
+            <div className={`flex items-center gap-2 mt-2 px-3 sm:px-4 py-2 rounded-xl border text-xs sm:text-sm font-medium min-h-[36px] ${isDark ? 'bg-red-900/30 border-red-800 text-red-400' : 'bg-red-50 border-red-200 text-red-600'}`}>
+              No compatible trailer for this truck
+            </div>
+          )}
+          {selectedTruck && form.bagonId && !compatibleBagons.find((b: any) => b.id === form.bagonId) && (
+            <div className={`flex items-center gap-2 mt-2 px-3 sm:px-4 py-2 rounded-xl border text-xs sm:text-sm font-medium min-h-[36px] ${isDark ? 'bg-red-900/30 border-red-800 text-red-400' : 'bg-red-50 border-red-200 text-red-600'}`}>
+              Incompatible: this trailer type is not supported by the selected truck
+            </div>
+          )}
         </div>
 
         <div className={`rounded-xl sm:rounded-2xl border p-4 sm:p-5 space-y-3 sm:space-y-4 ${isDark ? 'border-slate-700 bg-slate-800/30' : 'border-slate-200 bg-slate-50/50'}`}>
@@ -134,18 +173,6 @@ export function QuedanForm({ onSuccess }: { onSuccess?: () => void }) {
           </div>
         </div>
 
-        <div>
-          <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Farm Origin</label>
-          <select required value={form.farmId} onChange={e=>setForm({...form, farmId: e.target.value})} className={`w-full px-4 sm:px-5 py-3 sm:py-4 border rounded-xl sm:rounded-2xl focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none text-sm sm:text-base cursor-pointer shadow-sm font-semibold min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}>
-            <option value="" disabled>Select a Farm...</option>
-            {farms.map((f: any) => <option key={f.id} value={f.id}>{f.farmName}</option>)}
-          </select>
-          {form.farmId && (() => { const f = farms.find((f: any) => f.id === form.farmId); return f?.owner?.assignedMill ? (
-            <div className={`flex items-center gap-2 mt-2 px-3 sm:px-4 py-2 rounded-xl border text-xs sm:text-sm font-medium min-h-[36px] ${isDark ? 'bg-slate-800/50 border-slate-700 text-slate-400' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
-              <Building2 className="w-3.5 h-3.5 shrink-0" /> Mill/Central: <span className="font-bold">{f.owner.assignedMill}</span>
-            </div>
-          ) : null})()}
-        </div>
         <div className="grid grid-cols-2 gap-3 sm:gap-4">
           <div>
             <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Gross (kg)</label>

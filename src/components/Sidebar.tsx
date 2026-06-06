@@ -20,7 +20,8 @@ export function Sidebar({ userName, onClose }: SidebarProps) {
   const allLinks = [
     { name: 'Dashboard', path: '/dashboard', icon: Home },
     { name: 'Farms', path: '/dashboard/farms', icon: Sprout },
-    { name: 'Bagon', path: '/dashboard/bagon', icon: Truck },
+    { name: 'Trailers', path: '/dashboard/bagon', icon: Truck },
+    { name: 'Trucks', path: '/dashboard/trucks', icon: Truck },
     { name: 'Quedans', path: '/dashboard/quedans', icon: FileSpreadsheet },
     { name: 'Expenses', path: '/dashboard/expenses', icon: FileText },
     { name: 'Payments', path: '/dashboard/payments', icon: DollarSign },

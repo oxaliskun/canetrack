@@ -14,6 +14,7 @@ import { FarmerPayments } from './pages/farmer/FarmerPayments';
 import { FarmerReports } from './pages/farmer/FarmerReports';
 import { FarmerExpenses } from './pages/farmer/FarmerExpenses';
 import { QuedanManagement } from './pages/farmer/QuedanManagement';
+import { Trucks } from './pages/farmer/Trucks';
 import { Profile } from './pages/shared/Profile';
 
 import { SplashScreen } from './components/SplashScreen';
@@ -122,6 +123,7 @@ export default function App() {
             <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
             <Route path="/dashboard/farms" element={<PrivateRoute><VerifiedRoute><FarmerFarms /></VerifiedRoute></PrivateRoute>} />
             <Route path="/dashboard/bagon" element={<PrivateRoute><VerifiedRoute><Bagon /></VerifiedRoute></PrivateRoute>} />
+            <Route path="/dashboard/trucks" element={<PrivateRoute><VerifiedRoute><Trucks /></VerifiedRoute></PrivateRoute>} />
             <Route path="/dashboard/payments" element={<PrivateRoute><VerifiedRoute><FarmerPayments /></VerifiedRoute></PrivateRoute>} />
             <Route path="/dashboard/reports" element={<PrivateRoute><VerifiedRoute><FarmerReports /></VerifiedRoute></PrivateRoute>} />
             <Route path="/dashboard/expenses" element={<PrivateRoute><VerifiedRoute><FarmerExpenses /></VerifiedRoute></PrivateRoute>} />

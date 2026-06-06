@@ -31,6 +31,7 @@ model User {
   farms           Farm[]
   tickets         WeightTicket[]
   bagon           Bagon[]
+  trucks          Truck[]
   expenses        Expense[]
 }
 
@@ -45,6 +46,21 @@ model Bagon {
   updatedAt   DateTime @updatedAt @default(now())
 
   owner User @relation(fields: [ownerId], references: [id])
+  tickets WeightTicket[]
+}
+
+model Truck {
+  id               String   @id @default(cuid())
+  plateNumber      String   @unique
+  driverName       String
+  driverContact    String?
+  compatibleTypes  String   @default("14ft,18ft,20ft")
+  ownerId          String
+  isArchived       Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt @default(now())
+
+  owner   User           @relation(fields: [ownerId], references: [id])
   tickets WeightTicket[]
 }
 
@@ -135,6 +151,7 @@ model WeightTicket {
   id               String    @id @default(cuid())
   ticketNo         String    @unique @default(cuid())
   bagonId          String
+  truckId          String?
   farmId           String
   grossWeight      Float
   tareWeight       Float
@@ -158,6 +175,7 @@ model WeightTicket {
   farm           Farm           @relation(fields: [farmId], references: [id])
   farmer         User?          @relation(fields: [farmerId], references: [id])
   bagon          Bagon?         @relation(fields: [bagonId], references: [id])
+  truck          Truck?         @relation(fields: [truckId], references: [id])
   deliveryReceipts DeliveryReceipt[]
   payment        Payment?
 }
