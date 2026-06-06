@@ -110,7 +110,7 @@ export function QuedanForm({ onSuccess }: { onSuccess?: () => void }) {
       <div className="space-y-4 sm:space-y-5">
         <div>
           <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Farm Origin</label>
-            <select required value={form.farmId} onChange={e => { const f = farms.find((x: any) => x.id === e.target.value) as any; setForm({...form, farmId: e.target.value, caneVariety: f?.cropType || ''}) }} className={`w-full px-4 sm:px-5 py-3 sm:py-4 border rounded-xl sm:rounded-2xl focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none text-sm sm:text-base cursor-pointer shadow-sm font-semibold min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}>
+            <select required value={form.farmId} onChange={e => { const f = farms.find((x: any) => x.id === e.target.value) as any; setForm({...form, farmId: e.target.value, caneVariety: f?.cropType || '', authorizedSignatory: f?.owner?.name ? f.owner.name.toUpperCase() : ''}) }} className={`w-full px-4 sm:px-5 py-3 sm:py-4 border rounded-xl sm:rounded-2xl focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none text-sm sm:text-base cursor-pointer shadow-sm font-semibold min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}>
             <option value="" disabled>Select a Farm...</option>
             {farms.map((f: any) => <option key={f.id} value={f.id}>{f.farmName}</option>)}
           </select>
@@ -123,7 +123,7 @@ export function QuedanForm({ onSuccess }: { onSuccess?: () => void }) {
 
         <div>
           <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Truck</label>
-          <select value={form.truckId} onChange={e => { const t = trucks.find((tr: any) => tr.id === e.target.value) as any; setForm({...form, truckId: e.target.value, bagonId: '', bagonPlate: '', tareWeight: '', truckNumber: t?.plateNumber || form.truckNumber, authorizedSignatory: t?.driverName || form.authorizedSignatory}) } } className={`w-full px-4 sm:px-5 py-3 sm:py-4 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none text-sm sm:text-base font-semibold shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}>
+          <select value={form.truckId} onChange={e => { const t = trucks.find((tr: any) => tr.id === e.target.value) as any; setForm({...form, truckId: e.target.value, bagonId: '', bagonPlate: '', tareWeight: '', truckNumber: t?.plateNumber || form.truckNumber, }) } } className={`w-full px-4 sm:px-5 py-3 sm:py-4 border rounded-xl sm:rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none text-sm sm:text-base font-semibold shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}>
             <option value="">— No truck selected —</option>
             {trucks.filter((t: any) => !t.isArchived).map((t: any) => <option key={t.id} value={t.id}>{t.plateNumber} — {t.driverName}</option>)}
           </select>
