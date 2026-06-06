@@ -4,10 +4,26 @@ import api from '../api/axiosInstance';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
 import { toast } from 'sonner';
-import { Truck, Scale, Camera, X, Eye, FlaskConical, Building2 } from 'lucide-react';
+import { Truck, Scale, Camera, X, Eye, FlaskConical, Building2, Truck as TruckIcon, Calendar, User as UserIcon, Leaf, CheckCircle2 } from 'lucide-react';
+
+const CANE_VARIETIES = [
+  'VMC 84-524', 'Phil 93-48', 'Phil 2000-2567', 'Phil 2000-2601 (Lanas)',
+  'Phil 2000-2568 (Itaas)', 'Phil 2002-0732 (Lakit)', 'Phil 2004-1481 (Latian)',
+  'Phil 2005-0448 (Mamco)', 'Phil 2005-0464 (Maayon)', 'Phil 2007-0050 (Bufag)'
+];
+
+const LOAD_REMARKS = [
+  { value: 'FC', label: 'Full Clean (FC)' },
+  { value: 'BS', label: 'Burned Standing (BS)' },
+  { value: 'BF', label: 'Burned Fallen (BF)' },
+  { value: 'G', label: 'Green (G)' },
+  { value: 'LO', label: 'Lateral / Others (LO)' },
+];
+
+const todayStr = () => new Date().toISOString().split('T')[0];
 
 export function QuedanForm({ onSuccess }: { onSuccess?: () => void }) {
-  const [form, setForm] = useState({ bagonPlate: '', bagonId: '', farmId: '', grossWeight: '', tareWeight: '', brix: '', pol: '', sampleCollected: false });
+  const [form, setForm] = useState({ bagonPlate: '', bagonId: '', farmId: '', grossWeight: '', tareWeight: '', brix: '', pol: '', sampleCollected: false, truckNumber: '', deliveryDate: todayStr(), authorizedSignatory: '', caneVariety: '', loadRemarks: '', unloadingType: '' });
   const [farms, setFarms] = useState([]);
   const [bagons, setBagons] = useState([]);
   const [photos, setPhotos] = useState<File[]>([]);
@@ -42,7 +58,21 @@ export function QuedanForm({ onSuccess }: { onSuccess?: () => void }) {
     e.preventDefault();
     setUploading(true);
     try {
-      const { data } = await api.post('/tickets', { bagonId: form.bagonId, farmId: form.farmId, grossWeight: form.grossWeight, tareWeight: form.tareWeight, brix: form.brix || undefined, pol: form.pol || undefined, sampleCollected: form.sampleCollected });
+      const { data } = await api.post('/tickets', {
+        bagonId: form.bagonId,
+        farmId: form.farmId,
+        grossWeight: form.grossWeight,
+        tareWeight: form.tareWeight,
+        brix: form.brix || undefined,
+        pol: form.pol || undefined,
+        sampleCollected: form.sampleCollected,
+        truckNumber: form.truckNumber || undefined,
+        deliveryDate: form.deliveryDate || undefined,
+        authorizedSignatory: form.authorizedSignatory || undefined,
+        caneVariety: form.caneVariety || undefined,
+        loadRemarks: form.loadRemarks || undefined,
+        unloadingType: form.unloadingType || undefined,
+      });
       const ticketId = data.id;
       for (const photo of photos) {
         const fd = new FormData();
@@ -51,7 +81,7 @@ export function QuedanForm({ onSuccess }: { onSuccess?: () => void }) {
         await api.post('/delivery-receipts', { quedanId: ticketId, imageUrl: uploadData.url });
       }
       toast.success('Quedan encoded successfully.');
-      setForm({ bagonPlate: '', bagonId: '', farmId: '', grossWeight: '', tareWeight: '', brix: '', pol: '', sampleCollected: false });
+      setForm({ bagonPlate: '', bagonId: '', farmId: '', grossWeight: '', tareWeight: '', brix: '', pol: '', sampleCollected: false, truckNumber: '', deliveryDate: todayStr(), authorizedSignatory: '', caneVariety: '', loadRemarks: '', unloadingType: '' });
       setPhotos([]);
       setPhotoPreviews([]);
       onSuccess?.();
@@ -77,6 +107,33 @@ export function QuedanForm({ onSuccess }: { onSuccess?: () => void }) {
             {bagons.filter((b: any) => !b.isArchived).map((b: any) => <option key={b.id} value={b.id}>{b.plateNumber} ({b.type})</option>)}
           </select>
         </div>
+
+        <div className={`rounded-xl sm:rounded-2xl border p-4 sm:p-5 space-y-3 sm:space-y-4 ${isDark ? 'border-slate-700 bg-slate-800/30' : 'border-slate-200 bg-slate-50/50'}`}>
+          <div className="flex items-center gap-2 mb-1">
+            <TruckIcon className="w-4 h-4 text-blue-500" />
+            <span className={`text-[11px] font-extrabold uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Delivery Details</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            <div>
+              <label className={`block text-[10px] font-extrabold uppercase tracking-widest mb-1.5 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Truck No.</label>
+              <input type="text" value={form.truckNumber} onChange={e => setForm({...form, truckNumber: e.target.value})}
+                className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none font-medium text-sm shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-400'}`}
+                placeholder="e.g. 27065" />
+            </div>
+            <div>
+              <label className={`block text-[10px] font-extrabold uppercase tracking-widest mb-1.5 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Delivery Date *</label>
+              <input required type="date" value={form.deliveryDate} onChange={e => setForm({...form, deliveryDate: e.target.value})}
+                className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none font-medium text-sm shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'}`} />
+            </div>
+            <div>
+              <label className={`block text-[10px] font-extrabold uppercase tracking-widest mb-1.5 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Authorized Signatory</label>
+              <input type="text" value={form.authorizedSignatory} onChange={e => setForm({...form, authorizedSignatory: e.target.value})}
+                className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none font-medium text-sm shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-400'}`}
+                placeholder="Sino naghatod?" />
+            </div>
+          </div>
+        </div>
+
         <div>
           <label className={`block text-[11px] font-extrabold uppercase tracking-widest mb-2 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Farm Origin</label>
           <select required value={form.farmId} onChange={e=>setForm({...form, farmId: e.target.value})} className={`w-full px-4 sm:px-5 py-3 sm:py-4 border rounded-xl sm:rounded-2xl focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none text-sm sm:text-base cursor-pointer shadow-sm font-semibold min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'}`}>
@@ -107,6 +164,46 @@ export function QuedanForm({ onSuccess }: { onSuccess?: () => void }) {
           <span className="font-mono font-black text-base sm:text-lg lg:text-xl text-blue-500">
             {Math.max(0, (Number(form.grossWeight) || 0) - (Number(form.tareWeight) || 0))} kg
           </span>
+        </div>
+
+        <div className={`rounded-xl sm:rounded-2xl border p-4 sm:p-5 space-y-3 sm:space-y-4 ${isDark ? 'border-slate-700 bg-slate-800/30' : 'border-slate-200 bg-slate-50/50'}`}>
+          <div className="flex items-center gap-2 mb-1">
+            <Leaf className="w-4 h-4 text-emerald-500" />
+            <span className={`text-[11px] font-extrabold uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Cane Details</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            <div>
+              <label className={`block text-[10px] font-extrabold uppercase tracking-widest mb-1.5 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Cane Variety</label>
+              <select value={form.caneVariety} onChange={e => setForm({...form, caneVariety: e.target.value})}
+                className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium text-sm shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'}`}>
+                <option value="">— Select —</option>
+                {CANE_VARIETIES.map(v => <option key={v} value={v}>{v}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className={`block text-[10px] font-extrabold uppercase tracking-widest mb-1.5 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Load Remarks</label>
+              <select value={form.loadRemarks} onChange={e => setForm({...form, loadRemarks: e.target.value})}
+                className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium text-sm shadow-sm min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'}`}>
+                <option value="">— Select —</option>
+                {LOAD_REMARKS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className={`block text-[10px] font-extrabold uppercase tracking-widest mb-1.5 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Unloading Type</label>
+              <div className="flex gap-2 h-full items-center pt-1">
+                {['GANTRY', 'DIRECT_DUMP'].map(t => (
+                  <label key={t} className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl border cursor-pointer transition-all text-xs font-bold min-h-[44px] flex-1 ${form.unloadingType === t
+                    ? isDark ? 'bg-emerald-900/30 border-emerald-700 text-emerald-400' : 'bg-emerald-100 border-emerald-300 text-emerald-700'
+                    : isDark ? 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'
+                  }`}>
+                    <input type="radio" name="unloadingType" value={t} checked={form.unloadingType === t} onChange={e => setForm({...form, unloadingType: e.target.value})} className="sr-only" />
+                    <CheckCircle2 className={`w-3.5 h-3.5 ${form.unloadingType === t ? 'opacity-100' : 'opacity-30'}`} />
+                    {t === 'GANTRY' ? 'Gantry' : 'Direct Dump'}
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
 
         <details className={`rounded-xl sm:rounded-2xl border overflow-hidden group ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
