@@ -33,6 +33,7 @@ export function Login() {
   const [showVerification, setShowVerification] = useState(false);
   const [verificationCode, setVerificationCode] = useState('');
   const [regEmail, setRegEmail] = useState('');
+  const [regPassword, setRegPassword] = useState('');
   const [resending, setResending] = useState(false);
 
   // Forgot Password
@@ -99,6 +100,7 @@ export function Login() {
         const res = await api.post('/auth/register', { name, email, password, contactNumber, address });
         if (res.data.needsVerification) {
           setRegEmail(res.data.email);
+          setRegPassword(password);
           setShowVerification(true);
           setSuccess('Verification code sent to your email. Please check your inbox.');
         }
@@ -136,9 +138,15 @@ export function Login() {
       setShowVerification(false);
       setVerificationCode('');
       setRegEmail('');
+      setRegPassword('');
       setName(''); setEmail(''); setPassword(''); setConfirmPassword('');
       setContactNumber(''); setAddress('');
       setIsRegistering(false);
+      try {
+        const loginRes = await api.post('/auth/login', { email: regEmail, password: regPassword });
+        login(loginRes.data.token, loginRes.data.user);
+        navigate('/dashboard');
+      } catch { /* auto-login failed, show sign-in form */ }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Verification failed');
     } finally {
