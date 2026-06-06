@@ -614,44 +614,50 @@ apiRouter.delete('/payments/:id', authMiddleware, async (req: AuthRequest, res: 
 // --- TICKETS ROUTES ---
 apiRouter.post('/tickets', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
    try {
-     const { bagonId, farmId, grossWeight, tareWeight, brix, pol, sampleCollected, notes } = req.body;
+      const { bagonId, farmId, grossWeight, tareWeight, brix, pol, sampleCollected, notes, truckNumber, caneVariety, loadRemarks, unloadingType, deliveryDate, authorizedSignatory } = req.body;
 
-     if (!bagonId || !farmId || grossWeight == null || tareWeight == null) {
-       res.status(400).json({ message: 'bagonId, farmId, grossWeight, tareWeight are required' });
-       return;
-     }
+      if (!bagonId || !farmId || grossWeight == null || tareWeight == null) {
+        res.status(400).json({ message: 'bagonId, farmId, grossWeight, tareWeight are required' });
+        return;
+      }
 
-     const netWeight = Number(grossWeight) - Number(tareWeight);
-     if (netWeight <= 0) {
-       res.status(400).json({ message: 'Invalid weights. Net weight must be > 0.' });
-       return;
-     }
+      const netWeight = Number(grossWeight) - Number(tareWeight);
+      if (netWeight <= 0) {
+        res.status(400).json({ message: 'Invalid weights. Net weight must be > 0.' });
+        return;
+      }
 
-     const year = new Date().getFullYear();
-     const count = await prisma.weightTicket.count();
-     const ticketNo = `QDN-${year}-${String(count + 1).padStart(5, '0')}`;
+      const year = new Date().getFullYear();
+      const count = await prisma.weightTicket.count();
+      const ticketNo = `QDN-${year}-${String(count + 1).padStart(5, '0')}`;
 
-     let purity: number | undefined;
-     if (brix != null && pol != null) {
-       purity = Number(brix) > 0 ? (Number(pol) / Number(brix)) * 100 : 0;
-     }
+      let purity: number | undefined;
+      if (brix != null && pol != null) {
+        purity = Number(brix) > 0 ? (Number(pol) / Number(brix)) * 100 : 0;
+      }
 
-     const ticket = await prisma.weightTicket.create({
-       data: {
-         ticketNo,
-         bagonId,
-         farmId,
-         grossWeight: Number(grossWeight),
-         tareWeight: Number(tareWeight),
-         netWeight,
-         brix: brix != null ? Number(brix) : undefined,
-         pol: pol != null ? Number(pol) : undefined,
-         purity: purity != null ? Math.round(purity * 100) / 100 : undefined,
-         sampleCollected: sampleCollected === true,
-         status: 'PENDING',
-         notes,
-         farmerId: req.user!.userId
-       },
+      const ticket = await prisma.weightTicket.create({
+        data: {
+          ticketNo,
+          bagonId,
+          farmId,
+          grossWeight: Number(grossWeight),
+          tareWeight: Number(tareWeight),
+          netWeight,
+          brix: brix != null ? Number(brix) : undefined,
+          pol: pol != null ? Number(pol) : undefined,
+          purity: purity != null ? Math.round(purity * 100) / 100 : undefined,
+          sampleCollected: sampleCollected === true,
+          status: 'PENDING',
+          notes,
+          farmerId: req.user!.userId,
+          truckNumber,
+          caneVariety,
+          loadRemarks,
+          unloadingType,
+          deliveryDate: deliveryDate ? new Date(deliveryDate) : undefined,
+          authorizedSignatory
+        },
        include: { farm: true, bagon: true }
      });
 
@@ -674,7 +680,7 @@ apiRouter.get('/tickets', authMiddleware, async (req: AuthRequest, res: Response
       where,
       include: {
         farm: true,
-        farmer: { select: { name: true, assignedMill: true } },
+        farmer: { select: { name: true, assignedMill: true, millName: true, paNumber: true } },
         bagon: true,
         deliveryReceipts: true,
         payment: true
@@ -692,8 +698,8 @@ apiRouter.get('/tickets/:id', authMiddleware, async (req: AuthRequest, res: Resp
     const ticket = await prisma.weightTicket.findUnique({
       where: { id },
       include: {
-        farm: { include: { owner: { select: { name: true, email: true, contactNumber: true, address: true, assignedMill: true } } } },
-        farmer: { select: { name: true, email: true, contactNumber: true } },
+        farm: { include: { owner: { select: { name: true, email: true, contactNumber: true, address: true, assignedMill: true, millName: true, paNumber: true } } } },
+        farmer: { select: { name: true, email: true, contactNumber: true, millName: true, paNumber: true } },
         bagon: true,
         deliveryReceipts: true,
         payment: true
@@ -742,9 +748,9 @@ apiRouter.patch('/tickets/:id', authMiddleware, async (req: AuthRequest, res: Re
     const farms = await prisma.farm.findMany({ where: { ownerId: req.user!.userId }, select: { id: true } });
     const farmIds = farms.map(f => f.id);
     if (!farmIds.includes(ticket.farmId)) { res.status(403).json({ message: 'Access denied' }); return; }
-    const { bagonId, grossWeight, tareWeight, brix, pol, sampleCollected, notes } = req.body;
+    const { bagonId, grossWeight, tareWeight, brix, pol, sampleCollected, notes, truckNumber, caneVariety, loadRemarks, unloadingType, deliveryDate, authorizedSignatory } = req.body;
     const { status } = req.body;
-    const hasOtherFields = bagonId !== undefined || grossWeight != null || tareWeight != null || brix !== undefined || pol !== undefined || sampleCollected !== undefined || notes !== undefined;
+    const hasOtherFields = bagonId !== undefined || grossWeight != null || tareWeight != null || brix !== undefined || pol !== undefined || sampleCollected !== undefined || notes !== undefined || truckNumber !== undefined || caneVariety !== undefined || loadRemarks !== undefined || unloadingType !== undefined || deliveryDate !== undefined || authorizedSignatory !== undefined;
 
     if (ticket.status !== 'PENDING' && hasOtherFields) {
       res.status(400).json({ message: 'Can only edit PENDING tickets' }); return;
@@ -766,6 +772,12 @@ apiRouter.patch('/tickets/:id', authMiddleware, async (req: AuthRequest, res: Re
       updateData.purity = (bVal && pVal && bVal > 0) ? Math.round((pVal / bVal) * 10000) / 100 : null;
     }
     if (sampleCollected !== undefined) updateData.sampleCollected = sampleCollected === true;
+    if (truckNumber !== undefined) updateData.truckNumber = truckNumber;
+    if (caneVariety !== undefined) updateData.caneVariety = caneVariety;
+    if (loadRemarks !== undefined) updateData.loadRemarks = loadRemarks;
+    if (unloadingType !== undefined) updateData.unloadingType = unloadingType;
+    if (deliveryDate !== undefined) updateData.deliveryDate = deliveryDate ? new Date(deliveryDate) : null;
+    if (authorizedSignatory !== undefined) updateData.authorizedSignatory = authorizedSignatory;
     if (status && ['PENDING', 'PAID'].includes(status)) updateData.status = status;
 
     const updated = await prisma.weightTicket.update({
