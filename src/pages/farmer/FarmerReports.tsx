@@ -14,6 +14,7 @@ const tabs = [
   { id: 'expenses', label: 'Expenses', icon: Sprout },
   { id: 'profitloss', label: 'Profit/Loss', icon: TrendingUp },
   { id: 'farms', label: 'Farms', icon: Leaf },
+  { id: 'varieties', label: 'Varieties', icon: BarChart },
   { id: 'bagon', label: 'Bagon', icon: TruckIcon },
 ];
 
@@ -154,6 +155,21 @@ export function FarmerReports() {
       map[plate].kg += Number(t.netWeight || 0);
     });
     return Object.values(map);
+  }, [tickets]);
+
+  const varietyReport = useMemo(() => {
+    const map: Record<string, any> = {};
+    tickets.forEach((t: any) => {
+      const v = t.caneVariety || 'Not Specified';
+      if (!map[v]) map[v] = { variety: v, trips: 0, kg: 0, gross: 0, count: 0 };
+      map[v].trips += 1;
+      map[v].kg += Number(t.netWeight || 0);
+      if (t.payment) {
+        map[v].gross += Number(t.payment.grossAmount || 0);
+        map[v].count += 1;
+      }
+    });
+    return Object.values(map).sort((a: any, b: any) => b.kg - a.kg);
   }, [tickets]);
 
   const pieColors = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#6366f1', '#84cc16'];
@@ -449,6 +465,48 @@ export function FarmerReports() {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* === VARIETIES === */}
+      {activeTab === 'varieties' && (
+        <div className="space-y-6">
+          {varietyReport.length === 0 || (varietyReport.length === 1 && varietyReport[0].variety === 'Not Specified') ? (
+            <div className={`flex flex-col items-center justify-center py-32 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
+              <BarChart className="w-12 h-12 mb-4 opacity-50" />
+              <p className={`text-2xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>No variety data yet</p>
+              <p className={`mt-2 text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Set cane variety when encoding quedans to see breakdown here.</p>
+            </div>
+          ) : (
+            <div className={`rounded-2xl border shadow-sm overflow-hidden ${isDark ? 'bg-slate-800/50 border-slate-700' : 'bg-white border-slate-200'}`}>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className={`${isDark ? 'bg-slate-800 text-slate-400' : 'bg-slate-50 text-slate-500'} text-xs uppercase tracking-widest font-bold`}>
+                      <th className="px-4 sm:px-5 py-4 text-left">Cane Variety</th>
+                      <th className="px-4 sm:px-5 py-4 text-right">Trips</th>
+                      <th className="px-4 sm:px-5 py-4 text-right">Total KG</th>
+                      <th className="px-4 sm:px-5 py-4 text-right">Avg kg/trip</th>
+                      <th className="px-4 sm:px-5 py-4 text-right">Gross Earnings</th>
+                      <th className="px-4 sm:px-5 py-4 text-right">Avg ₱/kg</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {varietyReport.filter((v: any) => v.variety !== 'Not Specified').map((v: any) => (
+                      <tr key={v.variety} className={`border-t ${isDark ? 'border-slate-700 hover:bg-slate-700/30' : 'border-slate-100 hover:bg-slate-50'}`}>
+                        <td className={`px-4 sm:px-5 py-4 font-bold truncate max-w-[160px] ${isDark ? 'text-white' : 'text-slate-900'}`}>{v.variety}</td>
+                        <td className="px-4 sm:px-5 py-4 text-right font-bold">{v.trips}</td>
+                        <td className="px-4 sm:px-5 py-4 text-right font-mono font-bold truncate max-w-[100px]">{formatWeight(v.kg)}</td>
+                        <td className="px-4 sm:px-5 py-4 text-right font-mono truncate max-w-[100px]">{v.trips > 0 ? formatWeight(v.kg / v.trips) : '-'}</td>
+                        <td className="px-4 sm:px-5 py-4 text-right font-mono font-bold text-emerald-500 truncate max-w-[120px]">{v.count > 0 ? formatCurrency(v.gross) : '—'}</td>
+                        <td className="px-4 sm:px-5 py-4 text-right font-mono truncate max-w-[100px]">{v.kg > 0 && v.count > 0 ? `₱${(v.gross / v.kg).toFixed(2)}` : '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </div>
