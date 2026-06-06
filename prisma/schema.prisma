@@ -18,6 +18,8 @@ model User {
   address          String?
   profilePicture    String?
   assignedMill       String?
+  paNumber           String?
+  millName           String?
   emailVerified     Boolean  @default(false)
   verificationCode  String?
   createdAt      DateTime @default(now())
@@ -141,6 +143,12 @@ model WeightTicket {
   status           String    @default("PENDING") // PENDING, PAID
   notes            String?
   farmerId         String?
+  truckNumber      String?
+  caneVariety      String?
+  loadRemarks      String?
+  unloadingType    String?
+  deliveryDate     DateTime?
+  authorizedSignatory String?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt @default(now())
 
