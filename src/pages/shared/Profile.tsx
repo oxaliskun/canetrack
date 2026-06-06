@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { User, Lock, Save, ShieldCheck, Phone, MapPin, Loader2, Camera, Trash2, Building2, Upload, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
@@ -9,6 +10,7 @@ import { toast } from 'sonner';
 
 export function Profile() {
   const { user: authUser, login } = useAuth();
+  const navigate = useNavigate();
   const { isDark } = useTheme();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -126,6 +128,7 @@ export function Profile() {
         login(localStorage.getItem('canetrack_token') || '', updatedUser);
       }
       toast.success('Account verified successfully! All features are now available.');
+      navigate('/dashboard');
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Verification failed');
     } finally {

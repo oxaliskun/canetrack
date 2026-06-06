@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { AnimatePresence } from 'motion/react';
-import { useAuth } from './hooks/useAuth';
+import { AuthProvider, useAuth } from './hooks/useAuth';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { Login } from './pages/Login';
@@ -104,6 +104,7 @@ export default function App() {
 
   return (
     <ThemeProvider>
+      <AuthProvider>
       <Toaster position="top-right" richColors />
       <NotificationProvider>
       {isLanding && (
@@ -137,6 +138,7 @@ export default function App() {
         </BrowserRouter>
        )}
      </NotificationProvider>
+     </AuthProvider>
      </ThemeProvider>
    );
 }

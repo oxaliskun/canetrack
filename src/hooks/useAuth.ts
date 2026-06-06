@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, createContext, useContext, createElement, ReactNode } from 'react';
 
 interface User {
   id: string;
@@ -15,7 +15,16 @@ interface User {
   farms?: { id: string; farmName: string; location: string; barangay?: string; hectares?: number }[];
 }
 
-export function useAuth() {
+interface AuthContextType {
+  user: User | null;
+  login: (token: string, userData: User) => void;
+  logout: () => void;
+  loading: boolean;
+}
+
+const AuthContext = createContext<AuthContextType | null>(null);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -24,7 +33,7 @@ export function useAuth() {
       const stored = localStorage.getItem('canetrack_user');
       if (stored) setUser(JSON.parse(stored));
     } catch {
-      // 
+      //
     }
     setLoading(false);
   }, []);
@@ -41,5 +50,11 @@ export function useAuth() {
     setUser(null);
   };
 
-  return { user, login, logout, loading };
+  return createElement(AuthContext.Provider, { value: { user, login, logout, loading } }, children);
+}
+
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  return ctx;
 }
