@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import api from '../api/axiosInstance';
 import { formatWeight, formatCurrency } from '../lib/utils';
-import { DollarSign, TrendingUp, Wallet, Weight, Sprout } from 'lucide-react';
+import { DollarSign, TrendingUp, Wallet, Weight, Sprout, AlertTriangle, ArrowRight } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../hooks/useAuth';
 
 export function StatCard({ label, value, icon: Icon, colorClass, delay = 0, subtitle }: any) {
   const { isDark } = useTheme();
@@ -51,10 +53,13 @@ export const TableWrapper = ({ children, delay = 0, title, icon: Icon, action }:
 };
 
 export function Dashboard() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [chartData, setChartData] = useState([]);
   const [monthlyStats, setMonthlyStats] = useState({ kg: 0, earnings: 0, expenses: 0, profit: 0 });
   const [loading, setLoading] = useState(true);
   const { isDark } = useTheme();
+  const isUnverified = user?.verificationStatus === 'UNVERIFIED';
 
   const fetchData = () => {
     Promise.all([
@@ -106,6 +111,19 @@ export function Dashboard() {
     <div className="space-y-8 max-w-7xl mx-auto relative">
       <div className={`absolute top-0 right-0 w-[30%] h-[30%] rounded-full blur-[80px] pointer-events-none ${isDark ? 'bg-emerald-950/30' : 'bg-emerald-50/50'}`} />
 
+      {isUnverified && (
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className={`p-4 sm:p-6 rounded-2xl border-2 flex items-start gap-4 ${isDark ? 'bg-amber-900/20 border-amber-700/50' : 'bg-amber-50 border-amber-200'}`}>
+          <AlertTriangle className={`w-6 h-6 shrink-0 mt-0.5 ${isDark ? 'text-amber-400' : 'text-amber-600'}`} />
+          <div className="flex-1 min-w-0">
+            <h3 className={`text-sm sm:text-base font-extrabold ${isDark ? 'text-amber-400' : 'text-amber-800'}`}>Your account is unverified</h3>
+            <p className={`text-xs sm:text-sm mt-1 font-medium ${isDark ? 'text-amber-300/70' : 'text-amber-700/70'}`}>Upload your documents in Profile to unlock Farms, Bagons, Quedans, and more.</p>
+            <button onClick={() => navigate('/dashboard/profile')} className={`mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all min-h-[36px] ${isDark ? 'bg-amber-600 text-white hover:bg-amber-500' : 'bg-amber-600 text-white hover:bg-amber-500'}`}>
+              Go to Profile <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </motion.div>
+      )}
+
       <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="mb-4">
         <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-widest mb-2 sm:mb-3 border w-max ${isDark ? 'bg-emerald-900/30 text-emerald-400 border-emerald-800' : 'bg-emerald-100 text-emerald-700 border-emerald-200'}`}>
            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Live Overview
@@ -114,43 +132,47 @@ export function Dashboard() {
         <p className={`mt-1 text-sm sm:text-base font-medium ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Monthly performance and earnings overview.</p>
       </motion.div>
 
-      <div className="mb-2">
-        <h3 className={`text-sm font-bold tracking-wide uppercase ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-          This Month
-        </h3>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
-        <StatCard label="Total KG Delivered" value={formatWeight(monthlyStats.kg)} subtitle="Delivered this month" icon={Weight} colorClass={{bg: 'bg-violet-100', text: 'text-violet-700'}} delay={0.1} />
-        <StatCard label="Total Earnings" value={formatCurrency(monthlyStats.earnings)} subtitle="Paid this month" icon={Wallet} colorClass={{bg: 'bg-emerald-100', text: 'text-emerald-700'}} delay={0.15} />
-        <StatCard label="Total Expenses" value={formatCurrency(monthlyStats.expenses)} subtitle="Farm + delivery costs" icon={Sprout} colorClass={{bg: 'bg-red-100', text: 'text-red-700'}} delay={0.2} />
-        <StatCard label="Net Profit" value={formatCurrency(monthlyStats.profit)} subtitle={monthlyStats.profit >= 0 ? 'Positive' : 'Negative'} icon={TrendingUp} colorClass={{bg: monthlyStats.profit >= 0 ? 'bg-emerald-100' : 'bg-red-100', text: monthlyStats.profit >= 0 ? 'text-emerald-700' : 'text-red-700'}} delay={0.25} />
-      </div>
+      {!isUnverified && (
+        <>
+          <div className="mb-2">
+            <h3 className={`text-sm font-bold tracking-wide uppercase ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+              This Month
+            </h3>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
+            <StatCard label="Total KG Delivered" value={formatWeight(monthlyStats.kg)} subtitle="Delivered this month" icon={Weight} colorClass={{bg: 'bg-violet-100', text: 'text-violet-700'}} delay={0.1} />
+            <StatCard label="Total Earnings" value={formatCurrency(monthlyStats.earnings)} subtitle="Paid this month" icon={Wallet} colorClass={{bg: 'bg-emerald-100', text: 'text-emerald-700'}} delay={0.15} />
+            <StatCard label="Total Expenses" value={formatCurrency(monthlyStats.expenses)} subtitle="Farm + delivery costs" icon={Sprout} colorClass={{bg: 'bg-red-100', text: 'text-red-700'}} delay={0.2} />
+            <StatCard label="Net Profit" value={formatCurrency(monthlyStats.profit)} subtitle={monthlyStats.profit >= 0 ? 'Positive' : 'Negative'} icon={TrendingUp} colorClass={{bg: monthlyStats.profit >= 0 ? 'bg-emerald-100' : 'bg-red-100', text: monthlyStats.profit >= 0 ? 'text-emerald-700' : 'text-red-700'}} delay={0.25} />
+          </div>
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className={`rounded-xl sm:rounded-[2rem] border shadow-sm p-4 sm:p-5 lg:p-6 h-[300px] sm:h-[350px] lg:h-[400px] flex flex-col relative overflow-hidden ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
-        <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-2xl opacity-50 pointer-events-none ${isDark ? 'bg-emerald-950/50' : 'bg-emerald-50'}`} />
-        <h3 className={`font-extrabold tracking-tight text-sm sm:text-base lg:text-lg mb-4 sm:mb-6 flex items-center gap-2 relative z-10 ${isDark ? 'text-white' : 'text-slate-900'}`}><TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" /> Earnings Overview</h3>
-        <div className="flex-1 w-full h-full min-h-0 relative z-10">
-            {chartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData}>
-                  <defs>
-                    <linearGradient id="colorEarnings" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? '#334155' : '#e2e8f0'} />
-                  <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fill: isDark ? '#94a3b8' : '#64748b', fontSize: 11}} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{fill: isDark ? '#94a3b8' : '#64748b', fontSize: 11}} dx={-10} tickFormatter={(val) => `$${val}`} width={50} />
-                  <RechartsTooltip cursor={{stroke: isDark ? '#475569' : '#cbd5e1', strokeWidth: 1, strokeDasharray: '4 4'}} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)', fontFamily: 'monospace' }} formatter={(value: number) => formatCurrency(value)} />
-                  <Area type="monotone" dataKey="earnings" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorEarnings)" />
-                </AreaChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className={`w-full h-full flex items-center justify-center ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>No data available yet.</div>
-            )}
-       </div>
-      </motion.div>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className={`rounded-xl sm:rounded-[2rem] border shadow-sm p-4 sm:p-5 lg:p-6 h-[300px] sm:h-[350px] lg:h-[400px] flex flex-col relative overflow-hidden ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+            <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-2xl opacity-50 pointer-events-none ${isDark ? 'bg-emerald-950/50' : 'bg-emerald-50'}`} />
+            <h3 className={`font-extrabold tracking-tight text-sm sm:text-base lg:text-lg mb-4 sm:mb-6 flex items-center gap-2 relative z-10 ${isDark ? 'text-white' : 'text-slate-900'}`}><TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" /> Earnings Overview</h3>
+            <div className="flex-1 w-full h-full min-h-0 relative z-10">
+                {chartData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={chartData}>
+                      <defs>
+                        <linearGradient id="colorEarnings" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? '#334155' : '#e2e8f0'} />
+                      <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fill: isDark ? '#94a3b8' : '#64748b', fontSize: 11}} dy={10} />
+                      <YAxis axisLine={false} tickLine={false} tick={{fill: isDark ? '#94a3b8' : '#64748b', fontSize: 11}} dx={-10} tickFormatter={(val) => `$${val}`} width={50} />
+                      <RechartsTooltip cursor={{stroke: isDark ? '#475569' : '#cbd5e1', strokeWidth: 1, strokeDasharray: '4 4'}} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)', fontFamily: 'monospace' }} formatter={(value: number) => formatCurrency(value)} />
+                      <Area type="monotone" dataKey="earnings" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorEarnings)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className={`w-full h-full flex items-center justify-center ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>No data available yet.</div>
+                )}
+           </div>
+          </motion.div>
+        </>
+      )}
     </div>
   );
 }

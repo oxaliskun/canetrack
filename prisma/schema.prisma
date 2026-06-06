@@ -10,25 +10,28 @@ datasource db {
 }
 
 model User {
-  id             String   @id @default(cuid())
-  name           String
-  email          String   @unique
-  passwordHash   String
-  contactNumber    String?
-  address          String?
-  profilePicture    String?
+  id                 String   @id @default(cuid())
+  name               String
+  email              String   @unique
+  passwordHash       String
+  contactNumber      String?
+  address            String?
+  profilePicture     String?
   assignedMill       String?
-  paNumber           String?
+  paNumber           String?  @unique
   millName           String?
-  emailVerified     Boolean  @default(false)
-  verificationCode  String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt @default(now())
+  verificationStatus String   @default("UNVERIFIED")
+  verificationDoc    String?
+  verificationSelfie String?
+  emailVerified      Boolean  @default(false)
+  verificationCode   String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt @default(now())
 
   farms           Farm[]
   tickets         WeightTicket[]
   bagon           Bagon[]
-  expenses            Expense[]
+  expenses        Expense[]
 }
 
 model Bagon {

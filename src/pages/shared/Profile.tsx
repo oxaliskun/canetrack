@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
-import { User, Lock, Save, ShieldCheck, Phone, MapPin, Sprout, Loader2, Camera, Trash2, Building2, Hash } from 'lucide-react';
+import { User, Lock, Save, ShieldCheck, Phone, MapPin, Sprout, Loader2, Camera, Trash2, Building2, Upload, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../context/ThemeContext';
 import api from '../../api/axiosInstance';
@@ -8,20 +8,31 @@ import { resolveProfilePic } from '../../lib/utils';
 import { toast } from 'sonner';
 
 export function Profile() {
-  const { user: authUser } = useAuth();
+  const { user: authUser, login } = useAuth();
   const { isDark } = useTheme();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [verifying, setVerifying] = useState(false);
   const [name, setName] = useState('');
   const [contactNumber, setContactNumber] = useState('');
   const [address, setAddress] = useState('');
   const [profilePicture, setProfilePicture] = useState('');
   const [paNumber, setPaNumber] = useState('');
   const [millName, setMillName] = useState('');
+  const [verificationStatus, setVerificationStatus] = useState('UNVERIFIED');
   const [farmName, setFarmName] = useState('');
   const [farmLocation, setFarmLocation] = useState('');
   const [passwords, setPasswords] = useState({ old: '', new: '', confirm: '' });
+  const [validId, setValidId] = useState<File | null>(null);
+  const [validIdPreview, setValidIdPreview] = useState('');
+  const [landDocument, setLandDocument] = useState<File | null>(null);
+  const [landDocumentPreview, setLandDocumentPreview] = useState('');
+  const [selfie, setSelfie] = useState<File | null>(null);
+  const [selfiePreview, setSelfiePreview] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const validIdRef = useRef<HTMLInputElement>(null);
+  const landDocRef = useRef<HTMLInputElement>(null);
+  const selfieRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -34,12 +45,12 @@ export function Profile() {
         setProfilePicture(u.profilePicture || '');
         setPaNumber(u.paNumber || '');
         setMillName(u.millName || '');
+        setVerificationStatus(u.verificationStatus || 'UNVERIFIED');
         if (u.farms && u.farms.length > 0) {
           setFarmName(u.farms[0].farmName || '');
           setFarmLocation(u.farms[0].location || '');
         }
       } catch {
-        // Fallback to auth user data
         setName(authUser?.name || '');
         setContactNumber(authUser?.contactNumber || '');
         setAddress(authUser?.address || '');
@@ -76,6 +87,35 @@ export function Profile() {
     setProfilePicture('');
   };
 
+  const handleVerifySubmit = async () => {
+    if (!validId || !selfie) {
+      toast.error('Please upload your Valid ID and Selfie');
+      return;
+    }
+    setVerifying(true);
+    try {
+      const formData = new FormData();
+      formData.append('validId', validId);
+      if (landDocument) formData.append('landDocument', landDocument);
+      formData.append('selfie', selfie);
+
+      const res = await api.patch('/users/verify', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setVerificationStatus('VERIFIED');
+      if (res.data.user) {
+        const updatedUser = { ...authUser, ...res.data.user, verificationStatus: 'VERIFIED' };
+        localStorage.setItem('canetrack_user', JSON.stringify(updatedUser));
+        login(localStorage.getItem('canetrack_token') || '', updatedUser);
+      }
+      toast.success('Account verified successfully! All features are now available.');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Verification failed');
+    } finally {
+      setVerifying(false);
+    }
+  };
+
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
@@ -96,6 +136,7 @@ export function Profile() {
           profilePicture,
           paNumber,
           millName,
+          verificationStatus,
         };
         localStorage.setItem('canetrack_user', JSON.stringify(updatedUser));
       }
@@ -215,8 +256,8 @@ export function Profile() {
                   <div>
                     <label className={labelClass}>P.A. No.</label>
                     <div className="relative">
-                      <input type="text" value={paNumber} onChange={e => setPaNumber(e.target.value)} className={`${inputClass} pl-9 sm:pl-10`} placeholder="e.g. 2-120089-01-9" />
-                      <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <input type="text" value={paNumber} readOnly className={`${inputClass} pl-9 sm:pl-10 opacity-70 cursor-not-allowed`} placeholder="Auto-generated upon verification" />
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 font-mono text-xs font-bold"><span className={isDark ? 'text-slate-500' : 'text-slate-400'}>#</span></span>
                     </div>
                   </div>
                   <div>
@@ -235,6 +276,92 @@ export function Profile() {
                     <MapPin className="absolute left-3 top-4 w-4 h-4 text-slate-400" />
                   </div>
                 </div>
+
+                  {verificationStatus === 'UNVERIFIED' && (
+                    <div className={`p-4 sm:p-5 rounded-xl border-2 ${isDark ? 'bg-amber-900/20 border-amber-700/50' : 'bg-amber-50 border-amber-200'}`}>
+                      <div className="flex items-start gap-3">
+                        <AlertTriangle className={`w-6 h-6 shrink-0 mt-0.5 ${isDark ? 'text-amber-400' : 'text-amber-600'}`} />
+                        <div className="min-w-0">
+                          <h4 className={`text-sm sm:text-base font-extrabold ${isDark ? 'text-amber-400' : 'text-amber-800'}`}>Verify your account to unlock all features</h4>
+                          <p className={`text-xs sm:text-sm mt-1 font-medium ${isDark ? 'text-amber-300/70' : 'text-amber-700/70'}`}>Upload your valid ID and a selfie holding it. Your account will be verified immediately.</p>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 space-y-4">
+                        <div>
+                          <label className={`${labelClass} ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>Valid ID <span className="text-red-500">*</span></label>
+                          <div className="flex items-center gap-3">
+                            <button type="button" onClick={() => validIdRef.current?.click()} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border transition-all min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-800 hover:bg-slate-50'}`}>
+                              <Upload className="w-4 h-4" /> {validId ? 'Change' : 'Upload ID'}
+                            </button>
+                            {validId && <span className={`text-xs font-medium truncate ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{validId.name}</span>}
+                          </div>
+                          <input type="file" ref={validIdRef} accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) { setValidId(f); setValidIdPreview(URL.createObjectURL(f)); } }} />
+                          {validIdPreview && (
+                            <div className="mt-2 relative inline-block">
+                              <img src={validIdPreview} alt="Valid ID preview" className="h-28 rounded-lg object-cover border border-slate-200" />
+                              <button type="button" onClick={() => { setValidId(null); setValidIdPreview(''); }} className={`absolute top-1 right-1 p-1 rounded-full ${isDark ? 'bg-slate-900/80 text-slate-300 hover:bg-slate-900' : 'bg-white/80 text-slate-600 hover:bg-white'}`}>
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
+                        <div>
+                          <label className={`${labelClass} ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>Land Title / Land Document</label>
+                          <div className="flex items-center gap-3">
+                            <button type="button" onClick={() => landDocRef.current?.click()} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border transition-all min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-800 hover:bg-slate-50'}`}>
+                              <Upload className="w-4 h-4" /> {landDocument ? 'Change' : 'Upload Land Title'}
+                            </button>
+                            {landDocument && <span className={`text-xs font-medium truncate ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{landDocument.name}</span>}
+                          </div>
+                          <input type="file" ref={landDocRef} accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) { setLandDocument(f); setLandDocumentPreview(URL.createObjectURL(f)); } }} />
+                          {landDocumentPreview && (
+                            <div className="mt-2 relative inline-block">
+                              <img src={landDocumentPreview} alt="Land document preview" className="h-28 rounded-lg object-cover border border-slate-200" />
+                              <button type="button" onClick={() => { setLandDocument(null); setLandDocumentPreview(''); }} className={`absolute top-1 right-1 p-1 rounded-full ${isDark ? 'bg-slate-900/80 text-slate-300 hover:bg-slate-900' : 'bg-white/80 text-slate-600 hover:bg-white'}`}>
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
+                        <div>
+                          <label className={`${labelClass} ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>Selfie Holding ID <span className="text-red-500">*</span></label>
+                          <div className="flex items-center gap-3">
+                            <button type="button" onClick={() => selfieRef.current?.click()} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border transition-all min-h-[44px] ${isDark ? 'bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-800 hover:bg-slate-50'}`}>
+                              <Camera className="w-4 h-4" /> {selfie ? 'Change' : 'Upload Selfie'}
+                            </button>
+                            {selfie && <span className={`text-xs font-medium truncate ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{selfie.name}</span>}
+                          </div>
+                          <input type="file" ref={selfieRef} accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) { setSelfie(f); setSelfiePreview(URL.createObjectURL(f)); } }} />
+                          {selfiePreview && (
+                            <div className="mt-2 relative inline-block">
+                              <img src={selfiePreview} alt="Selfie preview" className="h-28 rounded-lg object-cover border border-slate-200" />
+                              <button type="button" onClick={() => { setSelfie(null); setSelfiePreview(''); }} className={`absolute top-1 right-1 p-1 rounded-full ${isDark ? 'bg-slate-900/80 text-slate-300 hover:bg-slate-900' : 'bg-white/80 text-slate-600 hover:bg-white'}`}>
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={handleVerifySubmit}
+                          disabled={verifying || !validId || !selfie}
+                          className={`flex items-center gap-2 px-5 py-3 rounded-xl font-bold shadow-lg transition-all disabled:opacity-50 min-h-[44px] w-full justify-center ${isDark ? 'bg-amber-600 text-white hover:bg-amber-500 shadow-amber-600/20' : 'bg-amber-600 text-white hover:bg-amber-500 shadow-amber-600/20'}`}
+                        >
+                          {verifying ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />} Submit for Verification
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {verificationStatus === 'VERIFIED' && (
+                    <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold ${isDark ? 'bg-emerald-900/30 text-emerald-400' : 'bg-emerald-100 text-emerald-700'}`}>
+                      <CheckCircle className="w-4 h-4" /> Verified
+                    </div>
+                  )}
 
                   <div className={`pt-4 border-t ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
                     <h3 className={`text-base sm:text-lg font-bold mb-4 sm:mb-6 flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-900'}`}><Sprout className={`w-5 h-5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} /> Farm Information</h3>
@@ -320,6 +447,12 @@ export function Profile() {
                 </div>
               </div>
               <div className={`pt-4 border-t ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
+                <p className={`text-[10px] font-extrabold uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Verification</p>
+                <div className={`mt-1 inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] sm:text-xs font-bold uppercase tracking-widest ${verificationStatus === 'VERIFIED' ? (isDark ? 'bg-emerald-900/30 text-emerald-400' : 'bg-emerald-100 text-emerald-700') : (isDark ? 'bg-amber-900/30 text-amber-400' : 'bg-amber-100 text-amber-700')}`}>
+                  {verificationStatus === 'VERIFIED' ? <CheckCircle className="w-3 h-3" /> : <AlertTriangle className="w-3 h-3" />} {verificationStatus === 'VERIFIED' ? 'Verified' : 'Unverified'}
+                </div>
+              </div>
+              <div>
                 <p className={`text-[10px] font-extrabold uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>P.A. No.</p>
                 <p className={`font-mono font-bold mt-1 text-sm truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>{paNumber || '—'}</p>
               </div>

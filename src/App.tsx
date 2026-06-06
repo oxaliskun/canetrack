@@ -20,6 +20,12 @@ import { SplashScreen } from './components/SplashScreen';
 import { LandingPage } from './pages/LandingPage';
 import { Toaster } from 'sonner';
 
+function VerifiedRoute({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  if (user && user.verificationStatus === 'UNVERIFIED') return <Navigate to="/dashboard" replace />;
+  return <>{children}</>;
+}
+
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const { isDark } = useTheme();
@@ -113,12 +119,12 @@ export default function App() {
             <Route path="/login" element={<Login />} />
             
             <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-            <Route path="/dashboard/farms" element={<PrivateRoute><FarmerFarms /></PrivateRoute>} />
-            <Route path="/dashboard/bagon" element={<PrivateRoute><Bagon /></PrivateRoute>} />
-            <Route path="/dashboard/payments" element={<PrivateRoute><FarmerPayments /></PrivateRoute>} />
-            <Route path="/dashboard/reports" element={<PrivateRoute><FarmerReports /></PrivateRoute>} />
-            <Route path="/dashboard/expenses" element={<PrivateRoute><FarmerExpenses /></PrivateRoute>} />
-            <Route path="/dashboard/quedans" element={<PrivateRoute><QuedanManagement /></PrivateRoute>} />
+            <Route path="/dashboard/farms" element={<PrivateRoute><VerifiedRoute><FarmerFarms /></VerifiedRoute></PrivateRoute>} />
+            <Route path="/dashboard/bagon" element={<PrivateRoute><VerifiedRoute><Bagon /></VerifiedRoute></PrivateRoute>} />
+            <Route path="/dashboard/payments" element={<PrivateRoute><VerifiedRoute><FarmerPayments /></VerifiedRoute></PrivateRoute>} />
+            <Route path="/dashboard/reports" element={<PrivateRoute><VerifiedRoute><FarmerReports /></VerifiedRoute></PrivateRoute>} />
+            <Route path="/dashboard/expenses" element={<PrivateRoute><VerifiedRoute><FarmerExpenses /></VerifiedRoute></PrivateRoute>} />
+            <Route path="/dashboard/quedans" element={<PrivateRoute><VerifiedRoute><QuedanManagement /></VerifiedRoute></PrivateRoute>} />
             <Route path="/dashboard/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
 
             {/* Fallback 404 Route */}

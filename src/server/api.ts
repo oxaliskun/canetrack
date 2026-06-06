@@ -156,17 +156,20 @@ apiRouter.post('/auth/verify-email', async (req: Request, res: Response): Promis
       return;
     }
 
+    const paNumber = `PA-${new Date().getFullYear()}-${String(randomInt(10000, 99999))}`;
+
     const user = await prisma.user.create({
       data: {
         name: pending.name, email: pending.email, passwordHash: pending.passwordHash,
         contactNumber: pending.contactNumber, address: pending.address,
-        emailVerified: true, verificationCode: null
+        emailVerified: true, verificationCode: null,
+        paNumber, verificationStatus: 'UNVERIFIED'
       },
-      select: { id: true, name: true, email: true, contactNumber: true, address: true, profilePicture: true }
+      select: { id: true, name: true, email: true, contactNumber: true, address: true, profilePicture: true, paNumber: true, verificationStatus: true }
     });
 
     pendingRegistrations.delete(email);
-    res.json({ message: 'Email verified successfully! You can now sign in.' });
+    res.json({ message: 'Email verified successfully! You can now sign in.', paNumber: user.paNumber, verificationStatus: user.verificationStatus });
   } catch (e: any) {
     res.status(500).json({ message: e.message });
   }
@@ -294,7 +297,7 @@ apiRouter.post('/auth/login', async (req: Request, res: Response): Promise<void>
       return;
     }
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '8h' });
-    res.json({ token, user: { id: user.id, userId: user.id, name: user.name, email: user.email, contactNumber: user.contactNumber, address: user.address, profilePicture: user.profilePicture, paNumber: user.paNumber, millName: user.millName } });
+    res.json({ token, user: { id: user.id, userId: user.id, name: user.name, email: user.email, contactNumber: user.contactNumber, address: user.address, profilePicture: user.profilePicture, paNumber: user.paNumber, millName: user.millName, verificationStatus: user.verificationStatus } });
   } catch (e: any) {
     res.status(500).json({ message: e.message });
   }
@@ -311,7 +314,7 @@ apiRouter.get('/auth/me', authMiddleware, async (req: AuthRequest, res: Response
         include: { farms: { select: { id: true, farmName: true, location: true, barangay: true, hectares: true, cropType: true, description: true, isArchived: true } } }
       });
       if (!user) { res.status(404).json({ message: 'User not found' }); return; }
-    res.json({ user: { id: user.id, userId: user.id, name: user.name, email: user.email, contactNumber: user.contactNumber, address: user.address, profilePicture: user.profilePicture, assignedMill: user.assignedMill, paNumber: user.paNumber, millName: user.millName, farms: user.farms } });
+    res.json({ user: { id: user.id, userId: user.id, name: user.name, email: user.email, contactNumber: user.contactNumber, address: user.address, profilePicture: user.profilePicture, assignedMill: user.assignedMill, paNumber: user.paNumber, millName: user.millName, verificationStatus: user.verificationStatus, farms: user.farms } });
   } catch(e: any) { res.status(500).json({ message: e.message }); }
 });
 
@@ -323,7 +326,7 @@ apiRouter.get('/users/profile', authMiddleware, async (req: AuthRequest, res: Re
       include: { farms: { select: { id: true, farmName: true, location: true, barangay: true, hectares: true, cropType: true, description: true, isArchived: true } } }
     });
     if (!user) { res.status(404).json({ message: 'User not found' }); return; }
-    res.json({ user: { id: user.id, userId: user.id, name: user.name, email: user.email, contactNumber: user.contactNumber, address: user.address, profilePicture: user.profilePicture, assignedMill: user.assignedMill, paNumber: user.paNumber, millName: user.millName, farms: user.farms } });
+    res.json({ user: { id: user.id, userId: user.id, name: user.name, email: user.email, contactNumber: user.contactNumber, address: user.address, profilePicture: user.profilePicture, assignedMill: user.assignedMill, paNumber: user.paNumber, millName: user.millName, verificationStatus: user.verificationStatus, farms: user.farms } });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
 });
 
@@ -352,6 +355,53 @@ apiRouter.patch('/users/profile', authMiddleware, async (req: AuthRequest, res: 
 
     res.json({ message: 'Profile updated successfully', user });
   } catch (e: any) { res.status(500).json({ message: e.message }); }
+});
+
+apiRouter.patch('/users/verify', authMiddleware, (req: AuthRequest, res: Response): void => {
+  upload.fields([
+    { name: 'validId', maxCount: 1 },
+    { name: 'landDocument', maxCount: 1 },
+    { name: 'selfie', maxCount: 1 }
+  ])(req, res, async (err) => {
+    if (err instanceof multer.MulterError) {
+      res.status(400).json({ message: 'File too large. Max 5MB.' });
+      return;
+    }
+    if (err) {
+      res.status(400).json({ message: 'Upload failed. Only images allowed.' });
+      return;
+    }
+
+    try {
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      const validIdFile = files?.['validId']?.[0];
+      const landDocFile = files?.['landDocument']?.[0];
+      const selfieFile = files?.['selfie']?.[0];
+
+      if (!validIdFile || !selfieFile) {
+        res.status(400).json({ message: 'Valid ID and Selfie are required' });
+        return;
+      }
+
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const verificationDoc = `${baseUrl}/uploads/${validIdFile.filename}` + (landDocFile ? `,${baseUrl}/uploads/${landDocFile.filename}` : '');
+      const verificationSelfie = `${baseUrl}/uploads/${selfieFile.filename}`;
+
+      const user = await prisma.user.update({
+        where: { id: req.user!.userId },
+        data: {
+          verificationStatus: 'VERIFIED',
+          verificationDoc,
+          verificationSelfie
+        },
+        select: { id: true, name: true, email: true, contactNumber: true, address: true, profilePicture: true, paNumber: true, millName: true, verificationStatus: true }
+      });
+
+      res.json({ message: 'Account verified successfully', user });
+    } catch (e: any) {
+      res.status(500).json({ message: e.message });
+    }
+  });
 });
 
 // --- FILE UPLOAD ---

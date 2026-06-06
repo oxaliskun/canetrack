@@ -11,12 +11,13 @@ interface SidebarProps {
 }
 
 export function Sidebar({ userName, onClose }: SidebarProps) {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const { isDark } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
+  const isUnverified = user?.verificationStatus === 'UNVERIFIED';
 
-  const links = [
+  const allLinks = [
     { name: 'Dashboard', path: '/dashboard', icon: Home },
     { name: 'Farms', path: '/dashboard/farms', icon: Sprout },
     { name: 'Bagon', path: '/dashboard/bagon', icon: Truck },
@@ -25,6 +26,10 @@ export function Sidebar({ userName, onClose }: SidebarProps) {
     { name: 'Payments', path: '/dashboard/payments', icon: DollarSign },
     { name: 'Reports', path: '/dashboard/reports', icon: PieChart },
   ];
+
+  const links = isUnverified
+    ? allLinks.filter(l => l.name === 'Dashboard')
+    : allLinks;
 
   const handleLogout = async () => {
     try {
@@ -69,6 +74,11 @@ export function Sidebar({ userName, onClose }: SidebarProps) {
       </div>
 
       <nav className="flex-1 py-2 lg:py-4 flex flex-col gap-1 lg:gap-2 px-3 lg:px-6 overflow-y-auto custom-scrollbar">
+        {isUnverified && (
+          <div className={`mx-1 mb-2 px-3 py-2 rounded-xl text-[11px] font-bold leading-tight text-center ${isDark ? 'bg-amber-900/30 text-amber-400 border border-amber-800/50' : 'bg-amber-50 text-amber-700 border border-amber-200'}`}>
+            Account Unverified — Complete verification to access all features
+          </div>
+        )}
         {links.map(link => {
           const Icon = link.icon;
           const isActive = location.pathname === link.path;

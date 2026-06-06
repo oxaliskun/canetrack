@@ -15,6 +15,8 @@ async function main() {
       contactNumber: '+63 945 678 9012',
       address: '123 Barangay San Juan, Sugarcane Province',
       assignedMill: 'Crystal Sugar Mill',
+      paNumber: 'PA-2026-12345',
+      verificationStatus: 'VERIFIED',
     },
   ];
 

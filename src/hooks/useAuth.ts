@@ -11,6 +11,7 @@ interface User {
   assignedMill?: string;
   paNumber?: string;
   millName?: string;
+  verificationStatus?: string;
   farms?: { id: string; farmName: string; location: string; barangay?: string; hectares?: number }[];
 }
 
