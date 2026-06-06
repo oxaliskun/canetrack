@@ -218,9 +218,9 @@ export function QuedanForm({ onSuccess }: { onSuccess?: () => void }) {
             </div>
             <div>
               <label className={`block text-[10px] font-extrabold uppercase tracking-widest mb-1.5 ml-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Unloading Type</label>
-              <div className="flex gap-2 h-full items-center pt-1">
+              <div className="flex gap-2 h-full items-center">
                 {['GANTRY', 'DIRECT_DUMP'].map(t => (
-                  <label key={t} className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl border cursor-pointer transition-all text-xs font-bold min-h-[44px] flex-1 ${form.unloadingType === t
+                  <label key={t} className={`flex items-center gap-1.5 px-3 py-2.5 sm:py-3 rounded-xl border cursor-pointer transition-all text-xs font-bold min-h-[44px] flex-1 ${form.unloadingType === t
                     ? isDark ? 'bg-emerald-900/30 border-emerald-700 text-emerald-400' : 'bg-emerald-100 border-emerald-300 text-emerald-700'
                     : isDark ? 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'
                   }`}>
