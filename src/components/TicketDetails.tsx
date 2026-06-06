@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Printer, Clock, User, Truck, Scale, CheckCircle, FileText, Calendar, MapPin, Phone, Mail, Plus, Minus, Building2, Wallet, Camera, Trash2, DollarSign, AlertTriangle } from 'lucide-react';
+import { X, Printer, Clock, User, Truck, Scale, CheckCircle, FileText, Calendar, MapPin, Phone, Mail, Plus, Minus, Building2, Wallet, Camera, Trash2, DollarSign, AlertTriangle, Leaf, Hash, ClipboardList } from 'lucide-react';
 import api from '../api/axiosInstance';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../hooks/useAuth';
@@ -136,7 +136,7 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
       }
       await api.post('/payments', {
         quedanId: ticketId, method: payForm.method, referenceNumber: payForm.referenceNumber || undefined,
-        grossAmount: gross, deductions, netAmount: net, notes: payForm.notes || undefined, proofUrl: proofUrl || undefined
+        grossAmount: gross, deductions, netAmount: net, status: 'PAID', notes: payForm.notes || undefined, proofUrl: proofUrl || undefined
       });
       await api.patch(`/tickets/${ticketId}`, { status: 'PAID' });
       toast.success('Payment processed successfully');
@@ -204,6 +204,15 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
       <div class="field"><div class="field-label">Farm Origin</div><div class="field-value">${ticket.farm?.farmName || '-'}</div></div>
       <div class="field"><div class="field-label">Farm Location</div><div class="field-value">${ticket.farm?.location || '-'}</div></div>
     </div>
+    <div class="info-group">
+      <h4>Delivery & Cane Details</h4>
+      ${ticket.truckNumber ? `<div class="field"><div class="field-label">Truck No.</div><div class="field-value">${ticket.truckNumber}</div></div>` : ''}
+      ${ticket.deliveryDate ? `<div class="field"><div class="field-label">Delivery Date</div><div class="field-value">${new Date(ticket.deliveryDate).toLocaleDateString()}</div></div>` : ''}
+      ${ticket.authorizedSignatory ? `<div class="field"><div class="field-label">Authorized Signatory</div><div class="field-value">${ticket.authorizedSignatory}</div></div>` : ''}
+      ${ticket.caneVariety ? `<div class="field"><div class="field-label">Cane Variety</div><div class="field-value">${ticket.caneVariety}</div></div>` : ''}
+      ${ticket.loadRemarks ? `<div class="field"><div class="field-label">Load Remarks</div><div class="field-value">${({FC:'Full Clean',BS:'Burned Standing',BF:'Burned Fallen',G:'Green',LO:'Lateral / Others'})[ticket.loadRemarks] || ticket.loadRemarks}</div></div>` : ''}
+      ${ticket.unloadingType ? `<div class="field"><div class="field-label">Unloading Type</div><div class="field-value">${ticket.unloadingType === 'GANTRY' ? 'Gantry' : 'Direct Dump'}</div></div>` : ''}
+    </div>
   </div>
 
   <div class="section">
@@ -227,12 +236,16 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
       <div class="field"><div class="field-value">${ticket.farm?.owner?.name || '-'}</div></div>
       <div class="field"><div class="field-label">Email</div><div class="field-value">${ticket.farm?.owner?.email || '-'}</div></div>
       <div class="field"><div class="field-label">Contact</div><div class="field-value">${ticket.farm?.owner?.contactNumber || '-'}</div></div>
+      ${ticket.farm?.owner?.millName ? `<div class="field"><div class="field-label">Mill</div><div class="field-value">${ticket.farm.owner.millName}</div></div>` : ''}
+      ${ticket.farm?.owner?.paNumber ? `<div class="field"><div class="field-label">P.A. No.</div><div class="field-value">${ticket.farm.owner.paNumber}</div></div>` : ''}
     </div>
     <div class="info-group">
       <h4>Operator</h4>
       <div class="field"><div class="field-value">${ticket.farmer?.name || '-'}</div></div>
       <div class="field"><div class="field-label">Email</div><div class="field-value">${ticket.farmer?.email || '-'}</div></div>
       <div class="field"><div class="field-label">Contact</div><div class="field-value">${ticket.farmer?.contactNumber || '-'}</div></div>
+      ${ticket.farmer?.millName ? `<div class="field"><div class="field-label">Mill</div><div class="field-value">${ticket.farmer.millName}</div></div>` : ''}
+      ${ticket.farmer?.paNumber ? `<div class="field"><div class="field-label">P.A. No.</div><div class="field-value">${ticket.farmer.paNumber}</div></div>` : ''}
     </div>
   </div>
 
@@ -378,10 +391,16 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
                             <span className={`truncate ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{ticket.farm.owner.address}</span>
                           </div>
                         )}
-                        {ticket.farm?.owner?.assignedMill && (
+                        {ticket.farm?.owner?.millName && (
                           <div className="flex items-center gap-1.5 mt-1 text-xs">
                             <Building2 className={`w-3 h-3 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} />
-                            <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>Mill: <strong>{ticket.farm.owner.assignedMill}</strong></span>
+                            <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>Mill: <strong>{ticket.farm.owner.millName}</strong></span>
+                          </div>
+                        )}
+                        {ticket.farm?.owner?.paNumber && (
+                          <div className="flex items-center gap-1.5 mt-1 text-xs">
+                            <Hash className={`w-3 h-3 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} />
+                            <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>P.A. No.: <strong>{ticket.farm.owner.paNumber}</strong></span>
                           </div>
                         )}
                         <p className={`text-[10px] mt-3 font-semibold ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
@@ -422,9 +441,36 @@ export function TicketDetails({ ticketId, onClose }: TicketDetailsProps) {
                             <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>{ticket.farmer.contactNumber}</span>
                           </div>
                         )}
+                        {ticket.farmer?.millName && (
+                          <div className="flex items-center gap-1.5 mt-1 text-xs">
+                            <Building2 className={`w-3 h-3 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} />
+                            <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>Mill: <strong>{ticket.farmer.millName}</strong></span>
+                          </div>
+                        )}
+                        {ticket.farmer?.paNumber && (
+                          <div className="flex items-center gap-1.5 mt-1 text-xs">
+                            <Hash className={`w-3 h-3 ${isDark ? 'text-slate-500' : 'text-slate-400'}`} />
+                            <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>P.A. No.: <strong>{ticket.farmer.paNumber}</strong></span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
+
+                  {/* Delivery & Cane Details */}
+                  {(ticket.truckNumber || ticket.deliveryDate || ticket.authorizedSignatory || ticket.caneVariety || ticket.loadRemarks || ticket.unloadingType) && (
+                    <div>
+                      <SectionTitle title="Delivery & Cane Details" icon={ClipboardList} />
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {ticket.truckNumber && <DetailRow label="Truck No." value={ticket.truckNumber} icon={Truck} />}
+                        {ticket.deliveryDate && <DetailRow label="Delivery Date" value={new Date(ticket.deliveryDate).toLocaleDateString()} icon={Calendar} />}
+                        {ticket.authorizedSignatory && <DetailRow label="Authorized Signatory" value={ticket.authorizedSignatory} icon={User} />}
+                        {ticket.caneVariety && <DetailRow label="Cane Variety" value={ticket.caneVariety} icon={Leaf} />}
+                        {ticket.loadRemarks && <DetailRow label="Load Remarks" value={{ FC: 'Full Clean', BS: 'Burned Standing', BF: 'Burned Fallen', G: 'Green', LO: 'Lateral / Others' }[ticket.loadRemarks] || ticket.loadRemarks} icon={FileText} />}
+                        {ticket.unloadingType && <DetailRow label="Unloading Type" value={ticket.unloadingType === 'GANTRY' ? 'Gantry' : 'Direct Dump'} icon={Hash} />}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Dates */}
                   <div>
